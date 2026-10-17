@@ -209,8 +209,9 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "0.6.1";
+const APP_VERSION = "0.7.0";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
+const SERVER_EXPECTED = "0.7.0"; // the worker/worker.js version this app was built with
 
 /* ---------------- storage (on this phone only) ---------------- */
 const LS = "clothes:";
@@ -555,7 +556,7 @@ async function connectAI(){
     const r = await fetch(workerBase() + "/health?code=" + encodeURIComponent(AI.code));
     let j = null; try{ j = await r.json(); }catch(e){}
     if (!r.ok) throw new Error((j && j.error) || ("AI server error " + r.status));
-    AI.on = true; AI.health = {ideas:!!j.ideas, images:!!j.images};
+    AI.on = true; AI.health = {ideas:!!j.ideas, images:!!j.images, version:j.version || "before 0.7"};
     save("ai", AI);
     toast(j.ideas ? "AI is on" : "Connected, but the AI isn't set up on the server");
   }catch(e){
@@ -794,12 +795,20 @@ function renderProfile(){
     </div>
   </main>`;
 }
+function serverOutdated(v){
+  const n = (x) => String(x).split(".").map((p) => parseInt(p, 10) || 0);
+  if (!/^\d/.test(String(v))) return true;
+  const a = n(v), b = n(SERVER_EXPECTED);
+  for (let i = 0; i < 3; i++){ if ((a[i] || 0) !== (b[i] || 0)) return (a[i] || 0) < (b[i] || 0); }
+  return false;
+}
 function aiCard(){
   const on = aiOn(), h = AI.health || {};
   const missing = on && h.ideas === false ? ["the AI"] : [];
   return `<section class="card" aria-labelledby="ai-h">
     <h2 id="ai-h">AI connection</h2>
-    <span class="ai-status"><span class="dot${on ? " on" : ""}" aria-hidden="true"></span>${on ? "On" : "Off"}</span>
+    <span class="ai-status"><span class="dot${on ? " on" : ""}" aria-hidden="true"></span>${on ? "On" : "Off"}${on && h.version ? `<span class="mono-label" style="font-weight:400;margin-left:6px">server ${esc(h.version)}</span>` : ""}</span>
+    ${on && h.version && serverOutdated(h.version) ? `<p style="color:var(--danger)">The AI server is older than this app. In Cloudflare, redeploy the worker from the latest commit.</p>` : ""}
     <p>${on ? "Free Cloudflare AI writes your ideas and draws a photo for each one. Up to about 70 votes a day; it resets at 03:00." + (missing.length ? " Not set up yet on the server: " + esc(joinAnd(missing)) + "." : "")
             : "Using the built-in sample ideas. Enter the access code you set on your AI server to turn AI on."}</p>
     ${on ? `<button type="button" class="link-btn" data-act="ai-off" style="align-self:flex-start;padding:0">Turn off</button>` : `
@@ -1123,6 +1132,7 @@ function askSnapshot(){
   L.push(`ua: ${navigator.userAgent}`);
   L.push(`ai: ${aiOn() ? "on" : "off"}${S.sampleRound ? " (this round uses sample ideas)" : ""}   server: ${AI.url || DEFAULT_WORKER}   health: ${JSON.stringify(AI.health || null)}`);
   L.push(`ai request: ${S.fetching ? "in flight" : "idle"}   last error: ${S.aiErr || "none"}   waiting ideas: ${S.queue.length}`);
+  L.push(`server version: ${(AI.health && AI.health.version) || "unknown"}   (app expects ${SERVER_EXPECTED} or newer)`);
   L.push(`last photo error: ${S.imgErr || "none"}`);
   L.push(`\nSEARCH: type=${Q.type || "-"}  styles=${(Q.styles || []).join(", ") || "-"}  text="${Q.text || ""}"`);
   L.push(`PREFS: ${JSON.stringify(PREFS)}`);
@@ -1213,6 +1223,16 @@ async function appRefresh(){
   location.reload();
   setTimeout(() => { location.href = location.pathname; }, 1500); // if the reload is ignored
 }
+// Ask the server which version it runs (quietly, on start-up) so reports and the
+// profile show whether Cloudflare has deployed the latest server code.
+async function checkServer(){
+  if (!aiOn()) return;
+  try{
+    const r = await fetch(workerBase() + "/health?code=" + encodeURIComponent(AI.code), {cache:"no-store"});
+    const j = await r.json();
+    if (r.ok){ AI.health = {ideas:!!j.ideas, images:!!j.images, version:j.version || "before 0.7"}; save("ai", AI); if (S.screen === "profile") render(); }
+  }catch(e){}
+}
 function afterUpdate(){
   const from = load("updatedFrom", null);
   if (!from) return;
@@ -1225,6 +1245,7 @@ function afterUpdate(){
 restoreSession();
 render();
 afterUpdate();
+checkServer();
 if (S.screen === "explore" && aiRound() && S.queue.length <= 1) refill();
 if ("serviceWorker" in navigator && location.protocol === "https:"){
   navigator.serviceWorker.register("sw.js").catch(() => {});

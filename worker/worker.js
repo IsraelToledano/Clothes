@@ -11,6 +11,8 @@
 // The free allowance is 10,000 "neurons" a day (resets 00:00 UTC = 03:00 in Israel).
 // On the free plan Cloudflare blocks requests past that instead of charging.
 
+// Bump with the app version so a report shows whether the server was redeployed.
+const SERVER_VERSION = "0.7.0";
 const APP_ORIGIN = "https://israeltoledano.github.io";
 const TEXT_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 const IMAGE_MODEL = "@cf/black-forest-labs/flux-1-schnell";
@@ -38,11 +40,11 @@ export default {
     if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: cors(origin) });
     const url = new URL(req.url);
     try {
-      if (url.pathname === "/") return json({ ok: true, service: "drape-ai" }, 200, origin);
+      if (url.pathname === "/") return json({ ok: true, service: "drape-ai", version: SERVER_VERSION }, 200, origin);
 
       if (req.method === "GET" && url.pathname === "/health") {
         checkCode(env, url.searchParams.get("code"));
-        return json({ ok: true, ideas: !!env.AI, images: !!env.AI }, 200, origin);
+        return json({ ok: true, ideas: !!env.AI, images: !!env.AI, version: SERVER_VERSION }, 200, origin);
       }
 
       if (req.method === "GET" && url.pathname === "/image") {
