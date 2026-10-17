@@ -1,0 +1,744 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#EEF0F3">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Drape">
+<title>Drape</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap">
+<style>
+:root{
+  --bg:#EEF0F3;--card:#FFFFFF;--ink:#16181D;--muted:#4A505C;--line:#C9CDD5;--soft:#E3E6EB;--hate:#DCE0E6;
+  --accent:#2A44D8;--accent-press:#1C2F9E;--danger:#B42318;
+  --display:'Bricolage Grotesque',system-ui,-apple-system,sans-serif;
+  --body:'DM Sans',system-ui,-apple-system,sans-serif;
+  --mono:'DM Mono',ui-monospace,Menlo,monospace;
+  --safe-t:env(safe-area-inset-top,0px);--safe-b:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+body{min-height:100dvh;overscroll-behavior-y:none}
+body.lock{overflow:hidden}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+a{color:var(--accent)}
+.screen{min-height:100vh;min-height:100dvh;max-width:520px;margin:0 auto;padding:calc(14px + var(--safe-t)) 16px calc(20px + var(--safe-b));display:flex;flex-direction:column;gap:14px}
+.screen.fixed{height:100vh;height:100dvh;min-height:0;overflow:hidden}
+.screen.roomy{gap:22px}
+.top{display:flex;align-items:center;justify-content:space-between;min-height:44px;gap:8px}
+.wordmark{font-family:var(--display);font-weight:800;font-size:28px;letter-spacing:-.03em}
+.icon-btn{width:44px;height:44px;border-radius:22px;border:1px solid var(--line);background:var(--card);color:var(--ink);display:grid;place-items:center;padding:0;flex:none}
+.icon-btn svg{width:20px;height:20px}
+.spacer{width:44px;flex:none}
+.meta{font-family:var(--mono);font-size:13px;color:var(--muted);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.h1{margin:0;font-family:var(--display);font-weight:800;font-size:36px;line-height:1.04;letter-spacing:-.03em}
+.label{display:block;font-size:16px;font-weight:700;margin:0 0 10px;padding:0}
+.label .hint{font-weight:400;color:var(--muted)}
+.mono-label{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+fieldset{border:0;margin:0;padding:0;min-width:0}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{height:44px;padding:0 16px;border-radius:22px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:15px;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:500}
+.chip svg{width:14px;height:14px}
+textarea{display:block;width:100%;min-height:92px;resize:none;padding:12px 14px;border-radius:16px;border:1px solid var(--line);background:var(--card);font-size:16px;line-height:1.4}
+textarea::placeholder{color:#686E79}
+.cta{height:58px;border-radius:29px;border:0;background:var(--accent);color:#fff;font-size:17px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px;width:100%}
+.cta:active{background:var(--accent-press)}
+.cta svg{width:20px;height:20px}
+.bottom{margin-top:auto;display:flex;flex-direction:column;gap:4px;padding-top:4px}
+.sticky{position:sticky;bottom:calc(10px + var(--safe-b))}
+.link-btn{min-height:44px;border:0;background:transparent;color:var(--ink);font-size:15px;text-decoration:underline;text-underline-offset:3px}
+.link-btn.danger{color:var(--danger)}
+.outline-btn{min-height:50px;border-radius:25px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:0 16px;text-decoration:none}
+.outline-btn.filled{background:var(--card)}
+.outline-btn svg{width:18px;height:18px;flex:none}
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.steps li{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted)}
+.steps li::before{content:"";height:4px;border-radius:2px;background:var(--line)}
+.steps li.on{color:var(--ink);font-weight:700}
+.steps li.on::before,.steps li.done::before{background:var(--ink)}
+.banner{display:flex;gap:10px;align-items:flex-start;background:var(--ink);color:#fff;border-radius:16px;padding:12px 14px;font-size:14px;line-height:1.4;flex:none}
+.banner svg{width:20px;height:20px;flex:none;margin-top:1px}
+.banner p{margin:0}
+.recent{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;flex:none}
+.recent li{display:flex;align-items:center;gap:8px;background:var(--card);border-radius:14px;padding:6px 8px 6px 6px;min-width:0}
+.recent .sw{flex:none;width:34px;height:34px;border-radius:10px}
+.recent .tx{display:flex;flex-direction:column;min-width:0}
+.recent .t{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.recent .v{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.recent .v.love{color:var(--accent)}
+.idea{flex:1 1 auto;min-height:0;background:var(--card);border-radius:24px;overflow:hidden;display:flex;flex-direction:column;touch-action:none;user-select:none;-webkit-user-select:none;will-change:transform}
+.idea-img{position:relative;flex:1 1 auto;min-height:130px;display:flex;align-items:center;justify-content:center}
+.idea-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.ph{display:flex;flex-direction:column;align-items:center;gap:8px;padding:0 44px;text-align:center;color:#3B404A}
+.ph svg{width:40px;height:40px}
+.tag{position:absolute;top:12px;left:12px;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;background:#fff;color:var(--ink);padding:6px 10px;border-radius:999px}
+.swatches{position:absolute;bottom:12px;left:12px;display:flex;gap:6px}
+.swatches span{width:22px;height:22px;border-radius:11px;border:2px solid #fff}
+.idea-body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:12px;flex:none}
+.idea-head{display:flex;flex-direction:column;gap:6px}
+.because{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.idea-title{margin:0;font-family:var(--display);font-weight:800;font-size:26px;line-height:1.08;letter-spacing:-.02em}
+.idea-desc{margin:0;font-size:15px;line-height:1.4;color:var(--muted)}
+.specs{margin:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.specs div{display:flex;flex-direction:column;gap:3px;min-width:0}
+.specs dt{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.specs dd{margin:0;font-size:14px;font-weight:500;overflow-wrap:anywhere}
+.votes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;flex:none}
+.vote{height:68px;border-radius:20px;border:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:14px;font-weight:700;color:var(--ink)}
+.vote svg{width:22px;height:22px}
+.vote.hate{background:var(--hate)}
+.vote.like{background:var(--card);border:1px solid var(--line)}
+.vote.love{background:var(--accent);color:#fff}
+.vote:active{transform:scale(.97)}
+.empty{flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px;text-align:center;padding:0 8px}
+.empty .idea-desc{margin-bottom:6px}
+.toast{position:fixed;left:50%;bottom:calc(160px + var(--safe-b));transform:translateX(-50%);background:var(--ink);color:#fff;border-radius:999px;padding:6px 6px 6px 16px;display:flex;align-items:center;gap:10px;font-size:14px;z-index:40;max-width:calc(100% - 32px);box-shadow:0 4px 16px rgba(0,0,0,.18)}
+.toast.plain{padding:10px 16px}
+.toast span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.toast button{height:36px;border-radius:18px;border:0;background:#fff;color:var(--ink);padding:0 14px;font-weight:700;flex:none}
+.scrim{position:fixed;inset:0;background:rgba(22,24,29,.55);z-index:50;display:flex;align-items:flex-end;justify-content:center}
+.scrim.center{align-items:center}
+.sheet{width:100%;max-width:520px;background:var(--card);border-radius:28px 28px 0 0;padding:10px 20px calc(24px + var(--safe-b));display:flex;flex-direction:column;gap:18px;max-height:92dvh;overflow:auto}
+.grab{align-self:center;width:40px;height:4px;border-radius:2px;background:var(--line)}
+.picked{display:flex;align-items:center;gap:14px}
+.picked h2{margin:0;font-family:var(--display);font-weight:800;font-size:21px;line-height:1.1}
+.picked .sub{font-size:13px;color:var(--muted)}
+.thumb{flex:none;width:60px;height:60px;border-radius:16px;display:grid;place-items:center;color:#3B404A}
+.thumb svg{width:24px;height:24px}
+.thumb.sm{width:52px;height:52px;border-radius:14px}
+.sizes{display:grid;gap:8px}
+.sizes .chip{padding:0;border-radius:12px}
+.check{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:48px;padding:0 14px;border-radius:14px;background:var(--bg);font-size:15px}
+.check input{width:22px;height:22px;margin:0;accent-color:var(--accent);flex:none}
+.ctx{display:flex;align-items:center;gap:12px}
+.ctx h1{margin:0;font-family:var(--display);font-weight:800;font-size:20px;line-height:1.15;letter-spacing:-.01em}
+.pills{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.undo-pill{min-height:44px;min-width:0;max-width:100%;border:0;border-radius:22px;background:var(--ink);color:#fff;padding:0 6px 0 14px;font-size:14px;display:flex;align-items:center;gap:8px}
+.undo-pill span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.undo-pill b{flex:none;background:#fff;color:var(--ink);border-radius:16px;height:32px;padding:0 12px;display:grid;place-items:center}
+.pill{font-size:14px;padding:7px 12px;border-radius:999px;background:var(--card);border:1px solid var(--line)}
+.card{background:var(--card);border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.card h2{margin:0;font-size:16px;font-weight:700}
+.card p{margin:0;font-size:15px;line-height:1.45;color:var(--muted)}
+.store{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:60px;padding:10px 16px;border-radius:16px;border:1px solid var(--line);background:var(--card);color:var(--ink);text-decoration:none}
+.store b{display:block;font-size:16px}
+.store small{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+.store svg{width:18px;height:18px;flex:none}
+.tchips{display:flex;flex-wrap:wrap;gap:6px}
+.tchip{font-size:14px;padding:6px 12px;border-radius:999px}
+.tchip.plus{border:1.5px solid var(--ink);font-weight:500}
+.tchip.minus{background:var(--soft);color:#3B404A}
+.hist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.hist li{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--soft);min-width:0}
+.hist li:first-child{border-top:0}
+.hist .sw{flex:none;width:32px;height:32px;border-radius:10px}
+.hist .t{flex:1;min-width:0;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hist .v{font-family:var(--mono);font-size:12px;color:var(--muted);flex:none}
+.hist .v.love{color:var(--accent)}
+.modal{background:var(--card);border-radius:24px;padding:22px;margin:16px;max-width:400px;width:100%;display:flex;flex-direction:column;gap:14px}
+.modal h2{margin:0;font-family:var(--display);font-weight:800;font-size:22px}
+.modal p{margin:0;font-size:15px;line-height:1.45;color:var(--muted)}
+.modal .row{display:flex;gap:10px;justify-content:flex-end}
+.btn{min-height:44px;border-radius:22px;padding:0 18px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-weight:700}
+.btn.danger{background:var(--danger);border-color:var(--danger);color:#fff}
+.small-note{font-size:13px;color:var(--muted);text-align:center;margin:0}
+@media (max-height:760px){
+  .recent-wrap{display:none}
+}
+@media (max-height:700px){
+  .vote{height:58px}
+  .idea-title{font-size:23px}
+  .banner{padding:10px 12px;font-size:13px}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<noscript><p style="padding:24px">Drape needs JavaScript to run.</p></noscript>
+<script>
+"use strict";
+/* ---------------- config ----------------
+   AI_MODE stays false until the Cloudflare Worker (Claude for ideas, an image
+   model for photos, a shopping search for products) is connected. Until then
+   ideas come from the SAMPLE_IDEAS list below and still adapt to your votes. */
+const APP_VERSION = "0.1.0";
+const AI_MODE = false;
+
+/* ---------------- storage (on this phone only) ---------------- */
+const LS = "clothes:";
+function load(k, d){ try{ const r = localStorage.getItem(LS + k); return r != null ? JSON.parse(r) : d; }catch(e){ return d; } }
+function save(k, v){ try{ localStorage.setItem(LS + k, JSON.stringify(v)); }catch(e){} }
+
+/* ---------------- options ---------------- */
+const TYPES = ["T-shirts","Shirts","Overshirts","Knitwear","Jackets","Trousers","Shorts","Shoes","Surprise me"];
+const STYLES = ["Relaxed","Minimal","Smart-casual","Streetwear","Vintage","Sporty"];
+const BUDGETS = [{id:"u200",label:"Under ₪200"},{id:"200-400",label:"₪200–400"},{id:"400+",label:"₪400+"},{id:"any",label:"Any"}];
+const SIZES = ["S","M","L","XL","XXL"];
+const SHOE_SIZES = ["40","41","42","43","44","45","46"];
+const VAL = {hate:-2, like:1, love:2};
+const VOTE_LABEL = {hate:"Hated", like:"Liked", love:"Loved"};
+
+/* ---------------- sample ideas (menswear) ---------------- */
+const SAMPLE_IDEAS = [
+ {id:"t1",type:"T-shirts",title:"Heavyweight boxy tee",desc:"Thick cotton, dropped shoulders, cropped at the hip.",fit:"Boxy",fabric:"Heavy cotton",colour:"Off-white",vibe:"Everyday",styles:["Relaxed","Minimal","Streetwear"],palette:["#F2EEE4","#D9D2C3","#2B2E35"],tint:"#ECE7DC"},
+ {id:"t2",type:"T-shirts",title:"Striped Breton tee",desc:"Classic navy stripes, boat neck, slightly short sleeves.",fit:"Regular",fabric:"Cotton",colour:"Navy stripe",vibe:"Summer",styles:["Vintage","Smart-casual"],palette:["#1F2A44","#F4F1EA","#B33A2E"],tint:"#DCE1EA"},
+ {id:"t3",type:"T-shirts",title:"Washed pocket tee",desc:"Garment-dyed for a soft, lived-in feel, with a chest pocket.",fit:"Relaxed",fabric:"Washed cotton",colour:"Olive",vibe:"Weekend",styles:["Relaxed","Vintage"],palette:["#7C8559","#D2D8BD","#2B2E35"],tint:"#D8DDC6"},
+ {id:"t4",type:"T-shirts",title:"Technical knit tee",desc:"Smooth, quick-dry knit that works from gym to street.",fit:"Slim",fabric:"Tech knit",colour:"Charcoal",vibe:"Active",styles:["Sporty","Minimal"],palette:["#3A3D44","#8A8F99","#E3E6EB"],tint:"#D3D6DC"},
+ {id:"s1",type:"Shirts",title:"Linen camp-collar shirt",desc:"Open collar, short sleeves, straight hem worn untucked.",fit:"Relaxed",fabric:"Linen",colour:"Terracotta",vibe:"Summer",styles:["Relaxed","Vintage"],palette:["#B8643E","#E8CDB9","#F4EFE6"],tint:"#ECD6C6"},
+ {id:"s2",type:"Shirts",title:"Oxford button-down",desc:"Soft oxford cloth that dresses up or down.",fit:"Regular",fabric:"Cotton oxford",colour:"Light blue",vibe:"Office",styles:["Smart-casual","Minimal"],palette:["#9DB4D3","#F4F6FA","#1F2A44"],tint:"#DAE3F0"},
+ {id:"s3",type:"Shirts",title:"Band-collar poplin shirt",desc:"Crisp and collarless, buttoned to the top or worn open.",fit:"Regular",fabric:"Poplin",colour:"White",vibe:"Evening",styles:["Minimal","Smart-casual"],palette:["#FFFFFF","#E3E6EB","#16181D"],tint:"#E9EBEF"},
+ {id:"o1",type:"Overshirts",title:"Relaxed linen overshirt",desc:"Worn open over a white tee, sleeves pushed up.",fit:"Relaxed",fabric:"Linen",colour:"Sand",vibe:"Weekend",styles:["Relaxed","Minimal"],palette:["#CDB892","#F5F2EA","#8C8578"],tint:"#E6DAC3"},
+ {id:"o2",type:"Overshirts",title:"Washed chore jacket",desc:"Boxy workwear cut with three patch pockets.",fit:"Boxy",fabric:"Cotton canvas",colour:"Stone",vibe:"Workwear",styles:["Vintage","Relaxed"],palette:["#B9B2A3","#EDE8DA","#4B4A45"],tint:"#DDD8CD"},
+ {id:"o3",type:"Overshirts",title:"Wool-blend shirt jacket",desc:"A subtle check that layers over knits when it cools down.",fit:"Regular",fabric:"Wool blend",colour:"Charcoal check",vibe:"Autumn",styles:["Smart-casual"],palette:["#4A4C52","#8C8F96","#C9B79A"],tint:"#D2D3D7"},
+ {id:"o4",type:"Overshirts",title:"Ripstop utility overshirt",desc:"Light nylon with snap pockets, built for the city.",fit:"Relaxed",fabric:"Ripstop nylon",colour:"Black",vibe:"City",styles:["Streetwear","Sporty"],palette:["#16181D","#4A505C","#C9CDD5"],tint:"#CDD0D6"},
+ {id:"k1",type:"Knitwear",title:"Fine merino crewneck",desc:"Thin enough to wear over a shirt collar.",fit:"Regular",fabric:"Merino",colour:"Navy",vibe:"Office",styles:["Minimal","Smart-casual"],palette:["#1F2A44","#4A5A7A","#E3E6EB"],tint:"#D5DAE4"},
+ {id:"k2",type:"Knitwear",title:"Chunky fisherman knit",desc:"Cable texture and a roomy fit, made for cool evenings.",fit:"Relaxed",fabric:"Wool",colour:"Ecru",vibe:"Weekend",styles:["Vintage","Relaxed"],palette:["#EFE8D8","#D6CBB3","#6B5E4A"],tint:"#EBE4D4"},
+ {id:"k3",type:"Knitwear",title:"Cotton half-zip",desc:"Sporty collar, clean knit, easy over a tee.",fit:"Regular",fabric:"Cotton knit",colour:"Forest green",vibe:"Weekend",styles:["Sporty","Smart-casual"],palette:["#2F4A3A","#7E9A86","#EDEDE6"],tint:"#D3DDD5"},
+ {id:"j1",type:"Jackets",title:"Unstructured cotton blazer",desc:"No shoulder pads or lining: sharp but relaxed.",fit:"Soft",fabric:"Cotton",colour:"Navy",vibe:"Office",styles:["Smart-casual","Minimal"],palette:["#1F2A44","#F4F1EA","#8C6A4A"],tint:"#D5DAE4"},
+ {id:"j2",type:"Jackets",title:"Suede trucker jacket",desc:"A western-inspired cut that softens with wear.",fit:"Regular",fabric:"Suede",colour:"Tobacco",vibe:"Evening",styles:["Vintage"],palette:["#8A5A36","#D9B48F","#2B2E35"],tint:"#E5D2BF"},
+ {id:"j3",type:"Jackets",title:"Lightweight bomber",desc:"Packable nylon with ribbed cuffs and hem.",fit:"Relaxed",fabric:"Nylon",colour:"Olive",vibe:"City",styles:["Streetwear","Sporty"],palette:["#5E6640","#B9BF9C","#E06A2B"],tint:"#D6DAC4"},
+ {id:"tr1",type:"Trousers",title:"Wide-leg pleated trousers",desc:"High rise, soft drape, cropped just above the ankle.",fit:"Wide",fabric:"Cotton twill",colour:"Olive",vibe:"Office",styles:["Relaxed","Smart-casual"],palette:["#7C8559","#EDE8DA","#2B2E35"],tint:"#D2D8BD"},
+ {id:"tr2",type:"Trousers",title:"Tapered drawstring chinos",desc:"Chino looks with a jogger's comfort.",fit:"Tapered",fabric:"Stretch cotton",colour:"Khaki",vibe:"Weekend",styles:["Relaxed","Sporty"],palette:["#B9A27A","#E7DCC6","#3B3A35"],tint:"#E3D9C3"},
+ {id:"tr3",type:"Trousers",title:"Straight raw denim",desc:"Dark indigo that fades to fit you over time.",fit:"Straight",fabric:"Denim",colour:"Indigo",vibe:"Everyday",styles:["Vintage","Minimal"],palette:["#26324F","#5C6E91","#C9CDD5"],tint:"#D3D9E5"},
+ {id:"tr4",type:"Trousers",title:"Linen drawstring trousers",desc:"Loose, breezy and made for hot days.",fit:"Relaxed",fabric:"Linen",colour:"Off-white",vibe:"Summer",styles:["Relaxed","Minimal"],palette:["#F4EFE4","#D9D0BE","#8C8578"],tint:"#ECE6D9"},
+ {id:"sh1",type:"Shorts",title:"Pleated chino shorts",desc:"A 7-inch inseam with a neat pleat at the front.",fit:"Relaxed",fabric:"Cotton twill",colour:"Stone",vibe:"Summer",styles:["Smart-casual","Vintage"],palette:["#B9B2A3","#EDE8DA","#2B2E35"],tint:"#DDD8CD"},
+ {id:"sh2",type:"Shorts",title:"Swim-to-street shorts",desc:"Quick-dry nylon that still looks right off the beach.",fit:"Regular",fabric:"Quick-dry nylon",colour:"Navy",vibe:"Beach",styles:["Sporty","Streetwear"],palette:["#1F2A44","#6F87B5","#F4F1EA"],tint:"#D5DAE4"},
+ {id:"sh3",type:"Shorts",title:"Linen drawstring shorts",desc:"Soft, airy and easy with sandals.",fit:"Relaxed",fabric:"Linen",colour:"Sage",vibe:"Summer",styles:["Relaxed","Minimal"],palette:["#A7B29A","#E3E8DB","#4B5244"],tint:"#DDE3D5"},
+ {id:"f1",type:"Shoes",title:"Minimal white leather sneakers",desc:"Clean low-tops that go with almost everything.",fit:"Low-top",fabric:"Leather",colour:"White",vibe:"Everyday",styles:["Minimal","Smart-casual"],palette:["#FFFFFF","#E3E6EB","#8C8F96"],tint:"#E6E8EC"},
+ {id:"f2",type:"Shoes",title:"Suede desert boots",desc:"Soft ankle boots on a crepe sole.",fit:"Ankle",fabric:"Suede",colour:"Sand",vibe:"Weekend",styles:["Vintage","Smart-casual"],palette:["#C9A97E","#EBDCC6","#6B4E31"],tint:"#E6D8C3"},
+ {id:"f3",type:"Shoes",title:"Retro running sneakers",desc:"Suede and mesh panels on a slim, low sole.",fit:"Low-top",fabric:"Suede & mesh",colour:"Grey",vibe:"City",styles:["Sporty","Streetwear"],palette:["#8C8F96","#1F2A44","#E3E6EB"],tint:"#D8DBE1"},
+ {id:"f4",type:"Shoes",title:"Leather penny loafers",desc:"Slip-ons that sharpen up chinos or denim.",fit:"Slip-on",fabric:"Leather",colour:"Dark brown",vibe:"Evening",styles:["Smart-casual","Minimal"],palette:["#4A2E1E","#8A5A36","#E5D2BF"],tint:"#E0CDBC"},
+];
+const IDEAS = SAMPLE_IDEAS;
+const byId = (id) => IDEAS.find((i) => i.id === id);
+
+/* ---------------- icons ---------------- */
+const sv = (p, o) => `<svg viewBox="0 0 24 24" fill="${(o&&o.fill)||"none"}" stroke="currentColor" stroke-width="${(o&&o.w)||2}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+const ICON = {
+  close: sv('<path d="M6 6l12 12M18 6L6 18"/>', {w:2.2}),
+  person: sv('<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>'),
+  arrow: sv('<path d="M5 12h14M13 6l6 6-6 6"/>', {w:2.2}),
+  back: sv('<path d="M15 18l-6-6 6-6"/>', {w:2.2}),
+  thumb: sv('<path d="M7 10v11H4a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h3z"/><path d="M7 10l4-8a3 3 0 0 1 3 3v4h5.5a2 2 0 0 1 2 2.3l-1.4 8A2 2 0 0 1 18.1 21H7"/>'),
+  heart: sv('<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21.2l8.8-8.8a5.5 5.5 0 0 0 0-7.8z"/>', {fill:"currentColor", w:1.5}),
+  bag: sv('<path d="M6 7h12l-1 13H7L6 7z"/><path d="M9 7a3 3 0 0 1 6 0"/>'),
+  sliders: sv('<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>'),
+  image: sv('<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/>', {w:1.6}),
+  check: sv('<path d="M5 12l5 5 9-10"/>', {w:3}),
+  ext: sv('<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>', {w:2.2}),
+  refresh: sv('<path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/>'),
+  share: sv('<path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/>'),
+  copy: sv('<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>'),
+};
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+/* ---------------- state ---------------- */
+let Q = load("query", {type:"", styles:[], text:""});
+let TASTE = load("taste", {w:{}, votes:[]});
+let PREFS = load("prefs", {budget:"any", size:"M", shoe:"43", shipIL:true});
+let PICKS = load("picks", []);
+const S = {screen:"start", prev:"start", round:{votes:[]}, current:null, picked:null, sheet:false, modal:null, toast:null, busy:false};
+
+/* ---------------- taste model ----------------
+   Every idea is a bundle of attributes (type, fit, fabric, colour, vibe,
+   styles). A vote adds -2 / +1 / +2 to each of its attributes; the next idea
+   is the unseen one whose attributes score highest, plus what you asked for
+   on the start screen. Claude will replace this once AI_MODE is on. */
+const attrsOf = (i) => [["type",i.type],["fit",i.fit],["fabric",i.fabric],["colour",i.colour],["vibe",i.vibe]].concat(i.styles.map((s) => ["style",s]));
+const akey = (a) => a[0] + ":" + a[1];
+
+function recordVote(idea, v, f, src){
+  for (const a of attrsOf(idea)){ const k = akey(a); TASTE.w[k] = (TASTE.w[k] || 0) + VAL[v] * f; }
+  const rec = {id:idea.id, title:idea.title, tint:idea.tint, v, f, src, at:Date.now()};
+  TASTE.votes.push(rec);
+  if (TASTE.votes.length > 600) TASTE.votes = TASTE.votes.slice(-600);
+  save("taste", TASTE);
+  return rec;
+}
+function undoVote(rec){
+  const i = TASTE.votes.lastIndexOf(rec);
+  if (i < 0) return false;
+  const idea = byId(rec.id);
+  if (idea) for (const a of attrsOf(idea)){
+    const k = akey(a); TASTE.w[k] = (TASTE.w[k] || 0) - VAL[rec.v] * rec.f;
+    if (Math.abs(TASTE.w[k]) < 1e-9) delete TASTE.w[k];
+  }
+  TASTE.votes.splice(i, 1);
+  save("taste", TASTE);
+  return true;
+}
+
+const STOP = new Set("the and for with that this something some over under into onto from about like want need looking look just very really also have has had are was were will would could should can lot lots bit maybe kind sort thing things wear wearing throw".split(" "));
+const NEG = new Set(["not","no","nothing","without","avoid","never","hate","dont","don't","isnt","isn't","less"]);
+function textSignals(text){
+  const toks = String(text || "").toLowerCase().replace(/[^a-z'\s-]/g, " ").split(/\s+/).filter(Boolean);
+  const pos = [], neg = []; let window = 0;
+  for (const t of toks){
+    if (NEG.has(t)){ window = 3; continue; }
+    if (t.length < 3 || STOP.has(t) || t === "too"){ if (window) window--; continue; }
+    (window > 0 ? neg : pos).push(t.replace(/s$/, ""));
+    if (window) window--;
+  }
+  return {pos, neg};
+}
+function hay(i){ return (i.title + " " + i.desc + " " + i.type + " " + i.fit + " " + i.fabric + " " + i.colour + " " + i.vibe + " " + i.styles.join(" ")).toLowerCase(); }
+function score(i, sig){
+  let s = 0;
+  for (const a of attrsOf(i)) s += (TASTE.w[akey(a)] || 0) * (a[0] === "type" ? 0.3 : 1);
+  for (const st of Q.styles) if (i.styles.includes(st)) s += 3;
+  const h = hay(i);
+  for (const w of sig.pos) if (h.includes(w)) s += 2;
+  for (const w of sig.neg) if (h.includes(w)) s -= 4;
+  return s + Math.random() * 0.8;
+}
+function nextIdea(){
+  const seen = new Set(S.round.votes.map((v) => v.id));
+  let pool = IDEAS.filter((i) => !seen.has(i.id));
+  if (Q.type && Q.type !== "Surprise me") pool = pool.filter((i) => i.type === Q.type);
+  const hated = new Set(TASTE.votes.filter((v) => v.v === "hate").map((v) => v.id));
+  const fresh = pool.filter((i) => !hated.has(i.id));
+  if (fresh.length) pool = fresh;
+  if (!pool.length) return null;
+  const sig = textSignals(Q.text);
+  const scored = pool.map((i) => [i, score(i, sig)]).sort((a, b) => b[1] - a[1]);
+  return scored[0][0];
+}
+
+function phrase(k){
+  const ix = k.indexOf(":"), kind = k.slice(0, ix), v = k.slice(ix + 1).toLowerCase();
+  if (kind === "fit") return v + " fits";
+  if (kind === "style") return v + " looks";
+  if (kind === "vibe") return v + " pieces";
+  return v;
+}
+function chipLabel(k){
+  const ix = k.indexOf(":"), kind = k.slice(0, ix), v = k.slice(ix + 1);
+  if (kind === "fit") return v + " fit";
+  if (kind === "vibe") return v + " vibe";
+  return v;
+}
+const joinAnd = (a) => a.length < 2 ? a.join("") : a.slice(0, -1).join(", ") + " and " + a[a.length - 1];
+function roundInsight(){
+  const votes = S.round.votes;
+  if (votes.length < 3) return "";
+  const w = {};
+  for (const v of votes){
+    const i = byId(v.id); if (!i) continue;
+    for (const a of attrsOf(i)){ if (a[0] === "type") continue; const k = akey(a); w[k] = (w[k] || 0) + VAL[v.v]; }
+  }
+  const ent = Object.entries(w);
+  const pos = ent.filter((e) => e[1] >= 2).sort((a, b) => b[1] - a[1]).slice(0, 2).map((e) => phrase(e[0]));
+  const neg = ent.filter((e) => e[1] <= -2).sort((a, b) => a[1] - b[1]).slice(0, 2).map((e) => phrase(e[0]));
+  const parts = [];
+  if (pos.length) parts.push("more " + joinAnd(pos));
+  if (neg.length) parts.push("less " + joinAnd(neg));
+  return parts.join("; ");
+}
+function because(i){
+  const mine = attrsOf(i).filter((a) => a[0] !== "type").map(akey);
+  for (const v of S.round.votes.slice().reverse()){
+    if (v.v === "hate") continue;
+    const o = byId(v.id); if (!o || o.id === i.id) continue;
+    const theirs = new Set(attrsOf(o).map(akey));
+    if (mine.filter((k) => theirs.has(k)).length >= 2) return (v.v === "love" ? "Because you loved: " : "Because you liked: ") + o.title;
+  }
+  return "";
+}
+function tasteLists(){
+  const ent = Object.entries(TASTE.w).filter(([k]) => !k.startsWith("type:"));
+  return {
+    pos: ent.filter((e) => e[1] >= 2).sort((a, b) => b[1] - a[1]).slice(0, 6).map((e) => e[0]),
+    neg: ent.filter((e) => e[1] <= -2).sort((a, b) => a[1] - b[1]).slice(0, 6).map((e) => e[0]),
+  };
+}
+
+/* ---------------- session (survives the phone closing the app) ---------------- */
+function saveSession(){
+  save("session", {at:Date.now(), screen:S.screen, votes:S.round.votes.map((v) => ({id:v.id, title:v.title, tint:v.tint, v:v.v, f:v.f, src:v.src, at:v.at})), current:S.current && S.current.id, picked:S.picked && S.picked.id});
+}
+function restoreSession(){
+  const s = load("session", null);
+  if (!s || Date.now() - s.at > 6 * 3600 * 1000) return;
+  S.round = {votes: s.votes || []};
+  S.current = s.current ? byId(s.current) : null;
+  S.picked = s.picked ? byId(s.picked) : null;
+  if (s.screen === "explore" && (S.current || S.round.votes.length)){
+    S.screen = "explore";
+    if (!S.current) S.current = nextIdea();
+  }
+  else if (s.screen === "shop" && S.picked) S.screen = "shop";
+}
+
+/* ---------------- screens ---------------- */
+function renderStart(){
+  return `<main class="screen roomy" aria-labelledby="start-h">
+    <header class="top"><span class="wordmark">drape</span><button type="button" class="icon-btn" data-act="profile" aria-label="Your taste profile">${ICON.person}</button></header>
+    <h1 id="start-h" class="h1">What are you looking for today?</h1>
+    <fieldset><legend class="label">Type of clothing</legend><div class="chips">${TYPES.map((t) => `<button type="button" class="chip" data-act="type" data-v="${esc(t)}" aria-pressed="${Q.type === t}">${esc(t)}</button>`).join("")}</div></fieldset>
+    <fieldset><legend class="label">Style <span class="hint">· pick any</span></legend><div class="chips">${STYLES.map((s) => { const on = Q.styles.includes(s); return `<button type="button" class="chip" data-act="style" data-v="${esc(s)}" aria-pressed="${on}">${on ? ICON.check : ""}${esc(s)}</button>`; }).join("")}</div></fieldset>
+    <div><label class="label" for="txt">In your own words <span class="hint">· optional</span></label><textarea id="txt" rows="3" placeholder="e.g. something light to throw over a tee on summer evenings, nothing too sporty">${esc(Q.text)}</textarea></div>
+    <div class="bottom sticky"><button type="button" class="cta" data-act="go">Show me ideas ${ICON.arrow}</button></div>
+  </main>`;
+}
+
+function steps(stage){
+  return `<ol class="steps" aria-label="Steps"><li class="${stage === 1 ? "on" : "done"}"${stage === 1 ? ' aria-current="step"' : ""}>${stage === 1 ? "1 · Explore ideas" : "✓ Explore ideas"}</li><li class="${stage === 2 ? "on" : ""}"${stage === 2 ? ' aria-current="step"' : ""}>2 · Shop real pieces</li></ol>`;
+}
+
+function ideaImage(i){
+  if (i.image) return `<img src="${esc(i.image)}" alt="${esc(i.title + ": " + i.desc)}">`;
+  return `<div class="ph">${ICON.image}<span class="mono-label">AI photo · coming soon</span></div>`;
+}
+
+function metaHtml(){
+  const n = S.round.votes.length;
+  return `<span class="meta">${esc(Q.type || "Anything")} · ${n} vote${n === 1 ? "" : "s"}</span>`;
+}
+function headCenter(){
+  const u = S.toast && S.toast.undo;
+  if (!u) return metaHtml();
+  return `<button type="button" class="undo-pill" data-act="undo" aria-label="Undo: ${esc(VOTE_LABEL[u.rec.v].toLowerCase() + " " + u.idea.title)}"><span>${esc(VOTE_LABEL[u.rec.v])} “${esc(u.idea.title)}”</span><b>Undo</b></button>`;
+}
+function renderExplore(){
+  const i = S.current;
+  const head = `<header class="top"><button type="button" class="icon-btn" data-act="home" aria-label="End round">${ICON.close}</button>${headCenter()}<button type="button" class="icon-btn" data-act="profile" aria-label="Your taste profile">${ICON.person}</button></header>${steps(1)}`;
+  if (!i){
+    return `<main class="screen fixed">${head}<div class="empty">
+      <h1 class="idea-title">That's every sample idea for this search</h1>
+      <p class="idea-desc">Once Claude is connected, ideas won't run out. For now, widen the search or start a new one.</p>
+      ${Q.type && Q.type !== "Surprise me" ? `<button type="button" class="cta" data-act="broaden">Show all types ${ICON.arrow}</button>` : ""}
+      <button type="button" class="link-btn" data-act="home">Back to start</button>
+    </div></main>`;
+  }
+  const insight = roundInsight();
+  const recent = S.round.votes.slice(-3).reverse();
+  const b = because(i);
+  return `<main class="screen fixed">${head}
+    ${insight ? `<div class="banner" role="status">${ICON.sliders}<p><strong>Adjusting to you:</strong> ${esc(insight)}.</p></div>` : ""}
+    ${recent.length >= 2 ? `<section class="recent-wrap" aria-labelledby="lv"><h2 id="lv" class="mono-label" style="margin:0 0 8px;font-weight:400">Your last votes</h2><ul class="recent">${recent.map((v) => `<li><span class="sw" style="background:${esc(v.tint)}" aria-hidden="true"></span><span class="tx"><span class="t">${esc(v.title)}</span><span class="v ${v.v}">${VOTE_LABEL[v.v]}</span></span></li>`).join("")}</ul></section>` : ""}
+    <article class="idea" id="card" aria-labelledby="idea-t">
+      <div class="idea-img" style="background:${esc(i.tint)}">
+        <span class="tag">${AI_MODE ? "AI preview" : "Sample idea"} · not a real product</span>
+        ${ideaImage(i)}
+        <div class="swatches" aria-hidden="true">${i.palette.map((c) => `<span style="background:${esc(c)}"></span>`).join("")}</div>
+      </div>
+      <div class="idea-body">
+        <div class="idea-head">${b ? `<span class="because">${esc(b)}</span>` : ""}<h1 id="idea-t" class="idea-title">${esc(i.title)}</h1><p class="idea-desc">${esc(i.desc)}</p></div>
+        <dl class="specs">${[["Fit",i.fit],["Fabric",i.fabric],["Colour",i.colour],["Vibe",i.vibe]].map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>
+      </div>
+    </article>
+    <section class="votes" aria-label="Vote on this idea">
+      <button type="button" class="vote hate" data-act="vote" data-v="hate">${ICON.close}Hate it</button>
+      <button type="button" class="vote like" data-act="vote" data-v="like">${ICON.thumb}Like it</button>
+      <button type="button" class="vote love" data-act="vote" data-v="love">${ICON.heart}Love it</button>
+    </section>
+    <button type="button" class="outline-btn" data-act="pick">${ICON.bag}This is it — show me where to buy</button>
+  </main>`;
+}
+
+function renderSheet(){
+  const i = S.current, shoes = i.type === "Shoes";
+  const sizes = shoes ? SHOE_SIZES : SIZES, cur = shoes ? PREFS.shoe : PREFS.size;
+  return `<div class="scrim" data-act="scrim"><section class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-t">
+    <span class="grab" aria-hidden="true"></span>
+    <div class="picked"><span class="thumb" style="background:${esc(i.tint)}">${ICON.image}</span><div style="display:flex;flex-direction:column;gap:3px;min-width:0"><span class="mono-label" style="color:var(--accent)">You picked</span><h2 id="sheet-t">${esc(i.title)}</h2><span class="sub">${esc([i.colour, i.fabric, i.fit].join(" · "))}</span></div></div>
+    <fieldset><legend class="label">Budget</legend><div class="chips">${BUDGETS.map((b) => `<button type="button" class="chip" data-act="budget" data-v="${b.id}" aria-pressed="${PREFS.budget === b.id}">${b.label}</button>`).join("")}</div></fieldset>
+    <fieldset><legend class="label">Size${shoes ? " (EU)" : ""}</legend><div class="sizes" style="grid-template-columns:repeat(${sizes.length},minmax(0,1fr))">${sizes.map((s) => `<button type="button" class="chip" data-act="size" data-v="${s}" aria-pressed="${cur === s}">${s}</button>`).join("")}</div></fieldset>
+    <label class="check"><span>Only stores that ship to Israel</span><input type="checkbox" id="shipIL"${PREFS.shipIL ? " checked" : ""}></label>
+    <div class="bottom"><button type="button" class="cta" data-act="shop">Find real pieces ${ICON.arrow}</button><button type="button" class="link-btn" data-act="sheet-close">Not yet — keep exploring</button></div>
+  </section></div>`;
+}
+
+function searchText(i){ return ("men " + i.colour + " " + i.title).replace(/\s+/g, " ").toLowerCase(); }
+function renderShop(){
+  const i = S.picked, q = searchText(i), shoes = i.type === "Shoes";
+  const b = BUDGETS.find((x) => x.id === PREFS.budget);
+  const pills = [b && b.id !== "any" ? b.label : null, "Size " + (shoes ? PREFS.shoe + " EU" : PREFS.size), PREFS.shipIL ? "Ships to Israel" : null].filter(Boolean);
+  const stores = [
+    {name:"Google Shopping", sub:"Israeli and international stores", url:"https://www.google.com/search?tbm=shop&gl=il&hl=en&q=" + encodeURIComponent(q)},
+    {name:"ASOS", sub:"International", url:"https://www.asos.com/search/?q=" + encodeURIComponent(q)},
+  ];
+  return `<main class="screen">
+    <header class="top"><button type="button" class="icon-btn" data-act="back-explore" aria-label="Back to ideas">${ICON.back}</button><span class="meta">Shopping</span><button type="button" class="icon-btn" data-act="profile" aria-label="Your taste profile">${ICON.person}</button></header>
+    ${steps(2)}
+    <div class="ctx"><span class="thumb sm" style="background:${esc(i.tint)}" aria-hidden="true">${ICON.image}</span><div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span class="mono-label">Real pieces for</span><h1>${esc(i.title)} · ${esc(i.colour)}</h1></div></div>
+    <div class="pills">${pills.map((p) => `<span class="pill">${esc(p)}</span>`).join("")}<button type="button" class="link-btn" data-act="edit-prefs" style="font-size:14px;padding:0 6px">Change</button></div>
+    <section class="card" aria-labelledby="soon-h">
+      <h2 id="soon-h">Live product search is coming next</h2>
+      <p>Real pieces with photos and prices will show here, ranked by your taste. For now, open this search in a store:</p>
+      ${stores.map((s) => `<a class="store" href="${esc(s.url)}" target="_blank" rel="noopener"><span><b>${esc(s.name)}</b><small>${esc(s.sub)}</small></span>${ICON.ext}</a>`).join("")}
+      <button type="button" class="outline-btn filled" data-act="copy-q" data-v="${esc(q)}">${ICON.copy}Copy search: “${esc(q)}”</button>
+    </section>
+    <div class="bottom sticky"><button type="button" class="outline-btn filled" data-act="more-like">${ICON.refresh}None of these — more ideas like it</button></div>
+  </main>`;
+}
+
+function ago(t){
+  const m = Math.round((Date.now() - t) / 60000);
+  if (m < 1) return "now"; if (m < 60) return m + "m"; const h = Math.round(m / 60); if (h < 24) return h + "h"; return Math.round(h / 24) + "d";
+}
+function renderProfile(){
+  const {pos, neg} = tasteLists();
+  const votes = TASTE.votes.slice(-12).reverse();
+  const picks = PICKS.slice(-6).reverse();
+  return `<main class="screen">
+    <header class="top"><button type="button" class="icon-btn" data-act="profile-back" aria-label="Back">${ICON.back}</button><span class="meta">Your taste</span><span class="spacer"></span></header>
+    <div style="display:flex;flex-direction:column;gap:6px"><h1 class="h1" style="font-size:32px">Your taste so far</h1><span class="mono-label">${TASTE.votes.length} vote${TASTE.votes.length === 1 ? "" : "s"} · ${PICKS.length} pick${PICKS.length === 1 ? "" : "s"}</span></div>
+    <section class="card" aria-label="What you like and dislike">
+      ${pos.length || neg.length ? `
+        ${pos.length ? `<div style="display:flex;flex-direction:column;gap:8px"><span class="mono-label">More of</span><div class="tchips">${pos.map((k) => `<span class="tchip plus">+ ${esc(chipLabel(k))}</span>`).join("")}</div></div>` : ""}
+        ${neg.length ? `<div style="display:flex;flex-direction:column;gap:8px"><span class="mono-label">Less of</span><div class="tchips">${neg.map((k) => `<span class="tchip minus">– ${esc(chipLabel(k))}</span>`).join("")}</div></div>` : ""}`
+      : `<p>Vote on a few ideas and this fills in.</p>`}
+    </section>
+    ${picks.length ? `<section class="card" aria-labelledby="pk"><h2 id="pk">Picked</h2><ul class="hist">${picks.map((p) => `<li><span class="sw" style="background:${esc(p.tint)}" aria-hidden="true"></span><span class="t">${esc(p.title)}</span><span class="v">${ago(p.at)}</span></li>`).join("")}</ul></section>` : ""}
+    ${votes.length ? `<section class="card" aria-labelledby="rv"><h2 id="rv">Recent votes</h2><ul class="hist">${votes.map((v) => `<li><span class="sw" style="background:${esc(v.tint)}" aria-hidden="true"></span><span class="t">${esc(v.title)}</span><span class="v ${v.v}">${VOTE_LABEL[v.v]} · ${ago(v.at)}</span></li>`).join("")}</ul></section>` : ""}
+    <div class="bottom">
+      <button type="button" class="outline-btn filled" data-act="ask">${ICON.share}Ask Claude about my style</button>
+      ${TASTE.votes.length ? `<button type="button" class="link-btn danger" data-act="reset">Reset my taste</button>` : ""}
+      <p class="small-note">Drape ${APP_VERSION} · ${AI_MODE ? "AI on" : "sample ideas"} · saved on this phone</p>
+    </div>
+  </main>`;
+}
+
+function renderModal(){
+  const m = S.modal;
+  return `<div class="scrim center" data-act="scrim"><section class="modal" role="alertdialog" aria-modal="true" aria-labelledby="m-t" aria-describedby="m-b">
+    <h2 id="m-t">${esc(m.title)}</h2><p id="m-b">${esc(m.body)}</p>
+    <div class="row"><button type="button" class="btn" data-act="modal-cancel">Cancel</button><button type="button" class="btn danger" data-act="modal-ok">${esc(m.ok)}</button></div>
+  </section></div>`;
+}
+function renderToast(){
+  const t = S.toast;
+  return `<div class="toast${t.undo ? "" : " plain"}" role="status"><span>${esc(t.text)}</span>${t.undo ? `<button type="button" data-act="undo">Undo</button>` : ""}</div>`;
+}
+
+/* ---------------- render ---------------- */
+function render(){
+  const app = document.getElementById("app");
+  let html = S.screen === "explore" ? renderExplore() : S.screen === "shop" ? renderShop() : S.screen === "profile" ? renderProfile() : renderStart();
+  if (S.sheet && S.current) html += renderSheet();
+  if (S.modal) html += renderModal();
+  if (S.toast && !S.toast.undo) html += renderToast();
+  app.innerHTML = html;
+  document.body.classList.toggle("lock", !!(S.sheet || S.modal));
+  if (S.screen === "explore") bindSwipe();
+  const f = S.focus && document.querySelector(S.focus);
+  if (f) f.focus();
+  S.focus = null;
+  saveSession();
+}
+function go(screen){
+  if (screen !== S.screen){
+    S.prev = S.screen; S.screen = screen; window.scrollTo(0, 0);
+    if (S.toast && S.toast.undo){ clearTimeout(toastTimer); S.toast = null; }
+  }
+  render();
+}
+
+// Toasts expire by patching the DOM, not re-rendering, so a card mid-swipe isn't rebuilt.
+let toastTimer = null;
+function toast(text, undo){
+  clearTimeout(toastTimer);
+  S.toast = {text, undo:undo || null};
+  toastTimer = setTimeout(() => {
+    S.toast = null;
+    const pill = document.querySelector(".undo-pill");
+    if (pill) pill.outerHTML = metaHtml();
+    const t = document.querySelector(".toast");
+    if (t) t.remove();
+  }, undo ? 4000 : 2400);
+}
+
+/* ---------------- actions ---------------- */
+function startRound(){
+  const ta = document.getElementById("txt");
+  if (ta) Q.text = ta.value.trim();
+  save("query", Q);
+  S.round = {votes:[]};
+  S.current = nextIdea();
+  go("explore");
+}
+function vote(v){
+  const i = S.current;
+  if (!i || S.busy) return;
+  S.busy = true;
+  const rec = recordVote(i, v, 1, "idea");
+  S.round.votes.push(rec);
+  const card = document.getElementById("card");
+  const done = () => {
+    S.busy = false;
+    S.current = nextIdea();
+    toast(VOTE_LABEL[v] + " “" + i.title + "”", {rec, idea:i});
+    render();
+  };
+  if (card && !matchMedia("(prefers-reduced-motion: reduce)").matches){
+    card.style.transition = "transform .22s ease, opacity .22s ease";
+    card.style.transform = v === "hate" ? "translateX(-130%) rotate(-10deg)" : v === "love" ? "translateY(-120%)" : "translateX(130%) rotate(10deg)";
+    card.style.opacity = "0";
+    setTimeout(done, 200);
+  } else done();
+}
+function undo(){
+  const t = S.toast && S.toast.undo;
+  if (!t) return;
+  undoVote(t.rec);
+  const ix = S.round.votes.lastIndexOf(t.rec);
+  if (ix >= 0) S.round.votes.splice(ix, 1);
+  S.current = t.idea;
+  clearTimeout(toastTimer);
+  S.toast = null;
+  if (S.screen !== "explore") S.screen = "explore";
+  render();
+}
+function pickCurrent(){
+  if (!S.current) return;
+  S.sheet = true;
+  S.focus = ".sheet .cta";
+  render();
+}
+function toShop(){
+  const i = S.current;
+  const cb = document.getElementById("shipIL");
+  if (cb) PREFS.shipIL = cb.checked;
+  save("prefs", PREFS);
+  if (!S.round.votes.some((v) => v.id === i.id && v.v === "love")){
+    const rec = recordVote(i, "love", 1, "pick");
+    S.round.votes.push(rec);
+  }
+  const last = PICKS[PICKS.length - 1];
+  if (!last || last.id !== i.id){
+    PICKS.push({id:i.id, title:i.title, tint:i.tint, at:Date.now()});
+    if (PICKS.length > 100) PICKS = PICKS.slice(-100);
+    save("picks", PICKS);
+  }
+  S.picked = i;
+  S.sheet = false;
+  go("shop");
+}
+function moreLike(){
+  const i = S.picked;
+  if (i){ Q.type = i.type; save("query", Q); }
+  S.current = nextIdea();
+  if (!S.current && Q.type !== "Surprise me"){ Q.type = "Surprise me"; save("query", Q); S.current = nextIdea(); }
+  go("explore");
+}
+async function copyText(text, msg){
+  try{ await navigator.clipboard.writeText(text); toast(msg || "Copied"); }
+  catch(e){ toast("Couldn't copy on this device"); }
+  render();
+}
+function styleSummary(){
+  const {pos, neg} = tasteLists();
+  const list = (v) => TASTE.votes.filter((x) => x.v === v).slice(-10).map((x) => x.title);
+  const lines = ["My clothing taste (menswear), from my Drape app:"];
+  if (Q.type || Q.styles.length || Q.text) lines.push("Currently looking for: " + [Q.type, Q.styles.join(", "), Q.text].filter(Boolean).join(" — "));
+  if (pos.length) lines.push("More of: " + pos.map(chipLabel).join(", "));
+  if (neg.length) lines.push("Less of: " + neg.map(chipLabel).join(", "));
+  if (list("love").length) lines.push("Loved: " + list("love").join("; "));
+  if (list("like").length) lines.push("Liked: " + list("like").join("; "));
+  if (list("hate").length) lines.push("Hated: " + list("hate").join("; "));
+  if (PICKS.length) lines.push("Picked to buy: " + PICKS.slice(-10).map((p) => p.title).join("; "));
+  lines.push("", "My question: ");
+  return lines.join("\n");
+}
+async function askClaude(){
+  const text = styleSummary();
+  if (navigator.share){
+    try{ await navigator.share({title:"My style profile", text}); return; }
+    catch(e){ if (e && e.name === "AbortError") return; }
+  }
+  copyText(text, "Copied — paste it into Claude");
+}
+
+const ACTIONS = {
+  profile(){ go("profile"); },
+  "profile-back"(){ go(S.prev && S.prev !== "profile" ? S.prev : "start"); },
+  home(){ S.sheet = false; go("start"); },
+  type(el){ const v = el.dataset.v; Q.type = Q.type === v ? "" : v; save("query", Q); render(); },
+  style(el){ const v = el.dataset.v; Q.styles = Q.styles.includes(v) ? Q.styles.filter((s) => s !== v) : Q.styles.concat(v); save("query", Q); render(); },
+  go(){ startRound(); },
+  vote(el){ vote(el.dataset.v); },
+  undo(){ undo(); },
+  pick(){ pickCurrent(); },
+  broaden(){ Q.type = "Surprise me"; save("query", Q); S.current = nextIdea(); render(); },
+  scrim(el, e){ if (e.target !== el) return; if (S.modal){ S.modal = null; } else S.sheet = false; render(); },
+  "sheet-close"(){ S.sheet = false; render(); },
+  budget(el){ PREFS.budget = el.dataset.v; save("prefs", PREFS); render(); },
+  size(el){ if (S.current && S.current.type === "Shoes") PREFS.shoe = el.dataset.v; else PREFS.size = el.dataset.v; save("prefs", PREFS); render(); },
+  shop(){ toShop(); },
+  "back-explore"(){ S.current = S.picked || S.current; go("explore"); },
+  "edit-prefs"(){ S.current = S.picked; S.sheet = true; S.screen = "explore"; render(); },
+  "copy-q"(el){ copyText(el.dataset.v, "Search copied"); },
+  "more-like"(){ moreLike(); },
+  ask(){ askClaude(); },
+  reset(){ S.modal = {title:"Reset your taste?", body:"This clears every vote and pick on this phone. Ideas start from scratch.", ok:"Reset", run(){ TASTE = {w:{}, votes:[]}; PICKS = []; save("taste", TASTE); save("picks", PICKS); S.round = {votes:[]}; toast("Taste reset"); }}; S.focus = ".modal .btn"; render(); },
+  "modal-cancel"(){ S.modal = null; render(); },
+  "modal-ok"(){ const m = S.modal; S.modal = null; if (m && m.run) m.run(); render(); },
+};
+
+document.addEventListener("click", (e) => {
+  const el = e.target.closest("[data-act]");
+  if (!el) return;
+  const fn = ACTIONS[el.dataset.act];
+  if (fn) fn(el, e);
+});
+document.addEventListener("input", (e) => {
+  if (e.target.id === "txt"){ Q.text = e.target.value; save("query", Q); }
+});
+document.addEventListener("change", (e) => {
+  if (e.target.id === "shipIL"){ PREFS.shipIL = e.target.checked; save("prefs", PREFS); }
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+  if (S.modal){ S.modal = null; render(); }
+  else if (S.sheet){ S.sheet = false; render(); }
+});
+
+/* ---------------- swipe: ← hate, → like, ↑ love ---------------- */
+function bindSwipe(){
+  const card = document.getElementById("card");
+  if (!card) return;
+  let x0 = null, y0 = 0, dx = 0, dy = 0, pid = null;
+  card.addEventListener("pointerdown", (e) => {
+    if (S.busy) return;
+    x0 = e.clientX; y0 = e.clientY; dx = dy = 0; pid = e.pointerId;
+    try{ card.setPointerCapture(pid); }catch(err){}
+    card.style.transition = "none";
+  });
+  card.addEventListener("pointermove", (e) => {
+    if (x0 === null || e.pointerId !== pid) return;
+    dx = e.clientX - x0; dy = e.clientY - y0;
+    card.style.transform = `translate(${dx}px, ${Math.min(0, dy)}px) rotate(${dx / 22}deg)`;
+  });
+  const end = () => {
+    if (x0 === null) return;
+    x0 = null;
+    if (dx < -90) vote("hate");
+    else if (dx > 90) vote("like");
+    else if (dy < -110 && Math.abs(dx) < 70) vote("love");
+    else { card.style.transition = "transform .18s ease"; card.style.transform = ""; }
+  };
+  card.addEventListener("pointerup", end);
+  card.addEventListener("pointercancel", end);
+}
+
+/* ---------------- boot ---------------- */
+restoreSession();
+render();
+if ("serviceWorker" in navigator && location.protocol === "https:"){
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+</script>
+</body>
+</html>
