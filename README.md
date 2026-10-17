@@ -19,6 +19,7 @@ Completely free: no API keys and no credit card.
   - Either way, a local taste model re-orders what's waiting after every vote.
 - **Pick**: "This is it" asks for budget, size and shipping to Israel.
 - **Shop**: opens the idea's search in Google Shopping (Israel, with your budget), Zara Israel and ASOS, or copies the search.
+- **Send to Claude** (the sparkle button in the top bar of every screen): one tap shares a screenshot of the current screen plus a data file (app version, what's on screen, this round's votes, your taste, AI status and errors) to a Claude chat, like in Gym Bro and Skin Ritual. The access code is never included.
 - **Taste profile**: what you like and dislike, recent votes and picks, and the AI connection. "Ask Claude about my style" shares a summary to the Claude app.
 
 Everything you do is saved on the phone (`localStorage`, keys prefixed `clothes:`).

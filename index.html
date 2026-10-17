@@ -153,6 +153,11 @@ textarea::placeholder{color:#686E79}
 .btn{min-height:44px;border-radius:22px;padding:0 18px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-weight:700}
 .btn.danger{background:var(--danger);border-color:var(--danger);color:#fff}
 .small-note{font-size:13px;color:var(--muted);text-align:center;margin:0}
+.hbtns{display:flex;gap:8px;flex:none}
+.ask-btn{color:var(--accent);border-color:var(--accent)}
+.ask-btn.ready{width:auto;padding:0 16px;font-size:14px;font-weight:700;background:var(--accent);color:#fff}
+.ask-msg{position:fixed;left:50%;transform:translateX(-50%);top:calc(64px + var(--safe-t));z-index:70;background:var(--ink);color:#fff;font-size:14px;padding:10px 16px;border-radius:14px;max-width:calc(100% - 32px);text-align:center;display:none;box-shadow:0 4px 16px rgba(0,0,0,.18)}
+.ask-msg.show{display:block}
 .small-note .link-btn{min-height:0;padding:0;font-size:13px;color:var(--muted)}
 /* AI photos, loading states, products */
 .idea-img img{opacity:0;transition:opacity .3s ease}
@@ -184,6 +189,7 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
 </head>
 <body>
 <div id="app"></div>
+<div id="askMsg" class="ask-msg" role="status" data-report-ui="1"></div>
 <noscript><p style="padding:24px">Drape needs JavaScript to run.</p></noscript>
 <script>
 "use strict";
@@ -192,7 +198,7 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "0.3.1";
+const APP_VERSION = "0.4.0";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
 
 /* ---------------- storage (on this phone only) ---------------- */
@@ -556,7 +562,7 @@ function restoreSession(){
 /* ---------------- screens ---------------- */
 function renderStart(){
   return `<main class="screen roomy" aria-labelledby="start-h">
-    <header class="top"><span class="wordmark">drape</span><button type="button" class="icon-btn" data-act="profile" aria-label="Your taste profile">${ICON.person}</button></header>
+    <header class="top"><span class="wordmark">drape</span>${hbtns(true)}</header>
     <h1 id="start-h" class="h1">What are you looking for today?</h1>
     <fieldset><legend class="label">Type of clothing</legend><div class="chips">${TYPES.map((t) => `<button type="button" class="chip" data-act="type" data-v="${esc(t)}" aria-pressed="${Q.type === t}">${esc(t)}</button>`).join("")}</div></fieldset>
     <fieldset><legend class="label">Style <span class="hint">· pick any</span></legend><div class="chips">${STYLES.map((s) => { const on = Q.styles.includes(s); return `<button type="button" class="chip" data-act="style" data-v="${esc(s)}" aria-pressed="${on}">${on ? ICON.check : ""}${esc(s)}</button>`; }).join("")}</div></fieldset>
@@ -587,7 +593,7 @@ function headCenter(){
 }
 function renderExplore(){
   const i = S.current;
-  const head = `<header class="top"><button type="button" class="icon-btn" data-act="home" aria-label="End round">${ICON.close}</button>${headCenter()}<button type="button" class="icon-btn" data-act="profile" aria-label="Your taste profile">${ICON.person}</button></header>${steps(1)}`;
+  const head = `<header class="top"><button type="button" class="icon-btn" data-act="home" aria-label="End round">${ICON.close}</button>${headCenter()}${hbtns(true)}</header>${steps(1)}`;
   if (!i && aiRound() && (S.fetching || !S.aiErr)){
     return `<main class="screen fixed">${head}
       <article class="idea" aria-busy="true" aria-labelledby="wait-t">
@@ -672,7 +678,7 @@ function renderShop(){
   const b = BUDGETS.find((x) => x.id === PREFS.budget);
   const pills = [b && b.id !== "any" ? b.label : null, "Size " + (shoes ? PREFS.shoe + " EU" : PREFS.size), PREFS.shipIL ? "Ships to Israel" : null].filter(Boolean);
   return `<main class="screen">
-    <header class="top"><button type="button" class="icon-btn" data-act="back-explore" aria-label="Back to ideas">${ICON.back}</button><span class="meta">Shopping</span><button type="button" class="icon-btn" data-act="profile" aria-label="Your taste profile">${ICON.person}</button></header>
+    <header class="top"><button type="button" class="icon-btn" data-act="back-explore" aria-label="Back to ideas">${ICON.back}</button><span class="meta">Shopping</span>${hbtns(true)}</header>
     ${steps(2)}
     <div class="ctx"><span class="thumb sm" style="background:${esc(i.tint)}" aria-hidden="true">${ICON.image}${thumbImg(i.id)}</span><div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span class="mono-label">Real pieces for</span><h1>${esc(i.title)} · ${esc(i.colour)}</h1></div></div>
     <div class="pills">${pills.map((p) => `<span class="pill">${esc(p)}</span>`).join("")}<button type="button" class="link-btn" data-act="edit-prefs" style="font-size:14px;padding:0 6px">Change</button></div>
@@ -694,7 +700,7 @@ function renderProfile(){
   const votes = TASTE.votes.slice(-12).reverse();
   const picks = PICKS.slice(-6).reverse();
   return `<main class="screen">
-    <header class="top"><button type="button" class="icon-btn" data-act="profile-back" aria-label="Back">${ICON.back}</button><span class="meta">Your taste</span><span class="spacer"></span></header>
+    <header class="top"><button type="button" class="icon-btn" data-act="profile-back" aria-label="Back">${ICON.back}</button><span class="meta">Your taste</span>${hbtns(false)}</header>
     <div style="display:flex;flex-direction:column;gap:6px"><h1 class="h1" style="font-size:32px">Your taste so far</h1><span class="mono-label">${TASTE.votes.length} vote${TASTE.votes.length === 1 ? "" : "s"} · ${PICKS.length} pick${PICKS.length === 1 ? "" : "s"}</span></div>
     <section class="card" aria-label="What you like and dislike">
       ${pos.length || neg.length ? `
@@ -912,6 +918,7 @@ const ACTIONS = {
   "copy-q"(el){ copyText(el.dataset.v, "Search copied"); },
   "more-like"(){ moreLike(); },
   ask(){ askClaude(); },
+  "ask-report"(){ askTap(); },
   reset(){ S.modal = {title:"Reset your taste?", body:"This clears every vote and pick on this phone. Ideas start from scratch.", ok:"Reset", run(){ TASTE = {w:{}, votes:[]}; PICKS = []; save("taste", TASTE); save("picks", PICKS); S.round = {votes:[]}; toast("Taste reset"); }}; S.focus = ".modal .btn"; render(); },
   "ai-connect"(){ connectAI(); },
   "ai-off"(){ AI.on = false; save("ai", AI); S.queue = []; S.gen++; S.fetching = null; toast("AI turned off — using sample ideas"); render(); },
@@ -965,6 +972,139 @@ function bindSwipe(){
   };
   card.addEventListener("pointerup", end);
   card.addEventListener("pointercancel", end);
+}
+
+/* ---------------- Send to Claude (same pattern as Gym Bro / Skin Ritual) ----------------
+   One tap captures the visible screen as a PNG plus a readable data file and
+   opens the share sheet, so both go straight into a Claude chat; pick Claude
+   and type your message there. A failed capture never blocks the report (the
+   data still goes). No share sheet = the data is copied to the clipboard. */
+const ASK_ICON = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M10 2.5l1.9 5.6 5.6 1.9-5.6 1.9L10 17.5l-1.9-5.6L2.5 10l5.6-1.9z"/><path d="M18.5 13.5l.95 2.55 2.55.95-2.55.95-.95 2.55-.95-2.55-2.55-.95 2.55-.95z"/></svg>';
+let askState = "idle", askPending = null, askMsgT = null, askBusySince = 0;
+function askBtn(){
+  const label = askState === "working" ? "…" : askState === "ready" ? "Send" : ASK_ICON;
+  return `<button type="button" id="askFab" class="icon-btn ask-btn${askState === "ready" ? " ready" : ""}" data-act="ask-report" data-report-ui="1" aria-label="${askState === "ready" ? "Tap again to send" : "Send this screen to Claude"}">${label}</button>`;
+}
+function hbtns(withProfile){
+  return `<span class="hbtns">${askBtn()}${withProfile ? `<button type="button" class="icon-btn" data-act="profile" aria-label="Your taste profile">${ICON.person}</button>` : ""}</span>`;
+}
+function askSetState(st){
+  askState = st;
+  const b = document.getElementById("askFab"); if (!b) return;
+  b.classList.toggle("ready", st === "ready");
+  b.innerHTML = st === "working" ? "…" : st === "ready" ? "Send" : ASK_ICON;
+  b.setAttribute("aria-label", st === "ready" ? "Tap again to send" : "Send this screen to Claude");
+}
+function askSetMsg(t){
+  const m = document.getElementById("askMsg"); if (!m) return;
+  m.textContent = t; m.classList.toggle("show", !!t);
+  clearTimeout(askMsgT); if (t) askMsgT = setTimeout(() => askSetMsg(""), 4500);
+}
+
+const ASK_CAPTURE_LIB = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+let askLibP = null;
+function askLoadLib(){
+  if (window.html2canvas) return Promise.resolve(window.html2canvas);
+  if (!askLibP) askLibP = new Promise((res, rej) => {
+    const el = document.createElement("script"); el.src = ASK_CAPTURE_LIB; el.async = true;
+    el.onload = () => window.html2canvas ? res(window.html2canvas) : rej(new Error("capture library missing"));
+    el.onerror = () => { askLibP = null; rej(new Error("capture library failed to load")); };
+    document.head.appendChild(el);
+  });
+  return askLibP;
+}
+// Preload so the tap is fast: iOS stops treating a slow tap as a tap by the time share() runs.
+setTimeout(() => { askLoadLib().catch(() => {}); }, 2500);
+
+const askStamp = (d = new Date()) => { const z = (n) => String(n).padStart(2, "0"); return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}-${z(d.getHours())}${z(d.getMinutes())}`; };
+async function askCapture(){
+  const h2c = await askLoadLib();
+  const bg = getComputedStyle(document.body).backgroundColor || "#EEF0F3";
+  const canvas = await h2c(document.body, {x:window.scrollX, y:window.scrollY, width:window.innerWidth, height:window.innerHeight,
+    windowWidth:document.documentElement.clientWidth, scale:Math.min(2, window.devicePixelRatio || 1), backgroundColor:bg, logging:false, useCORS:true,
+    ignoreElements:(el) => !!(el && el.getAttribute && el.getAttribute("data-report-ui") === "1")});
+  return new Promise((res, rej) => canvas.toBlob((b) => b ? res(b) : rej(new Error("empty capture")), "image/png"));
+}
+
+// The readable half of the report: what the app is doing and why, which a screenshot can't show.
+function askSnapshot(){
+  const L = [];
+  const row = (i) => i ? `${i.title} [${i.type}; ${i.colour}, ${i.fabric}, ${i.fit}, ${i.vibe}; ${(i.styles || []).join("/")}]${isAI(i) ? " (AI)" : " (sample)"}` : "none";
+  L.push(`app: ${APP_VERSION}   when: ${new Date().toISOString()}`);
+  L.push(`screen: ${S.screen}${S.sheet ? " + pick sheet" : ""}${S.modal ? " + dialog" : ""}`);
+  L.push(`ua: ${navigator.userAgent}`);
+  L.push(`ai: ${aiOn() ? "on" : "off"}${S.sampleRound ? " (this round uses sample ideas)" : ""}   server: ${AI.url || DEFAULT_WORKER}   health: ${JSON.stringify(AI.health || null)}`);
+  L.push(`ai request: ${S.fetching ? "in flight" : "idle"}   last error: ${S.aiErr || "none"}   waiting ideas: ${S.queue.length}`);
+  L.push(`\nSEARCH: type=${Q.type || "-"}  styles=${(Q.styles || []).join(", ") || "-"}  text="${Q.text || ""}"`);
+  L.push(`PREFS: ${JSON.stringify(PREFS)}`);
+  L.push(`\nON SCREEN: ${row(S.current)}`);
+  if (S.current) L.push(`  why: "${S.current.why || ""}"   search: "${S.current.search || ""}"`);
+  if (S.current && S.current.image_prompt) L.push(`  photo prompt: ${S.current.image_prompt}`);
+  if (S.picked) L.push(`PICKED: ${row(S.picked)}`);
+  if (S.queue.length) L.push(`NEXT UP: ${S.queue.slice(0, 5).map((i) => i.title).join("; ")}`);
+  L.push(`\nTHIS ROUND (${S.round.votes.length} votes, oldest first):`);
+  S.round.votes.slice(-25).forEach((v) => L.push(`  ${v.v.toUpperCase().padEnd(5)} ${v.title}`));
+  if (S.aiInsight) L.push(`AI insight: ${S.aiInsight}`);
+  const {pos, neg} = tasteLists();
+  L.push(`\nTASTE: more of: ${pos.map(chipLabel).join(", ") || "-"}   less of: ${neg.map(chipLabel).join(", ") || "-"}`);
+  L.push(`PICKS: ${PICKS.slice(-8).map((x) => x.title).join("; ") || "-"}`);
+  return L.join("\n");
+}
+// The full data (the access code is left out on purpose).
+function askData(meta){
+  let snap; try{ snap = askSnapshot(); }catch(e){ snap = "(snapshot failed: " + (e && e.message || e) + ")"; }
+  const full = {query:Q, prefs:PREFS, taste:TASTE, picks:PICKS, round:S.round, current:S.current, queue:S.queue, ai:{url:AI.url, on:AI.on, health:AI.health}};
+  return `DRAPE REPORT\n\n${snap}\n\nMETA: ${JSON.stringify(meta)}\n\n--- FULL DATA ---\n${JSON.stringify(full)}`;
+}
+async function askFiles(){
+  const stamp = askStamp(), files = [];
+  const meta = {screen:S.screen, viewport:{w:window.innerWidth, h:window.innerHeight, scrollY:Math.round(window.scrollY)}};
+  try{
+    const png = await Promise.race([askCapture(), new Promise((_, rej) => setTimeout(() => rej(new Error("screen capture timed out")), 6000))]);
+    files.push(new File([png], `drape-screen-${stamp}.png`, {type:"image/png"}));
+  }catch(e){ meta.captureError = String(e && e.message || e); }
+  files.push(new File([askData(meta)], `drape-data-${stamp}.txt`, {type:"text/plain"}));
+  return files;
+}
+// "shared" | "shared-data-only" | "cancelled" | "needs-tap" | "unsupported" | "failed"
+async function askShare(files){
+  const nav = navigator;
+  if (!nav || typeof nav.share !== "function" || !files.length) return "unsupported";
+  const can = (l) => typeof nav.canShare !== "function" || !!nav.canShare({files:l});
+  let list = files;
+  if (!can(list)){ list = files.filter((f) => f.type === "text/plain"); if (!list.length || !can(list)) return "unsupported"; }
+  try{ await nav.share({files:list, title:"Drape report"}); return list.length === files.length ? "shared" : "shared-data-only"; }
+  catch(e){ const n = e && e.name; if (n === "AbortError") return "cancelled"; if (n === "NotAllowedError") return "needs-tap"; return "failed"; }
+}
+async function askHandle(result, files){
+  if (result === "needs-tap"){ askPending = files; askSetState("ready"); return; }
+  askPending = null; askSetState("idle");
+  if (result === "shared-data-only") askSetMsg("Sent the data. The screen image isn't supported here.");
+  if (result === "unsupported" || result === "failed"){
+    try{ const tf = files && files.find((f) => f.type === "text/plain"); await navigator.clipboard.writeText(await tf.text()); askSetMsg("Copied. Paste it into a Claude chat."); }
+    catch(e){ askSetMsg("Couldn't share or copy the report on this device"); }
+  }
+}
+// The button must never stay stuck on "…": the capture is time-boxed, every step is guarded,
+// and a tap on a button that has been busy too long resets it.
+async function askTap(){
+  if (askState === "working"){
+    if (Date.now() - askBusySince < 15000) return;
+    askSetState("idle"); askPending = null;
+  }
+  askBusySince = Date.now();
+  let files = null;
+  try{
+    if (askState === "ready" && askPending){ files = askPending; askSetState("working"); }
+    else { askSetState("working"); files = await askFiles(); }
+    await askHandle(await askShare(files), files);
+  }catch(e){
+    askPending = null; askSetState("idle");
+    if (files) await askHandle("failed", files);
+    else askSetMsg("Couldn't build the report: " + (e && e.message || e));
+  }finally{
+    if (askState === "working") askSetState("idle");
+  }
 }
 
 /* ---------------- boot ---------------- */
