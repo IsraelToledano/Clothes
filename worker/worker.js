@@ -239,12 +239,16 @@ async function image(env, prompt, seed, origin) {
   if (!prompt) throw new HttpError(400, "Missing prompt");
   const s = Math.abs(parseInt(seed, 10) || 0) % 2147483647;
   const out = await runAI(env, IMAGE_MODEL, { prompt: prompt + " " + IMAGE_STYLE, steps: 4, seed: s });
-  const b64 = out && out.image;
-  if (!b64) throw new HttpError(502, "The image model returned nothing");
+  const headers = { "Content-Type": "image/jpeg", "Cache-Control": "public, max-age=31536000, immutable", ...cors(origin) };
+  // Models have returned a base64 string, raw bytes or a stream; accept all of them.
+  if (out instanceof ReadableStream) return new Response(out, { headers });
+  if (out instanceof ArrayBuffer || ArrayBuffer.isView(out)) return new Response(out, { headers });
+  let b64 = out && (out.image || out.result || (typeof out === "string" ? out : ""));
+  if (b64 && typeof b64 === "object" && b64.image) b64 = b64.image;
+  if (typeof b64 !== "string" || !b64) throw new HttpError(502, "The image model returned nothing usable (" + Object.keys(out || {}).join(",") + ")");
+  b64 = b64.replace(/^data:image\/\w+;base64,/, "");
   const bin = atob(b64);
   const bytes = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  return new Response(bytes, {
-    headers: { "Content-Type": "image/jpeg", "Cache-Control": "public, max-age=31536000, immutable", ...cors(origin) },
-  });
+  return new Response(bytes, { headers });
 }
