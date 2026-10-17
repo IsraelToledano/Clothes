@@ -135,6 +135,14 @@ textarea::placeholder{color:#686E79}
 .store b{display:block;font-size:16px}
 .store small{display:block;font-size:13px;color:var(--muted);margin-top:2px}
 .store svg{width:18px;height:18px;flex:none}
+.store-group{display:flex;flex-direction:column;gap:8px}
+.store-group h3{margin:4px 0 0;font-weight:400}
+.stores{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.store.sm{min-height:58px;padding:8px 10px 8px 14px;gap:6px;border-radius:14px}
+.store.sm span{min-width:0}
+.store.sm b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.store.sm small{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.store.sm svg{width:15px;height:15px}
 .tchips{display:flex;flex-wrap:wrap;gap:6px}
 .tchip{font-size:14px;padding:6px 12px;border-radius:999px}
 .tchip.plus{border:1.5px solid var(--ink);font-weight:500}
@@ -198,7 +206,7 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "0.4.1";
+const APP_VERSION = "0.5.0";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
 
 /* ---------------- storage (on this phone only) ---------------- */
@@ -677,16 +685,64 @@ function renderSheet(){
 }
 
 function searchText(i){ return (i.search || ("men " + i.colour + " " + i.title)).replace(/\s+/g, " ").toLowerCase(); }
+// Where to look for a picked idea. Stores with a well-known search link get it directly;
+// the rest open a Google search limited to that store's site, which keeps working even
+// when a store changes its own search page.
+const STORE_GROUPS = [
+  {id:"everywhere", label:"Search everywhere", stores:[
+    {name:"Google Israel", sub:"Shopping", kind:"gshop-il"},
+    {name:"Google Worldwide", sub:"Shopping", kind:"gshop-world"},
+    {name:"Lyst", sub:"Hundreds of stores", site:"lyst.com"},
+  ]},
+  {id:"il", label:"Israel", stores:[
+    {name:"Zara", sub:"Israel · men", url:(q, bare) => "https://www.zara.com/il/en/search?section=MAN&searchTerm=" + encodeURIComponent(bare)},
+    {name:"Terminal X", sub:"Israel", site:"terminalx.com"},
+    {name:"Factory 54", sub:"Israel · designer", site:"factory54.co.il", premium:true},
+    {name:"Massimo Dutti", sub:"Israel", site:"massimodutti.com/il"},
+  ]},
+  {id:"intl", label:"International · ships to Israel", stores:[
+    {name:"ASOS", sub:"Wide range", url:(q) => "https://www.asos.com/search/?q=" + encodeURIComponent(q)},
+    {name:"Amazon", sub:"Amazon Global", url:(q) => "https://www.amazon.com/s?k=" + encodeURIComponent(q)},
+    {name:"END.", sub:"Menswear", site:"endclothing.com", bare:true},
+    {name:"Mr Porter", sub:"Menswear · premium", site:"mrporter.com", bare:true, premium:true},
+    {name:"Farfetch", sub:"Designer · premium", site:"farfetch.com", premium:true},
+  ]},
+  {id:"brands", label:"Brands", stores:[
+    {name:"Ralph Lauren", sub:"Classic American", site:"ralphlauren.com", bare:true},
+    {name:"J.Crew", sub:"Classic American", site:"jcrew.com", bare:true},
+  ]},
+  {id:"budget", label:"Budget", stores:[
+    {name:"Shein", sub:"Low prices", site:"shein.com"},
+    {name:"AliExpress", sub:"Low prices", url:(q) => "https://www.aliexpress.com/wholesale?SearchText=" + encodeURIComponent(q)},
+    {name:"eBay", sub:"New and second-hand", url:(q) => "https://www.ebay.com/sch/i.html?_nkw=" + encodeURIComponent(q)},
+  ]},
+  {id:"inspo", label:"See it styled", stores:[
+    {name:"GQ", sub:"How to wear it", site:"gq.com", bare:true},
+    {name:"Vogue", sub:"Menswear stories", site:"vogue.com", q:(bare) => "men's " + bare},
+    {name:"Pinterest", sub:"Outfit ideas", url:(q) => "https://www.pinterest.com/search/pins/?q=" + encodeURIComponent(q + " outfit")},
+    {name:"Google Images", sub:"Looks", url:(q) => "https://www.google.com/search?tbm=isch&q=" + encodeURIComponent(q + " outfit")},
+  ]},
+];
+// Put the groups that fit the budget first.
+const GROUP_ORDER = {"u200":["everywhere","budget","il","intl","brands","inspo"], "400+":["everywhere","intl","brands","il","budget","inspo"]};
+function storeUrl(st, q, bare, budget){
+  if (st.kind === "gshop-il"){
+    const r = {"u200":[0,200], "200-400":[200,400], "400+":[400,0]}[budget];
+    const price = r ? "&tbs=" + encodeURIComponent("mr:1,price:1" + (r[0] ? ",ppr_min:" + r[0] : "") + (r[1] ? ",ppr_max:" + r[1] : "")) : "";
+    return "https://www.google.com/search?tbm=shop&gl=il&hl=en&q=" + encodeURIComponent(q) + price;
+  }
+  if (st.kind === "gshop-world") return "https://www.google.com/search?tbm=shop&gl=us&hl=en&q=" + encodeURIComponent(q);
+  if (st.url) return st.url(q, bare);
+  return "https://www.google.com/search?q=" + encodeURIComponent("site:" + st.site + " " + (st.q ? st.q(bare) : st.bare ? bare : q));
+}
 function storeLinks(q, budget){
-  // Google Shopping can take a price range; the other stores just get the search.
-  const r = {"u200":[0,200], "200-400":[200,400], "400+":[400,0]}[budget];
-  const price = r ? "&tbs=" + encodeURIComponent("mr:1,price:1" + (r[0] ? ",ppr_min:" + r[0] : "") + (r[1] ? ",ppr_max:" + r[1] : "")) : "";
-  const stores = [
-    {name:"Google Shopping", sub:"Israeli and international stores" + (r ? " · your budget" : ""), url:"https://www.google.com/search?tbm=shop&gl=il&hl=en&q=" + encodeURIComponent(q) + price},
-    {name:"Zara", sub:"Israel · men", url:"https://www.zara.com/il/en/search?section=MAN&searchTerm=" + encodeURIComponent(q.replace(/^men('?s)?\s+/i, ""))},
-    {name:"ASOS", sub:"International · ships to Israel", url:"https://www.asos.com/search/?q=" + encodeURIComponent(q)},
-  ];
-  return stores.map((s) => `<a class="store" href="${esc(s.url)}" target="_blank" rel="noopener"><span><b>${esc(s.name)}</b><small>${esc(s.sub)}</small></span>${ICON.ext}</a>`).join("")
+  const bare = q.replace(/^men('?s)?\s+/i, "");
+  const order = GROUP_ORDER[budget] || ["everywhere","il","intl","brands","budget","inspo"];
+  return order.map((id) => STORE_GROUPS.find((g) => g.id === id)).map((g) => `
+    <div class="store-group"><h3 class="mono-label">${esc(g.label)}</h3><div class="stores">${g.stores.map((st) => {
+      const sub = st.kind === "gshop-il" && budget && budget !== "any" ? "Shopping · your budget" : st.sub;
+      return `<a class="store sm" href="${esc(storeUrl(st, q, bare, budget))}" target="_blank" rel="noopener"><span><b>${esc(st.name)}</b><small>${esc(sub)}</small></span>${ICON.ext}</a>`;
+    }).join("")}</div></div>`).join("")
     + `<button type="button" class="outline-btn filled" data-act="copy-q" data-v="${esc(q)}">${ICON.copy}Copy search: “${esc(q)}”</button>`;
 }
 function renderShop(){
@@ -700,7 +756,7 @@ function renderShop(){
     <div class="pills">${pills.map((p) => `<span class="pill">${esc(p)}</span>`).join("")}<button type="button" class="link-btn" data-act="edit-prefs" style="font-size:14px;padding:0 6px">Change</button></div>
     <section class="card" aria-labelledby="soon-h">
       <h2 id="soon-h">Find it in a store</h2>
-      <p>Each link opens a search for this idea, for men.</p>
+      <p>Each link opens a search for this idea, for men. Stores without their own search link open a Google search of that store.</p>
       ${storeLinks(q, PREFS.budget)}
     </section>
     <div class="bottom sticky"><button type="button" class="outline-btn filled" data-act="more-like">${ICON.refresh}None of these — more ideas like it</button></div>
