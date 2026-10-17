@@ -51,3 +51,5 @@ Workers AI gives 10,000 free "neurons" a day, shared by ideas and photos. That's
 - `worker/worker.js`, `wrangler.toml`: the AI server
 
 When you change `index.html`, bump `CACHE` in `sw.js` and `APP_VERSION` in `index.html` so phones load the new version.
+
+On the phone, tap the version badge next to the logo (or **Update app** in the taste profile) to load the latest version. It keeps your search, votes and the round in progress, then says whether it updated.

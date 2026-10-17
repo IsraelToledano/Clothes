@@ -162,6 +162,9 @@ textarea::placeholder{color:#686E79}
 .btn.danger{background:var(--danger);border-color:var(--danger);color:#fff}
 .small-note{font-size:13px;color:var(--muted);text-align:center;margin:0}
 .hbtns{display:flex;gap:8px;flex:none}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.ver{height:30px;border-radius:15px;border:1px solid var(--line);background:var(--card);color:var(--muted);font-family:var(--mono);font-size:12px;padding:0 10px;display:inline-flex;align-items:center;gap:6px;flex:none}
+.ver svg{width:13px;height:13px}
 .ask-btn{color:var(--accent);border-color:var(--accent)}
 .ask-btn.ready{width:auto;padding:0 16px;font-size:14px;font-weight:700;background:var(--accent);color:#fff}
 .ask-msg{position:fixed;left:50%;transform:translateX(-50%);top:calc(64px + var(--safe-t));z-index:70;background:var(--ink);color:#fff;font-size:14px;padding:10px 16px;border-radius:14px;max-width:calc(100% - 32px);text-align:center;display:none;box-shadow:0 4px 16px rgba(0,0,0,.18)}
@@ -206,7 +209,7 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "0.5.0";
+const APP_VERSION = "0.6.0";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
 
 /* ---------------- storage (on this phone only) ---------------- */
@@ -565,7 +568,7 @@ async function connectAI(){
 
 /* ---------------- session (survives the phone closing the app) ---------------- */
 function saveSession(){
-  save("session", {at:Date.now(), screen:S.screen, votes:S.round.votes.map((v) => ({id:v.id, title:v.title, tint:v.tint, v:v.v, f:v.f, src:v.src, at:v.at})), current:S.current && S.current.id, picked:S.picked && S.picked.id, queue:(S.nextUp ? [S.nextUp] : []).concat(S.queue).map((i) => i.id), insight:S.aiInsight, sampleRound:S.sampleRound});
+  save("session", {at:Date.now(), screen:S.screen === "profile" ? S.prev : S.screen, votes:S.round.votes.map((v) => ({id:v.id, title:v.title, tint:v.tint, v:v.v, f:v.f, src:v.src, at:v.at})), current:S.current && S.current.id, picked:S.picked && S.picked.id, queue:(S.nextUp ? [S.nextUp] : []).concat(S.queue).map((i) => i.id), insight:S.aiInsight, sampleRound:S.sampleRound});
 }
 function restoreSession(){
   const s = load("session", null);
@@ -586,7 +589,7 @@ function restoreSession(){
 /* ---------------- screens ---------------- */
 function renderStart(){
   return `<main class="screen roomy" aria-labelledby="start-h">
-    <header class="top"><span class="wordmark">drape</span>${hbtns(true)}</header>
+    <header class="top"><span class="brand"><span class="wordmark">drape</span><button type="button" class="ver" data-act="refresh" aria-label="Update the app (version ${APP_VERSION})">v${APP_VERSION} ${ICON.refresh}</button></span>${hbtns(true)}</header>
     <h1 id="start-h" class="h1">What are you looking for today?</h1>
     <fieldset><legend class="label">Type of clothing</legend><div class="chips">${TYPES.map((t) => `<button type="button" class="chip" data-act="type" data-v="${esc(t)}" aria-pressed="${Q.type === t}">${esc(t)}</button>`).join("")}</div></fieldset>
     <fieldset><legend class="label">Style <span class="hint">· pick any</span></legend><div class="chips">${STYLES.map((s) => { const on = Q.styles.includes(s); return `<button type="button" class="chip" data-act="style" data-v="${esc(s)}" aria-pressed="${on}">${on ? ICON.check : ""}${esc(s)}</button>`; }).join("")}</div></fieldset>
@@ -786,6 +789,7 @@ function renderProfile(){
     <div class="bottom">
       <button type="button" class="outline-btn filled" data-act="ask">${ICON.share}Ask Claude about my style</button>
       ${TASTE.votes.length ? `<button type="button" class="link-btn danger" data-act="reset">Reset my taste</button>` : ""}
+      <button type="button" class="link-btn" data-act="refresh">Update app</button>
       <p class="small-note">Drape ${APP_VERSION} · ${aiOn() ? "AI on" : "sample ideas"} · saved on this phone</p>
     </div>
   </main>`;
@@ -991,6 +995,7 @@ const ACTIONS = {
   "more-like"(){ moreLike(); },
   ask(){ askClaude(); },
   "ask-report"(){ askTap(); },
+  refresh(){ appRefresh(); },
   reset(){ S.modal = {title:"Reset your taste?", body:"This clears every vote and pick on this phone. Ideas start from scratch.", ok:"Reset", run(){ TASTE = {w:{}, votes:[]}; PICKS = []; save("taste", TASTE); save("picks", PICKS); S.round = {votes:[]}; toast("Taste reset"); }}; S.focus = ".modal .btn"; render(); },
   "ai-connect"(){ connectAI(); },
   "ai-off"(){ AI.on = false; save("ai", AI); S.queue = []; S.gen++; S.fetching = null; toast("AI turned off — using sample ideas"); render(); },
@@ -1180,9 +1185,35 @@ async function askTap(){
   }
 }
 
+/* ---------------- update the app ----------------
+   Same idea as Gym Bro's version badge: save, ask the service worker to check
+   for a new version (never waiting long; iOS can hang there), drop the cached
+   app files and reload. After the reload a toast says whether it changed. */
+async function appRefresh(){
+  document.querySelectorAll('[data-act="refresh"]').forEach((b) => { b.disabled = true; b.textContent = "Updating…"; });
+  try{ const ta = document.getElementById("txt"); if (ta){ Q.text = ta.value; save("query", Q); } }catch(e){}
+  saveSession();
+  save("updatedFrom", APP_VERSION);
+  try{
+    const reg = navigator.serviceWorker && await navigator.serviceWorker.getRegistration();
+    if (reg) await Promise.race([reg.update().catch(() => {}), new Promise((r) => setTimeout(r, 1500))]);
+  }catch(e){}
+  try{ if (window.caches){ const keys = await caches.keys(); await Promise.all(keys.filter((k) => k.startsWith("drape-v")).map((k) => caches.delete(k))); } }catch(e){}
+  location.reload();
+  setTimeout(() => { location.href = location.pathname; }, 1500); // if the reload is ignored
+}
+function afterUpdate(){
+  const from = load("updatedFrom", null);
+  if (!from) return;
+  try{ localStorage.removeItem(LS + "updatedFrom"); }catch(e){}
+  toast(from === APP_VERSION ? "You're on the latest version (" + APP_VERSION + ")" : "Updated to " + APP_VERSION);
+  render();
+}
+
 /* ---------------- boot ---------------- */
 restoreSession();
 render();
+afterUpdate();
 if (S.screen === "explore" && aiRound() && S.queue.length <= 1) refill();
 if ("serviceWorker" in navigator && location.protocol === "https:"){
   navigator.serviceWorker.register("sw.js").catch(() => {});
