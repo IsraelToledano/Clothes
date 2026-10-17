@@ -1,20 +1,18 @@
-// Drape AI server (Cloudflare Worker).
+// Drape AI server (Cloudflare Worker). 100% free: everything runs on Workers AI,
+// Cloudflare's built-in AI, inside its free daily allowance. No API keys.
 //
-// The app on the phone calls this worker; the worker holds the API keys.
-//   GET  /health  → which services are set up (also checks the access code)
-//   POST /ideas   → Claude writes new style ideas from the request and the votes so far
-//   GET  /image   → an AI photo for one idea (Cloudflare Workers AI, FLUX.1 schnell)
-//   POST /shop    → real products from Google Shopping (Serper), ranked by Claude
+//   GET  /health  → checks the access code and that the AI binding is there
+//   POST /ideas   → an LLM writes new style ideas from the request and the votes so far
+//   GET  /image   → an AI photo for one idea (FLUX.1 schnell)
 //
-// Set up in the Cloudflare dashboard (Worker → Settings → Variables and Secrets):
-//   ACCESS_CODE        secret: any passcode; type the same one into the app once
-//   ANTHROPIC_API_KEY  secret: from console.anthropic.com
-//   SERPER_API_KEY     secret: from serper.dev (2,500 free searches)
-// The image model needs no key: it runs on the Workers AI binding in wrangler.toml.
+// One setting in the Cloudflare dashboard (Worker → Settings → Variables and Secrets):
+//   ACCESS_CODE  secret: any passcode; type the same one into the app once.
+//
+// The free allowance is 10,000 "neurons" a day (resets 00:00 UTC = 03:00 in Israel).
+// On the free plan Cloudflare blocks requests past that instead of charging.
 
 const APP_ORIGIN = "https://israeltoledano.github.io";
-const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
-const SERPER_URL = "https://google.serper.dev/shopping";
+const TEXT_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 const IMAGE_MODEL = "@cf/black-forest-labs/flux-1-schnell";
 
 const TYPES = ["T-shirts", "Shirts", "Overshirts", "Knitwear", "Jackets", "Trousers", "Shorts", "Shoes"];
@@ -44,7 +42,7 @@ export default {
 
       if (req.method === "GET" && url.pathname === "/health") {
         checkCode(env, url.searchParams.get("code"));
-        return json({ ok: true, claude: !!env.ANTHROPIC_API_KEY, images: !!env.AI, shopping: !!env.SERPER_API_KEY }, 200, origin);
+        return json({ ok: true, ideas: !!env.AI, images: !!env.AI }, 200, origin);
       }
 
       if (req.method === "GET" && url.pathname === "/image") {
@@ -52,12 +50,11 @@ export default {
         return await image(env, url.searchParams.get("p"), url.searchParams.get("s"), origin);
       }
 
-      if (req.method === "POST" && (url.pathname === "/ideas" || url.pathname === "/shop")) {
+      if (req.method === "POST" && url.pathname === "/ideas") {
         let body;
         try { body = JSON.parse(await req.text()); } catch (e) { throw new HttpError(400, "Request isn't valid JSON"); }
         checkCode(env, body && body.code);
-        const out = url.pathname === "/ideas" ? await ideas(env, body) : await shop(env, body);
-        return json(out, 200, origin);
+        return json(await ideas(env, body), 200, origin);
       }
 
       return json({ error: "not found" }, 404, origin);
@@ -73,40 +70,18 @@ function checkCode(env, code) {
   if (!code || String(code).trim() !== String(env.ACCESS_CODE).trim()) throw new HttpError(401, "Wrong access code");
 }
 
-/* ---------------- Claude ---------------- */
-
-async function claude(env, { model, system, user, schema, maxTokens, thinking }) {
-  if (!env.ANTHROPIC_API_KEY) throw new HttpError(503, "ANTHROPIC_API_KEY isn't set in the worker");
-  const base = {
-    model,
-    max_tokens: maxTokens || 4000,
-    system,
-    messages: [{ role: "user", content: user }],
-  };
-  const tuned = { ...base, thinking, output_config: { effort: "low", format: { type: "json_schema", schema } } };
-  let res = await callAnthropic(env, tuned);
-  // If this model rejects the speed settings, retry with only the schema.
-  if (res.status === 400) {
-    const err = await res.clone().text();
-    if (/thinking|effort/i.test(err)) res = await callAnthropic(env, { ...base, output_config: { format: { type: "json_schema", schema } } });
+// Workers AI errors: turn "used up the daily free allocation" into a clear message.
+async function runAI(env, model, input) {
+  if (!env.AI) throw new HttpError(503, "The Workers AI binding isn't set up");
+  try {
+    return await env.AI.run(model, input);
+  } catch (e) {
+    const msg = String((e && e.message) || e);
+    if (/4006|daily free allocation|neurons|quota|rate limit|429/i.test(msg)) {
+      throw new HttpError(429, "Today's free AI allowance is used up. It resets at 03:00.");
+    }
+    throw new HttpError(502, "AI error: " + msg.slice(0, 200));
   }
-  if (!res.ok) {
-    const err = await res.text();
-    throw new HttpError(502, "Claude API error " + res.status + ": " + err.slice(0, 300));
-  }
-  const data = await res.json();
-  const block = (data.content || []).find((b) => b.type === "text");
-  if (!block) throw new HttpError(502, "Claude returned no text" + (data.stop_reason ? " (" + data.stop_reason + ")" : ""));
-  try { return JSON.parse(block.text); }
-  catch (e) { throw new HttpError(502, "Claude's reply wasn't valid JSON" + (data.stop_reason === "max_tokens" ? " (too long)" : "")); }
-}
-
-function callAnthropic(env, payload) {
-  return fetch(ANTHROPIC_URL, {
-    method: "POST",
-    headers: { "content-type": "application/json", "x-api-key": env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" },
-    body: JSON.stringify(payload),
-  });
 }
 
 /* ---------------- /ideas ---------------- */
@@ -120,54 +95,64 @@ const IDEA_SCHEMA = {
       items: {
         type: "object",
         properties: {
-          type: { type: "string", enum: TYPES },
+          type: { type: "string" },
           title: { type: "string" },
           desc: { type: "string" },
           fit: { type: "string" },
           fabric: { type: "string" },
           colour: { type: "string" },
           vibe: { type: "string" },
-          styles: { type: "array", items: { type: "string", enum: STYLES } },
-          palette: { type: "array", items: { type: "string", pattern: "^#[0-9A-Fa-f]{6}$" } },
+          styles: { type: "array", items: { type: "string" } },
+          palette: { type: "array", items: { type: "string" } },
           why: { type: "string" },
           search: { type: "string" },
           image_prompt: { type: "string" },
         },
         required: ["type", "title", "desc", "fit", "fabric", "colour", "vibe", "styles", "palette", "why", "search", "image_prompt"],
-        additionalProperties: false,
       },
     },
   },
   required: ["insight", "ideas"],
-  additionalProperties: false,
 };
 
-const IDEAS_SYSTEM = `You are the stylist inside Drape, a personal menswear discovery app used by one man who lives in Tel Aviv, Israel. He says what he's looking for, you propose clothing ideas, he votes on each one (Hate / Like / Love), and you use those votes to get closer to what he'll love.
+const EXAMPLE = {
+  type: "Shirts", title: "Linen camp-collar shirt", desc: "Open collar, short sleeves, straight hem worn untucked.",
+  fit: "Relaxed", fabric: "Linen", colour: "Terracotta", vibe: "Summer", styles: ["Relaxed", "Vintage"],
+  palette: ["#B8643E", "#E8CDB9", "#F4EFE6"], why: "",
+  search: "men's terracotta linen camp collar shirt",
+  image_prompt: "Terracotta linen short-sleeve camp-collar shirt with visible slub texture, worn open over a white tee by a man, framed neck to mid-thigh, face out of frame, plain light studio backdrop",
+};
 
-An idea is a concept, not a product: a specific kind of garment defined by cut, fabric, colour and mood (for example "Linen camp-collar shirt" in terracotta) that many stores sell in some version. Never name brands.
+const IDEAS_SYSTEM = `You are the stylist inside Drape, a personal menswear app for one man who lives in Tel Aviv, Israel. He says what he's looking for, you propose clothing ideas, he votes on each (Hate / Like / Love), and you use the votes to get closer to what he'll love.
 
-How to use his votes:
-- Loved: stay close. Vary one or two things (colour, fabric, a detail) to find the best version of it.
+An idea is a concept, not a product: a specific kind of garment defined by cut, fabric, colour and mood that many stores sell in some version. Never name brands.
+
+Using his votes:
+- Loved: stay close. Vary one or two things (colour, fabric, a detail) to find the best version.
 - Liked: keep what worked and try a fresher take.
-- Hated: avoid that combination. If he hated two or three in a row, change direction clearly.
-- Long-term taste from earlier sessions is a starting point; today's request and today's votes count more.
+- Hated: avoid that combination. If he hated several in a row, change direction clearly.
+- Long-term taste is a starting point; today's request and today's votes count more.
 - Make about one idea in five a deliberate step outside the pattern so you keep learning. Its "why" is "Something different".
 - Never repeat or closely copy anything in "Already shown".
-- Use exactly the requested type unless it is "Surprise me". Follow his styles and his own words, including anything he says he doesn't want.
+- Use exactly the requested type unless it is "Surprise me". Follow his styles and his own words, including what he says he doesn't want.
 - Think about Tel Aviv weather in the given month (long hot humid summers, short mild winters).
 
-Field rules:
-- title: up to 32 characters, sentence case. desc: one sentence, up to 80 characters, about how it looks and wears.
-- fit, fabric, colour, vibe: one or two words each, Title case. Reuse the same words for the same things across ideas (always "Linen", always "Relaxed").
-- styles: one to three from the allowed list.
-- palette: three hex colours: the garment's main colour, a secondary colour in it, then a colour it pairs well with.
-- why: "Because you loved: <exact title>" or "Because you liked: <exact title>" when it builds on one of today's votes; "Something different" for an exploration; otherwise "".
-- search: a 3–6 word English shopping query that starts with "men's", e.g. "men's terracotta linen camp collar shirt".
-- image_prompt: up to 300 characters for an image model: a photorealistic catalogue photo of exactly this garment (colour, fabric texture, key details) worn by a man. Tops and jackets: framed from neck to mid-thigh, face out of frame. Trousers and shorts: waist to feet. Shoes: close-up on feet, side view. Plain light studio backdrop.
-- insight: when today has 3 or more votes, up to 70 characters on what you've learned, written to follow the words "Adjusting to you:", e.g. "more earthy linen and relaxed fits, less shiny sporty fabrics". Otherwise "".`;
+Reply with JSON only: {"insight": "...", "ideas": [ ... ]}. Each idea has exactly these fields:
+- type: one of ${TYPES.join(", ")}
+- title: up to 32 characters, sentence case
+- desc: one sentence, up to 80 characters, about how it looks and wears
+- fit, fabric, colour, vibe: one or two words each, Title case; reuse the same words for the same things
+- styles: one to three of ${STYLES.join(", ")}
+- palette: three hex colours: main colour, secondary, a colour it pairs with
+- why: "Because you loved: <exact title>" or "Because you liked: <exact title>" when it builds on one of today's votes; "Something different" for an exploration; otherwise ""
+- search: 3 to 6 English words for a shopping search, starting with "men's"
+- image_prompt: up to 250 characters describing a photorealistic catalogue photo of exactly this garment (colour, fabric texture, key details) worn by a man. Tops and jackets: framed neck to mid-thigh, face out of frame. Trousers and shorts: waist to feet. Shoes: close-up on feet, side view. Plain light studio backdrop.
+insight: if today has 3 or more votes, up to 70 characters on what you've learned, written to follow "Adjusting to you:", e.g. "more earthy linen and relaxed fits, less shiny sporty fabrics". Otherwise "".
+
+Example idea: ${JSON.stringify(EXAMPLE)}`;
 
 async function ideas(env, b) {
-  const count = Math.max(1, Math.min(8, parseInt(b.count, 10) || 5));
+  const count = Math.max(1, Math.min(6, parseInt(b.count, 10) || 4));
   const q = b.query || {};
   const lines = [];
   lines.push("Month: " + (b.month || new Date().toLocaleString("en", { month: "long" })));
@@ -179,7 +164,7 @@ async function ideas(env, b) {
 
   const round = Array.isArray(b.votes) ? b.votes.slice(-25) : [];
   lines.push("", "Today's votes, oldest first:" + (round.length ? "" : " none yet"));
-  for (const v of round) lines.push("- " + (v.vote || "").toUpperCase() + ": " + describe(v));
+  for (const v of round) lines.push("- " + String(v.vote || "").toUpperCase() + ": " + describe(v));
 
   const t = b.taste || {};
   if ((t.more && t.more.length) || (t.less && t.less.length) || (t.loved && t.loved.length) || (t.hated && t.hated.length)) {
@@ -190,39 +175,57 @@ async function ideas(env, b) {
     if (t.hated && t.hated.length) lines.push("Hated before: " + t.hated.join("; "));
     if (t.picked && t.picked.length) lines.push("Picked to buy before: " + t.picked.join("; "));
   }
-  if (Array.isArray(b.seen) && b.seen.length) lines.push("", "Already shown (don't repeat): " + b.seen.slice(-80).join("; "));
-  lines.push("", `Write ${count} new ideas, best bet first.`);
+  if (Array.isArray(b.seen) && b.seen.length) lines.push("", "Already shown (don't repeat): " + b.seen.slice(-60).join("; "));
+  lines.push("", `Write ${count} new ideas, best bet first. JSON only.`);
 
-  const out = await claude(env, {
-    model: env.CLAUDE_MODEL || "claude-sonnet-5-5",
-    system: IDEAS_SYSTEM,
-    user: lines.join("\n"),
-    schema: IDEA_SCHEMA,
-    maxTokens: 6000,
-    thinking: { type: "between_tools" },
-  });
+  const messages = [{ role: "system", content: IDEAS_SYSTEM }, { role: "user", content: lines.join("\n") }];
+  const model = env.TEXT_MODEL || TEXT_MODEL;
+  let out;
+  try {
+    out = parseJSON((await runAI(env, model, { messages, max_tokens: 2400, temperature: 0.8, response_format: { type: "json_schema", json_schema: IDEA_SCHEMA } })).response);
+  } catch (e) {
+    if (e instanceof HttpError && e.status === 429) throw e;
+    out = null;
+  }
+  // JSON mode can fail ("couldn't be met"); ask once more as plain text and pull the JSON out.
+  if (!out || !Array.isArray(out.ideas)) {
+    out = parseJSON((await runAI(env, model, { messages, max_tokens: 2400, temperature: 0.7 })).response);
+  }
+  if (!out || !Array.isArray(out.ideas)) throw new HttpError(502, "The AI's reply wasn't usable. Try again.");
 
-  const list = (out.ideas || []).slice(0, count).map((i) => ({
+  const list = out.ideas.slice(0, count).filter((i) => i && i.title).map((i) => ({
     id: "ai-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7),
-    type: TYPES.includes(i.type) ? i.type : (q.type && TYPES.includes(q.type) ? q.type : "Shirts"),
+    type: pickFrom(TYPES, i.type) || pickFrom(TYPES, q.type) || "Shirts",
     title: clip(i.title, 48),
     desc: clip(i.desc, 140),
     fit: clip(i.fit, 24), fabric: clip(i.fabric, 24), colour: clip(i.colour, 24), vibe: clip(i.vibe, 24),
-    styles: (i.styles || []).filter((s) => STYLES.includes(s)).slice(0, 3),
+    styles: (Array.isArray(i.styles) ? i.styles : []).map((s) => pickFrom(STYLES, s)).filter(Boolean).slice(0, 3),
     palette: fixPalette(i.palette),
     why: clip(i.why, 70),
-    search: clip(i.search, 80),
-    image_prompt: clip(i.image_prompt, 420),
+    search: clip(i.search, 80) || ("men's " + clip(i.colour, 24) + " " + clip(i.title, 48)).toLowerCase(),
+    image_prompt: clip(i.image_prompt || [i.colour, i.fabric, i.title, "worn by a man"].join(" "), 420),
   }));
   return { ideas: list, insight: clip(out.insight, 90) };
 }
 
+function parseJSON(r) {
+  if (r && typeof r === "object") return r;
+  const s = String(r || "");
+  try { return JSON.parse(s); } catch (e) {}
+  const a = s.indexOf("{"), z = s.lastIndexOf("}");
+  if (a >= 0 && z > a) { try { return JSON.parse(s.slice(a, z + 1)); } catch (e) {} }
+  return null;
+}
+function pickFrom(list, v) {
+  const k = String(v || "").trim().toLowerCase().replace(/[\s_]+/g, "-");
+  return list.find((x) => x.toLowerCase() === k || x.toLowerCase().replace(/-/g, "") === k.replace(/-/g, "") || x.toLowerCase() === k + "s") || null;
+}
 function describe(i) {
   return [i.title, i.colour, i.fabric, i.fit && i.fit + " fit", i.vibe, i.type].filter(Boolean).map((x) => clip(x, 60)).join(", ");
 }
 const clip = (s, n) => String(s == null ? "" : s).trim().slice(0, n);
 function fixPalette(p) {
-  const ok = (Array.isArray(p) ? p : []).filter((c) => /^#[0-9a-f]{6}$/i.test(c)).slice(0, 3);
+  const ok = (Array.isArray(p) ? p : []).map((c) => String(c).trim()).map((c) => (/^[0-9a-f]{6}$/i.test(c) ? "#" + c : c)).filter((c) => /^#[0-9a-f]{6}$/i.test(c)).slice(0, 3);
   while (ok.length < 3) ok.push(["#C9CDD5", "#E3E6EB", "#16181D"][ok.length]);
   return ok;
 }
@@ -232,11 +235,10 @@ function fixPalette(p) {
 const IMAGE_STYLE = "Photorealistic menswear e-commerce photo, soft even studio light, sharp fabric detail, natural colours, no text, no logos, no watermark.";
 
 async function image(env, prompt, seed, origin) {
-  if (!env.AI) throw new HttpError(503, "The Workers AI binding isn't set up");
   prompt = clip(prompt, 600);
   if (!prompt) throw new HttpError(400, "Missing prompt");
   const s = Math.abs(parseInt(seed, 10) || 0) % 2147483647;
-  const out = await env.AI.run(IMAGE_MODEL, { prompt: prompt + " " + IMAGE_STYLE, steps: 6, seed: s });
+  const out = await runAI(env, IMAGE_MODEL, { prompt: prompt + " " + IMAGE_STYLE, steps: 4, seed: s });
   const b64 = out && out.image;
   if (!b64) throw new HttpError(502, "The image model returned nothing");
   const bin = atob(b64);
@@ -245,94 +247,4 @@ async function image(env, prompt, seed, origin) {
   return new Response(bytes, {
     headers: { "Content-Type": "image/jpeg", "Cache-Control": "public, max-age=31536000, immutable", ...cors(origin) },
   });
-}
-
-/* ---------------- /shop ---------------- */
-
-// Rough rates for the budget filter only; prices show in the store's own currency.
-const TO_ILS = { "₪": 1, "ILS": 1, "$": 3.7, "USD": 3.7, "€": 4.0, "EUR": 4.0, "£": 4.7, "GBP": 4.7 };
-const BUDGET = { "u200": [0, 200], "200-400": [200, 400], "400+": [400, Infinity] };
-
-function priceILS(str) {
-  const s = String(str || "");
-  const n = parseFloat(s.replace(/[^\d.,]/g, "").replace(/,(?=\d{3}\b)/g, "").replace(",", "."));
-  if (!isFinite(n)) return null;
-  const cur = Object.keys(TO_ILS).find((k) => s.includes(k));
-  return cur ? Math.round(n * TO_ILS[cur]) : null;
-}
-
-const SHOP_SCHEMA = {
-  type: "object",
-  properties: {
-    picks: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: { i: { type: "integer" }, why: { type: "string" } },
-        required: ["i", "why"],
-        additionalProperties: false,
-      },
-    },
-  },
-  required: ["picks"],
-  additionalProperties: false,
-};
-
-async function shop(env, b) {
-  if (!env.SERPER_API_KEY) throw new HttpError(503, "SERPER_API_KEY isn't set in the worker");
-  const idea = b.idea || {};
-  let q = clip(idea.search || ["men's", idea.colour, idea.fabric, idea.title].filter(Boolean).join(" "), 100);
-  if (!/\bmen'?s?\b/i.test(q)) q = "men's " + q;
-
-  const res = await fetch(SERPER_URL, {
-    method: "POST",
-    headers: { "X-API-KEY": env.SERPER_API_KEY, "Content-Type": "application/json" },
-    body: JSON.stringify({ q, gl: "il", hl: "en", num: 40 }),
-  });
-  if (!res.ok) throw new HttpError(502, "Shopping search error " + res.status + ": " + (await res.text()).slice(0, 200));
-  const data = await res.json();
-  let items = (data.shopping || [])
-    .filter((p) => p && p.title && p.link)
-    .map((p) => ({
-      title: clip(p.title, 140),
-      store: clip(p.source, 60),
-      price: clip(p.price, 30),
-      ils: priceILS(p.price),
-      image: p.imageUrl || "",
-      link: p.link,
-      rating: p.rating || null,
-      delivery: clip(p.delivery, 60),
-    }));
-  const total = items.length;
-
-  // Budget: keep items in range (and unknown prices); if nothing is left, show everything.
-  let budgetRelaxed = false;
-  const range = BUDGET[b.budget];
-  if (range) {
-    const inRange = items.filter((p) => p.ils == null || (p.ils >= range[0] && p.ils <= range[1]));
-    if (inRange.length) items = inRange; else budgetRelaxed = items.length > 0;
-  }
-
-  // Claude (fast model) keeps the menswear items that match the idea, best first.
-  let ranked = false;
-  if (items.length > 3 && env.ANTHROPIC_API_KEY) {
-    try {
-      const listing = items.slice(0, 30).map((p, i) => `${i}. ${p.title} | ${p.store} | ${p.price}`).join("\n");
-      const out = await claude(env, {
-        model: env.SHOP_MODEL || "claude-haiku-5-5",
-        system: "You help a man in Israel shop for one clothing idea. From a numbered list of search results, choose the products that are menswear and genuinely match the idea (type, colour, fabric, cut). Best match first, at most 10. For each give a 'why' of up to 40 characters saying what matches or differs (e.g. 'Right colour, slightly slimmer cut'). Skip women's and kids' items, accessories, and anything that isn't this kind of garment.",
-        user: "Idea: " + describe(idea) + (idea.desc ? ". " + idea.desc : "") + "\n\nResults:\n" + listing,
-        schema: SHOP_SCHEMA,
-        maxTokens: 1500,
-        thinking: { type: "disabled" },
-      });
-      const seen = new Set();
-      const picked = (out.picks || [])
-        .filter((p) => Number.isInteger(p.i) && p.i >= 0 && p.i < Math.min(30, items.length) && !seen.has(p.i) && seen.add(p.i))
-        .map((p) => ({ ...items[p.i], why: clip(p.why, 60) }));
-      if (picked.length) { items = picked; ranked = true; }
-    } catch (e) { /* show unranked results instead */ }
-  }
-
-  return { query: q, products: items.slice(0, 12), total, ranked, budgetRelaxed };
 }
