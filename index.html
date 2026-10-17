@@ -209,7 +209,7 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "0.6.0";
+const APP_VERSION = "0.6.1";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
 
 /* ---------------- storage (on this phone only) ---------------- */
@@ -1099,7 +1099,18 @@ async function askCapture(){
   const bg = getComputedStyle(document.body).backgroundColor || "#EEF0F3";
   const canvas = await h2c(document.body, {x:window.scrollX, y:window.scrollY, width:window.innerWidth, height:window.innerHeight,
     windowWidth:document.documentElement.clientWidth, scale:Math.min(2, window.devicePixelRatio || 1), backgroundColor:bg, logging:false, useCORS:true,
-    ignoreElements:(el) => !!(el && el.getAttribute && el.getAttribute("data-report-ui") === "1")});
+    ignoreElements:(el) => !!(el && (/^(NOSCRIPT|SCRIPT)$/.test(el.tagName) || (el.getAttribute && el.getAttribute("data-report-ui") === "1")))});
+  // Stamp the app version into the corner so every report image shows it.
+  try{
+    const c = canvas.getContext("2d"), k = canvas.width / window.innerWidth, label = "Drape v" + APP_VERSION;
+    c.save(); c.setTransform(1, 0, 0, 1, 0, 0); // html2canvas leaves the context scaled
+    c.font = `500 ${11 * k}px ui-monospace, Menlo, monospace`;
+    const w = c.measureText(label).width + 16 * k, h = 22 * k, x = canvas.width - w - 8 * k, y = canvas.height - h - 8 * k;
+    c.fillStyle = "rgba(22,24,29,.82)"; c.beginPath();
+    if (c.roundRect) c.roundRect(x, y, w, h, h / 2); else c.rect(x, y, w, h);
+    c.fill(); c.fillStyle = "#fff"; c.textBaseline = "middle"; c.fillText(label, x + 8 * k, y + h / 2);
+    c.restore();
+  }catch(e){}
   return new Promise((res, rej) => canvas.toBlob((b) => b ? res(b) : rej(new Error("empty capture")), "image/png"));
 }
 

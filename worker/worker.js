@@ -236,11 +236,19 @@ function fixPalette(p) {
 
 const IMAGE_STYLE = "Photorealistic menswear e-commerce photo, soft even studio light, sharp fabric detail, natural colours, no text, no logos, no watermark.";
 
-async function image(env, prompt, seed, origin) {
+async function image(env, prompt, _seed, origin) {
   prompt = clip(prompt, 600);
   if (!prompt) throw new HttpError(400, "Missing prompt");
-  const s = Math.abs(parseInt(seed, 10) || 0) % 2147483647;
-  const out = await runAI(env, IMAGE_MODEL, { prompt: prompt + " " + IMAGE_STYLE, steps: 4, seed: s });
+  // The app sends "s" only so each idea has its own cached photo URL. The model no
+  // longer accepts a seed, and if it rejects another setting, retry with the prompt alone.
+  const full = prompt + " " + IMAGE_STYLE;
+  let out;
+  try {
+    out = await runAI(env, IMAGE_MODEL, { prompt: full, steps: 4 });
+  } catch (e) {
+    if (!(e instanceof HttpError) || e.status === 429 || !/propert|5006|schema|invalid/i.test(e.message)) throw e;
+    out = await runAI(env, IMAGE_MODEL, { prompt: full });
+  }
   const headers = { "Content-Type": "image/jpeg", "Cache-Control": "public, max-age=31536000, immutable", ...cors(origin) };
   // Models have returned a base64 string, raw bytes or a stream; accept all of them.
   if (out instanceof ReadableStream) return new Response(out, { headers });
