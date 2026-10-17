@@ -35,9 +35,9 @@ Everything you do is saved on the phone (`localStorage`, keys prefixed `clothes:
 
 ### Setup
 
-1. In the Cloudflare dashboard go to Workers & Pages → Create → Import a repository → pick `Clothes` and keep the defaults. The worker is named `clothes-ai`.
+1. In the Cloudflare dashboard go to Workers & Pages → Create → Import a repository → pick `Clothes` and keep the defaults. The worker is named `clothes`.
 2. In the worker's Settings → Variables and Secrets, add one secret: `ACCESS_CODE`, set to any passcode you choose.
-3. In the app, open your taste profile → AI connection, type the access code and tap Connect. If the worker's address isn't `https://clothes-ai.srul7022.workers.dev`, paste it under "Server address".
+3. In the app, open your taste profile → AI connection, type the access code and tap Connect. If the worker's address isn't `https://clothes.srul7022.workers.dev`, paste it under "Server address".
 
 ### The free limit
 
