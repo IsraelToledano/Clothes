@@ -82,12 +82,12 @@ textarea::placeholder{color:#686E79}
 .idea-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .ph{display:flex;flex-direction:column;align-items:center;gap:8px;padding:0 44px;text-align:center;color:#3B404A}
 .ph svg{width:40px;height:40px}
-.tag{position:absolute;top:12px;left:12px;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;background:#fff;color:var(--ink);padding:6px 10px;border-radius:999px}
-.swatches{position:absolute;bottom:12px;left:12px;display:flex;gap:6px}
+.tag{position:absolute;z-index:1;top:12px;left:12px;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;background:#fff;color:var(--ink);padding:6px 10px;border-radius:999px}
+.swatches{position:absolute;z-index:1;bottom:12px;left:12px;display:flex;gap:6px}
 .swatches span{width:22px;height:22px;border-radius:11px;border:2px solid #fff}
 .idea-body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:12px;flex:none}
 .idea-head{display:flex;flex-direction:column;gap:6px}
-.because{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.because{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .idea-title{margin:0;font-family:var(--display);font-weight:800;font-size:26px;line-height:1.08;letter-spacing:-.02em}
 .idea-desc{margin:0;font-size:15px;line-height:1.4;color:var(--muted)}
 .specs{margin:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
@@ -153,6 +153,36 @@ textarea::placeholder{color:#686E79}
 .btn{min-height:44px;border-radius:22px;padding:0 18px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-weight:700}
 .btn.danger{background:var(--danger);border-color:var(--danger);color:#fff}
 .small-note{font-size:13px;color:var(--muted);text-align:center;margin:0}
+.small-note .link-btn{min-height:0;padding:0;font-size:13px;color:var(--muted)}
+/* AI photos, loading states, products */
+.idea-img img{opacity:0;transition:opacity .3s ease}
+.idea-img img.ok{opacity:1}
+.ph.wait .mono-label{animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.4}}
+.shimmer{background:linear-gradient(100deg,var(--soft) 30%,#F5F6F8 50%,var(--soft) 70%) !important;background-size:300% 100% !important;animation:shim 1.4s linear infinite}
+@keyframes shim{from{background-position:100% 0}to{background-position:-50% 0}}
+.sk{display:block;height:14px;border-radius:7px;background:var(--soft)}
+.vote:disabled{opacity:.4;cursor:default}
+.outline-btn:disabled{opacity:.4;cursor:default}
+.sw,.thumb{position:relative;overflow:hidden}
+.sw img,.thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.field{display:block;width:100%;height:48px;padding:0 14px;border-radius:14px;border:1px solid var(--line);background:var(--card);font-size:16px}
+.ai-status{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700}
+.dot{width:10px;height:10px;border-radius:5px;background:var(--line);flex:none}
+.dot.on{background:#1E8E4E}
+details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px;display:flex;align-items:center}
+.res-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:0 0 10px}
+.res-head h2{margin:0;font-size:18px;font-weight:700}
+.prods{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.prod{display:flex;flex-direction:column;gap:4px;height:100%;background:var(--card);border-radius:18px;padding:8px 8px 12px;color:var(--ink);text-decoration:none}
+.pimg{aspect-ratio:1/1;border-radius:12px;background:#fff;display:grid;place-items:center;overflow:hidden;margin-bottom:4px;color:var(--line)}
+.pimg img{width:100%;height:100%;object-fit:contain}
+.pimg svg{width:28px;height:28px}
+.pt{font-size:14px;font-weight:500;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;padding:0 4px}
+.ps{font-size:12px;color:var(--muted);padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pp{font-size:15px;font-weight:700;padding:0 4px;margin-top:auto}
+.pw{font-size:12px;color:var(--accent);line-height:1.3;padding:0 4px}
+@media (prefers-reduced-motion:reduce){.shimmer,.ph.wait .mono-label{animation:none}}
 @media (max-height:760px){
   .recent-wrap{display:none}
 }
@@ -169,16 +199,20 @@ textarea::placeholder{color:#686E79}
 <script>
 "use strict";
 /* ---------------- config ----------------
-   AI_MODE stays false until the Cloudflare Worker (Claude for ideas, an image
-   model for photos, a shopping search for products) is connected. Until then
-   ideas come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "0.1.0";
-const AI_MODE = false;
+   AI runs through the Cloudflare Worker in worker/worker.js (Claude writes the
+   ideas, FLUX draws the photos, Google Shopping finds real products). It turns
+   on once the access code is entered in the taste profile. Without it, ideas
+   come from the SAMPLE_IDEAS list below and still adapt to your votes. */
+const APP_VERSION = "0.2.0";
+const DEFAULT_WORKER = "https://clothes-ai.srul7022.workers.dev";
 
 /* ---------------- storage (on this phone only) ---------------- */
 const LS = "clothes:";
 function load(k, d){ try{ const r = localStorage.getItem(LS + k); return r != null ? JSON.parse(r) : d; }catch(e){ return d; } }
 function save(k, v){ try{ localStorage.setItem(LS + k, JSON.stringify(v)); }catch(e){} }
+
+let AI = Object.assign({url:DEFAULT_WORKER, code:"", on:false, health:null}, load("ai", {}));
+const aiOn = () => !!(AI.on && AI.code && AI.url);
 
 /* ---------------- options ---------------- */
 const TYPES = ["T-shirts","Shirts","Overshirts","Knitwear","Jackets","Trousers","Shorts","Shoes","Surprise me"];
@@ -220,8 +254,29 @@ const SAMPLE_IDEAS = [
  {id:"f3",type:"Shoes",title:"Retro running sneakers",desc:"Suede and mesh panels on a slim, low sole.",fit:"Low-top",fabric:"Suede & mesh",colour:"Grey",vibe:"City",styles:["Sporty","Streetwear"],palette:["#8C8F96","#1F2A44","#E3E6EB"],tint:"#D8DBE1"},
  {id:"f4",type:"Shoes",title:"Leather penny loafers",desc:"Slip-ons that sharpen up chinos or denim.",fit:"Slip-on",fabric:"Leather",colour:"Dark brown",vibe:"Evening",styles:["Smart-casual","Minimal"],palette:["#4A2E1E","#8A5A36","#E5D2BF"],tint:"#E0CDBC"},
 ];
-const IDEAS = SAMPLE_IDEAS;
-const byId = (id) => IDEAS.find((i) => i.id === id);
+const SAMPLE_BY_ID = Object.fromEntries(SAMPLE_IDEAS.map((i) => [i.id, i]));
+
+// Ideas Claude wrote are kept on the phone so votes, undo and history still know them.
+let AIDB = load("ai-ideas", {});
+function rememberIdeas(list){
+  for (const i of list) AIDB[i.id] = i;
+  const ids = Object.keys(AIDB);
+  if (ids.length > 400) for (const id of ids.slice(0, ids.length - 400)) delete AIDB[id];
+  save("ai-ideas", AIDB);
+}
+const byId = (id) => AIDB[id] || SAMPLE_BY_ID[id];
+const isAI = (i) => !!(i && String(i.id).startsWith("ai-"));
+
+// A soft background for the photo area: the idea's main colour mixed with white.
+function tintOf(hex){
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex || "");
+  if (!m) return "#E3E6EB";
+  const n = parseInt(m[1], 16), mix = (c) => Math.round(c + (255 - c) * 0.7);
+  return "#" + [n >> 16, (n >> 8) & 255, n & 255].map((c) => mix(c).toString(16).padStart(2, "0")).join("");
+}
+function prepIdea(i){
+  return Object.assign({}, i, {styles:Array.isArray(i.styles) ? i.styles : [], palette:Array.isArray(i.palette) && i.palette.length ? i.palette : ["#C9CDD5","#E3E6EB","#16181D"], tint:tintOf(i.palette && i.palette[0])});
+}
 
 /* ---------------- icons ---------------- */
 const sv = (p, o) => `<svg viewBox="0 0 24 24" fill="${(o&&o.fill)||"none"}" stroke="currentColor" stroke-width="${(o&&o.w)||2}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
@@ -248,13 +303,16 @@ let Q = load("query", {type:"", styles:[], text:""});
 let TASTE = load("taste", {w:{}, votes:[]});
 let PREFS = load("prefs", {budget:"any", size:"M", shoe:"43", shipIL:true});
 let PICKS = load("picks", []);
-const S = {screen:"start", prev:"start", round:{votes:[]}, current:null, picked:null, sheet:false, modal:null, toast:null, busy:false};
+const S = {screen:"start", prev:"start", round:{votes:[]}, current:null, picked:null, sheet:false, modal:null, toast:null, busy:false,
+  // AI: ideas waiting to be shown, the request in flight, what Claude has learned this round
+  queue:[], fetching:null, gen:0, aiErr:null, aiInsight:"", anchor:null, sampleRound:false, shop:null, checking:false};
+const aiRound = () => aiOn() && !S.sampleRound;
 
 /* ---------------- taste model ----------------
    Every idea is a bundle of attributes (type, fit, fabric, colour, vibe,
    styles). A vote adds -2 / +1 / +2 to each of its attributes; the next idea
    is the unseen one whose attributes score highest, plus what you asked for
-   on the start screen. Claude will replace this once AI_MODE is on. */
+   on the start screen. With Claude on, it re-orders Claude's waiting ideas. */
 const attrsOf = (i) => [["type",i.type],["fit",i.fit],["fabric",i.fabric],["colour",i.colour],["vibe",i.vibe]].concat(i.styles.map((s) => ["style",s]));
 const akey = (a) => a[0] + ":" + a[1];
 
@@ -302,9 +360,10 @@ function score(i, sig){
   for (const w of sig.neg) if (h.includes(w)) s -= 4;
   return s + Math.random() * 0.8;
 }
-function nextIdea(){
+function nextIdea(){ return aiRound() ? takeNext() : nextSample(); }
+function nextSample(){
   const seen = new Set(S.round.votes.map((v) => v.id));
-  let pool = IDEAS.filter((i) => !seen.has(i.id));
+  let pool = SAMPLE_IDEAS.filter((i) => !seen.has(i.id));
   if (Q.type && Q.type !== "Surprise me") pool = pool.filter((i) => i.type === Q.type);
   const hated = new Set(TASTE.votes.filter((v) => v.v === "hate").map((v) => v.id));
   const fresh = pool.filter((i) => !hated.has(i.id));
@@ -363,16 +422,152 @@ function tasteLists(){
   };
 }
 
+/* ---------------- AI (through the Cloudflare Worker) ----------------
+   Claude writes ideas in small batches. Each request carries today's votes and
+   your long-term taste, so every new batch reflects how you've voted so far.
+   Between batches the local taste model re-orders what's waiting, so a vote
+   changes what comes next straight away. */
+const workerBase = () => String(AI.url || DEFAULT_WORKER).trim().replace(/\/+$/, "");
+async function aiCall(path, body){
+  let r;
+  try{ r = await fetch(workerBase() + path, {method:"POST", headers:{"Content-Type":"text/plain"}, body:JSON.stringify(Object.assign({}, body, {code:AI.code}))}); }
+  catch(e){ throw new Error("No connection to the AI server"); }
+  let j = null; try{ j = await r.json(); }catch(e){}
+  if (!r.ok) throw new Error((j && j.error) || ("AI server error " + r.status));
+  return j;
+}
+const uniq = (a) => Array.from(new Set(a));
+function tastePayload(){
+  const {pos, neg} = tasteLists();
+  const list = (v) => uniq(TASTE.votes.filter((x) => x.v === v).map((x) => x.title)).slice(-10);
+  return {more:pos.map(chipLabel), less:neg.map(chipLabel), loved:list("love"), hated:list("hate"), picked:uniq(PICKS.map((p) => p.title)).slice(-8)};
+}
+function ideaFields(i){ return {title:i.title, desc:i.desc, type:i.type, colour:i.colour, fabric:i.fabric, fit:i.fit, vibe:i.vibe, search:i.search || ""}; }
+function roundPayload(){ return S.round.votes.map((v) => { const i = byId(v.id) || {title:v.title}; return Object.assign(ideaFields(i), {vote:v.v}); }); }
+function seenTitles(){
+  const t = TASTE.votes.slice(-60).map((v) => v.title).concat(S.queue.map((i) => i.title));
+  if (S.current) t.push(S.current.title);
+  if (S.nextUp) t.push(S.nextUp.title);
+  return uniq(t);
+}
+
+function refill(opts){
+  opts = opts || {};
+  if (!aiRound() || S.fetching) return;
+  const gen = S.gen, at = S.round.votes.length;
+  S.reqVotes = at;
+  const body = {
+    count:opts.count || 4,
+    month:new Date().toLocaleString("en", {month:"long"}),
+    query:{type:Q.type || "Surprise me", styles:Q.styles, text:Q.text},
+    votes:roundPayload(), taste:tastePayload(), seen:seenTitles(),
+    anchor:S.anchor ? ideaFields(S.anchor) : null, redirect:!!opts.redirect,
+  };
+  S.aiErr = null;
+  S.fetching = aiCall("/ideas", body).then((res) => {
+    if (gen !== S.gen) return;
+    S.fetching = null;
+    const have = new Set(seenTitles().map((t) => t.toLowerCase()));
+    const list = (res.ideas || []).map(prepIdea).filter((i) => !have.has(String(i.title).toLowerCase()));
+    if (res.insight) S.aiInsight = res.insight;
+    if (!list.length){
+      // Nothing new came back: stop here instead of asking again in a loop.
+      if (!S.current && !S.queue.length){ S.aiErr = "Claude didn't come up with anything new. Try again, or change your search."; if (S.screen === "explore") render(); }
+      return;
+    }
+    rememberIdeas(list);
+    // Fresh ideas (written with your latest votes) go first; keep one older one in reserve.
+    S.queue = list.concat(S.queue.slice(0, 1));
+    S.anchor = null;
+    list.slice(0, 2).forEach(preload);
+    if (!S.current){ S.current = takeNext(); if (S.screen === "explore") render(); }
+    else if (S.queue.length <= 1 || S.round.votes.length - at >= 2) refill();
+  }).catch((e) => {
+    if (gen !== S.gen) return;
+    S.fetching = null;
+    S.aiErr = e.message || "Something went wrong";
+    if (!S.current && S.screen === "explore") render();
+  });
+}
+
+// Take the waiting idea that best fits your votes so far (Claude's order breaks ties).
+function takeNext(){
+  if (S.nextUp){ const n = S.nextUp; S.nextUp = null; return n; }
+  if (!S.queue.length){ refill(); return null; }
+  const sig = textSignals(Q.text);
+  let best = 0, bestScore = -Infinity;
+  S.queue.forEach((i, ix) => { const s = score(i, sig) + (S.queue.length - ix) * 0.6; if (s > bestScore){ best = ix; bestScore = s; } });
+  const pick = S.queue.splice(best, 1)[0];
+  if (S.queue.length <= 1) refill();
+  if (S.queue[0]) preload(S.queue[0]);
+  return pick;
+}
+
+// After three hates in a row, drop most of what's waiting and ask Claude for a new direction.
+function maybeRedirect(){
+  const last = S.round.votes.slice(-3);
+  if (last.length < 3 || last.some((v) => v.v !== "hate")) return;
+  if (S.round.redirectAt === S.round.votes.length) return;
+  S.round.redirectAt = S.round.votes.length;
+  S.queue = S.queue.slice(0, 1);
+  S.gen++; S.fetching = null;
+  refill({redirect:true});
+}
+
+function seedOf(id){ let h = 7; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) | 0; return Math.abs(h); }
+function imgUrl(i){
+  if (!i || !isAI(i) || !i.image_prompt || !AI.code) return "";
+  return workerBase() + "/image?s=" + seedOf(i.id) + "&code=" + encodeURIComponent(AI.code) + "&p=" + encodeURIComponent(i.image_prompt);
+}
+function preload(i){ const u = imgUrl(i); if (u){ const im = new Image(); im.crossOrigin = "anonymous"; im.src = u; } }
+function thumbImg(id){ const u = imgUrl(byId(id)); return u ? `<img src="${esc(u)}" alt="" crossorigin="anonymous" loading="lazy" onerror="this.remove()">` : ""; }
+
+function ensureShop(){
+  if (!aiRound() || !S.picked) return;
+  const key = S.picked.id + "|" + PREFS.budget;
+  if (S.shop && S.shop.key === key && !S.shop.err) return;
+  const st = S.shop = {key, loading:true, res:null, err:null};
+  aiCall("/shop", {idea:ideaFields(S.picked), budget:PREFS.budget, size:S.picked.type === "Shoes" ? PREFS.shoe : PREFS.size, shipIL:PREFS.shipIL})
+    .then((res) => { st.res = res; })
+    .catch((e) => { st.err = e.message || "Something went wrong"; })
+    .then(() => { st.loading = false; if (S.shop === st && S.screen === "shop") render(); });
+}
+
+async function connectAI(){
+  const code = (document.getElementById("ai-code") || {}).value;
+  const url = (document.getElementById("ai-url") || {}).value;
+  if (code != null) AI.code = code.trim();
+  if (url) AI.url = url.trim();
+  if (!AI.code){ toast("Type your access code first"); render(); return; }
+  S.checking = true; render();
+  try{
+    const r = await fetch(workerBase() + "/health?code=" + encodeURIComponent(AI.code));
+    let j = null; try{ j = await r.json(); }catch(e){}
+    if (!r.ok) throw new Error((j && j.error) || ("AI server error " + r.status));
+    AI.on = true; AI.health = {claude:!!j.claude, images:!!j.images, shopping:!!j.shopping};
+    save("ai", AI);
+    toast(j.claude ? "Claude is connected" : "Connected, but Claude's key isn't set yet");
+  }catch(e){
+    AI.on = false; save("ai", AI);
+    toast(e.message === "Failed to fetch" || e.name === "TypeError" ? "Can't reach the AI server" : e.message);
+  }
+  S.checking = false;
+  render();
+}
+
 /* ---------------- session (survives the phone closing the app) ---------------- */
 function saveSession(){
-  save("session", {at:Date.now(), screen:S.screen, votes:S.round.votes.map((v) => ({id:v.id, title:v.title, tint:v.tint, v:v.v, f:v.f, src:v.src, at:v.at})), current:S.current && S.current.id, picked:S.picked && S.picked.id});
+  save("session", {at:Date.now(), screen:S.screen, votes:S.round.votes.map((v) => ({id:v.id, title:v.title, tint:v.tint, v:v.v, f:v.f, src:v.src, at:v.at})), current:S.current && S.current.id, picked:S.picked && S.picked.id, queue:(S.nextUp ? [S.nextUp] : []).concat(S.queue).map((i) => i.id), insight:S.aiInsight, sampleRound:S.sampleRound});
 }
 function restoreSession(){
   const s = load("session", null);
   if (!s || Date.now() - s.at > 6 * 3600 * 1000) return;
   S.round = {votes: s.votes || []};
-  S.current = s.current ? byId(s.current) : null;
-  S.picked = s.picked ? byId(s.picked) : null;
+  S.sampleRound = !!s.sampleRound;
+  S.queue = (s.queue || []).map(byId).filter(Boolean);
+  S.aiInsight = s.insight || "";
+  S.current = s.current ? byId(s.current) || null : null;
+  S.picked = s.picked ? byId(s.picked) || null : null;
   if (s.screen === "explore" && (S.current || S.round.votes.length)){
     S.screen = "explore";
     if (!S.current) S.current = nextIdea();
@@ -388,7 +583,8 @@ function renderStart(){
     <fieldset><legend class="label">Type of clothing</legend><div class="chips">${TYPES.map((t) => `<button type="button" class="chip" data-act="type" data-v="${esc(t)}" aria-pressed="${Q.type === t}">${esc(t)}</button>`).join("")}</div></fieldset>
     <fieldset><legend class="label">Style <span class="hint">· pick any</span></legend><div class="chips">${STYLES.map((s) => { const on = Q.styles.includes(s); return `<button type="button" class="chip" data-act="style" data-v="${esc(s)}" aria-pressed="${on}">${on ? ICON.check : ""}${esc(s)}</button>`; }).join("")}</div></fieldset>
     <div><label class="label" for="txt">In your own words <span class="hint">· optional</span></label><textarea id="txt" rows="3" placeholder="e.g. something light to throw over a tee on summer evenings, nothing too sporty">${esc(Q.text)}</textarea></div>
-    <div class="bottom sticky"><button type="button" class="cta" data-act="go">Show me ideas ${ICON.arrow}</button></div>
+    <div class="bottom sticky"><button type="button" class="cta" data-act="go">Show me ideas ${ICON.arrow}</button>
+      ${aiOn() ? "" : `<p class="small-note" style="margin-top:6px">Sample ideas for now · <button type="button" class="link-btn" data-act="profile">connect Claude</button></p>`}</div>
   </main>`;
 }
 
@@ -397,8 +593,9 @@ function steps(stage){
 }
 
 function ideaImage(i){
-  if (i.image) return `<img src="${esc(i.image)}" alt="${esc(i.title + ": " + i.desc)}">`;
-  return `<div class="ph">${ICON.image}<span class="mono-label">AI photo · coming soon</span></div>`;
+  const u = i.image || imgUrl(i);
+  if (u) return `<div class="ph wait">${ICON.image}<span class="mono-label">Drawing the photo…</span></div><img src="${esc(u)}" alt="${esc("AI photo of " + i.title + ": " + i.desc)}" crossorigin="anonymous" onload="this.classList.add('ok');this.previousElementSibling.classList.remove('wait')" onerror="var p=this.previousElementSibling;p.classList.remove('wait');p.lastChild.textContent='Photo unavailable';this.remove()">`;
+  return `<div class="ph">${ICON.image}<span class="mono-label">${isAI(i) ? "No photo" : "Sample idea · no photo"}</span></div>`;
 }
 
 function metaHtml(){
@@ -413,23 +610,42 @@ function headCenter(){
 function renderExplore(){
   const i = S.current;
   const head = `<header class="top"><button type="button" class="icon-btn" data-act="home" aria-label="End round">${ICON.close}</button>${headCenter()}<button type="button" class="icon-btn" data-act="profile" aria-label="Your taste profile">${ICON.person}</button></header>${steps(1)}`;
+  if (!i && aiRound() && (S.fetching || !S.aiErr)){
+    return `<main class="screen fixed">${head}
+      <article class="idea" aria-busy="true" aria-labelledby="wait-t">
+        <div class="idea-img shimmer"><div class="ph wait">${ICON.sliders}<span class="mono-label" id="wait-t">${S.round.votes.length ? "Claude is adjusting to your votes…" : "Claude is picking ideas for you…"}</span></div></div>
+        <div class="idea-body"><span class="sk" style="width:62%;height:24px"></span><span class="sk" style="width:90%"></span><span class="sk" style="width:70%"></span></div>
+      </article>
+      <section class="votes" aria-label="Vote on this idea"><button type="button" class="vote hate" disabled>${ICON.close}Hate it</button><button type="button" class="vote like" disabled>${ICON.thumb}Like it</button><button type="button" class="vote love" disabled>${ICON.heart}Love it</button></section>
+      <button type="button" class="outline-btn" disabled>${ICON.bag}This is it — show me where to buy</button>
+    </main>`;
+  }
+  if (!i && aiRound()){
+    return `<main class="screen fixed">${head}<div class="empty" role="alert">
+      <h1 class="idea-title">Couldn't get ideas from Claude</h1>
+      <p class="idea-desc">${esc(S.aiErr)}</p>
+      <button type="button" class="cta" data-act="ai-retry">Try again ${ICON.refresh}</button>
+      <button type="button" class="outline-btn" data-act="use-samples">Use sample ideas this time</button>
+      <button type="button" class="link-btn" data-act="profile">Check the Claude connection</button>
+    </div></main>`;
+  }
   if (!i){
     return `<main class="screen fixed">${head}<div class="empty">
       <h1 class="idea-title">That's every sample idea for this search</h1>
-      <p class="idea-desc">Once Claude is connected, ideas won't run out. For now, widen the search or start a new one.</p>
+      <p class="idea-desc">${aiOn() ? "Start a new search to get fresh ideas from Claude." : "Once Claude is connected, ideas won't run out. For now, widen the search or start a new one."}</p>
       ${Q.type && Q.type !== "Surprise me" ? `<button type="button" class="cta" data-act="broaden">Show all types ${ICON.arrow}</button>` : ""}
       <button type="button" class="link-btn" data-act="home">Back to start</button>
     </div></main>`;
   }
-  const insight = roundInsight();
+  const insight = (aiRound() && S.round.votes.length >= 3 && S.aiInsight ? S.aiInsight : roundInsight()).replace(/[.\s]+$/, "");
   const recent = S.round.votes.slice(-3).reverse();
-  const b = because(i);
+  const b = i.why || because(i);
   return `<main class="screen fixed">${head}
     ${insight ? `<div class="banner" role="status">${ICON.sliders}<p><strong>Adjusting to you:</strong> ${esc(insight)}.</p></div>` : ""}
-    ${recent.length >= 2 ? `<section class="recent-wrap" aria-labelledby="lv"><h2 id="lv" class="mono-label" style="margin:0 0 8px;font-weight:400">Your last votes</h2><ul class="recent">${recent.map((v) => `<li><span class="sw" style="background:${esc(v.tint)}" aria-hidden="true"></span><span class="tx"><span class="t">${esc(v.title)}</span><span class="v ${v.v}">${VOTE_LABEL[v.v]}</span></span></li>`).join("")}</ul></section>` : ""}
+    ${recent.length >= 2 ? `<section class="recent-wrap" aria-labelledby="lv"><h2 id="lv" class="mono-label" style="margin:0 0 8px;font-weight:400">Your last votes</h2><ul class="recent">${recent.map((v) => `<li><span class="sw" style="background:${esc(v.tint)}" aria-hidden="true">${thumbImg(v.id)}</span><span class="tx"><span class="t">${esc(v.title)}</span><span class="v ${v.v}">${VOTE_LABEL[v.v]}</span></span></li>`).join("")}</ul></section>` : ""}
     <article class="idea" id="card" aria-labelledby="idea-t">
       <div class="idea-img" style="background:${esc(i.tint)}">
-        <span class="tag">${AI_MODE ? "AI preview" : "Sample idea"} · not a real product</span>
+        <span class="tag">${isAI(i) ? "AI idea" : "Sample idea"} · not a real product</span>
         ${ideaImage(i)}
         <div class="swatches" aria-hidden="true">${i.palette.map((c) => `<span style="background:${esc(c)}"></span>`).join("")}</div>
       </div>
@@ -452,7 +668,7 @@ function renderSheet(){
   const sizes = shoes ? SHOE_SIZES : SIZES, cur = shoes ? PREFS.shoe : PREFS.size;
   return `<div class="scrim" data-act="scrim"><section class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-t">
     <span class="grab" aria-hidden="true"></span>
-    <div class="picked"><span class="thumb" style="background:${esc(i.tint)}">${ICON.image}</span><div style="display:flex;flex-direction:column;gap:3px;min-width:0"><span class="mono-label" style="color:var(--accent)">You picked</span><h2 id="sheet-t">${esc(i.title)}</h2><span class="sub">${esc([i.colour, i.fabric, i.fit].join(" · "))}</span></div></div>
+    <div class="picked"><span class="thumb" style="background:${esc(i.tint)}">${ICON.image}${thumbImg(i.id)}</span><div style="display:flex;flex-direction:column;gap:3px;min-width:0"><span class="mono-label" style="color:var(--accent)">You picked</span><h2 id="sheet-t">${esc(i.title)}</h2><span class="sub">${esc([i.colour, i.fabric, i.fit].join(" · "))}</span></div></div>
     <fieldset><legend class="label">Budget</legend><div class="chips">${BUDGETS.map((b) => `<button type="button" class="chip" data-act="budget" data-v="${b.id}" aria-pressed="${PREFS.budget === b.id}">${b.label}</button>`).join("")}</div></fieldset>
     <fieldset><legend class="label">Size${shoes ? " (EU)" : ""}</legend><div class="sizes" style="grid-template-columns:repeat(${sizes.length},minmax(0,1fr))">${sizes.map((s) => `<button type="button" class="chip" data-act="size" data-v="${s}" aria-pressed="${cur === s}">${s}</button>`).join("")}</div></fieldset>
     <label class="check"><span>Only stores that ship to Israel</span><input type="checkbox" id="shipIL"${PREFS.shipIL ? " checked" : ""}></label>
@@ -460,26 +676,48 @@ function renderSheet(){
   </section></div>`;
 }
 
-function searchText(i){ return ("men " + i.colour + " " + i.title).replace(/\s+/g, " ").toLowerCase(); }
-function renderShop(){
-  const i = S.picked, q = searchText(i), shoes = i.type === "Shoes";
-  const b = BUDGETS.find((x) => x.id === PREFS.budget);
-  const pills = [b && b.id !== "any" ? b.label : null, "Size " + (shoes ? PREFS.shoe + " EU" : PREFS.size), PREFS.shipIL ? "Ships to Israel" : null].filter(Boolean);
+function searchText(i){ return (i.search || ("men " + i.colour + " " + i.title)).replace(/\s+/g, " ").toLowerCase(); }
+function storeLinks(q){
   const stores = [
     {name:"Google Shopping", sub:"Israeli and international stores", url:"https://www.google.com/search?tbm=shop&gl=il&hl=en&q=" + encodeURIComponent(q)},
     {name:"ASOS", sub:"International", url:"https://www.asos.com/search/?q=" + encodeURIComponent(q)},
   ];
+  return stores.map((s) => `<a class="store" href="${esc(s.url)}" target="_blank" rel="noopener"><span><b>${esc(s.name)}</b><small>${esc(s.sub)}</small></span>${ICON.ext}</a>`).join("")
+    + `<button type="button" class="outline-btn filled" data-act="copy-q" data-v="${esc(q)}">${ICON.copy}Copy search: “${esc(q)}”</button>`;
+}
+function productsHtml(st){
+  if (st.loading){
+    return `<section aria-labelledby="res-h" aria-busy="true"><div class="res-head"><h2 id="res-h">Finding real pieces…</h2><span class="mono-label">Google Shopping · Israel</span></div>
+      <ul class="prods">${[0,1,2,3].map(() => `<li><div class="prod"><span class="pimg shimmer"></span><span class="sk" style="width:90%"></span><span class="sk" style="width:50%"></span></div></li>`).join("")}</ul></section>`;
+  }
+  if (st.err){
+    return `<section class="card" role="alert"><h2>Couldn't load products</h2><p>${esc(st.err)}</p><button type="button" class="outline-btn filled" data-act="shop-retry">${ICON.refresh}Try again</button></section>`;
+  }
+  const r = st.res || {}, list = r.products || [];
+  if (!list.length) return `<section class="card"><h2>No matching pieces found</h2><p>Try a different budget, or open the search in a store below.</p></section>`;
+  return `<section aria-labelledby="res-h"><div class="res-head"><h2 id="res-h">Real pieces</h2><span class="mono-label">${r.ranked ? "Picked by Claude" : "Google Shopping"} · Israel</span></div>
+    ${r.budgetRelaxed ? `<p class="small-note" style="text-align:left;margin:0 0 10px">Nothing matched your budget, so these are the closest finds.</p>` : ""}
+    <ul class="prods">${list.map((p) => `<li><a class="prod" href="${esc(p.link)}" target="_blank" rel="noopener">
+      <span class="pimg">${p.image ? `<img src="${esc(p.image)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ICON.bag}</span>
+      <span class="pt">${esc(p.title)}</span><span class="ps">${esc(p.store)}</span>${p.why ? `<span class="pw">${esc(p.why)}</span>` : ""}<span class="pp">${esc(p.price || "See price")}</span>
+    </a></li>`).join("")}</ul></section>`;
+}
+function renderShop(){
+  const i = S.picked, q = searchText(i), shoes = i.type === "Shoes";
+  const b = BUDGETS.find((x) => x.id === PREFS.budget);
+  const pills = [b && b.id !== "any" ? b.label : null, "Size " + (shoes ? PREFS.shoe + " EU" : PREFS.size), PREFS.shipIL ? "Ships to Israel" : null].filter(Boolean);
+  const live = aiRound() && S.shop;
   return `<main class="screen">
     <header class="top"><button type="button" class="icon-btn" data-act="back-explore" aria-label="Back to ideas">${ICON.back}</button><span class="meta">Shopping</span><button type="button" class="icon-btn" data-act="profile" aria-label="Your taste profile">${ICON.person}</button></header>
     ${steps(2)}
-    <div class="ctx"><span class="thumb sm" style="background:${esc(i.tint)}" aria-hidden="true">${ICON.image}</span><div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span class="mono-label">Real pieces for</span><h1>${esc(i.title)} · ${esc(i.colour)}</h1></div></div>
+    <div class="ctx"><span class="thumb sm" style="background:${esc(i.tint)}" aria-hidden="true">${ICON.image}${thumbImg(i.id)}</span><div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span class="mono-label">Real pieces for</span><h1>${esc(i.title)} · ${esc(i.colour)}</h1></div></div>
     <div class="pills">${pills.map((p) => `<span class="pill">${esc(p)}</span>`).join("")}<button type="button" class="link-btn" data-act="edit-prefs" style="font-size:14px;padding:0 6px">Change</button></div>
+    ${live ? productsHtml(S.shop) + `<section class="card" aria-labelledby="more-h"><h2 id="more-h">Search more stores</h2>${storeLinks(q)}</section>` : `
     <section class="card" aria-labelledby="soon-h">
-      <h2 id="soon-h">Live product search is coming next</h2>
-      <p>Real pieces with photos and prices will show here, ranked by your taste. For now, open this search in a store:</p>
-      ${stores.map((s) => `<a class="store" href="${esc(s.url)}" target="_blank" rel="noopener"><span><b>${esc(s.name)}</b><small>${esc(s.sub)}</small></span>${ICON.ext}</a>`).join("")}
-      <button type="button" class="outline-btn filled" data-act="copy-q" data-v="${esc(q)}">${ICON.copy}Copy search: “${esc(q)}”</button>
-    </section>
+      <h2 id="soon-h">Open this search in a store</h2>
+      <p>${aiOn() ? "Live results are off for this round." : "Connect Claude in your profile to see real pieces with photos and prices here."}</p>
+      ${storeLinks(q)}
+    </section>`}
     <div class="bottom sticky"><button type="button" class="outline-btn filled" data-act="more-like">${ICON.refresh}None of these — more ideas like it</button></div>
   </main>`;
 }
@@ -501,14 +739,29 @@ function renderProfile(){
         ${neg.length ? `<div style="display:flex;flex-direction:column;gap:8px"><span class="mono-label">Less of</span><div class="tchips">${neg.map((k) => `<span class="tchip minus">– ${esc(chipLabel(k))}</span>`).join("")}</div></div>` : ""}`
       : `<p>Vote on a few ideas and this fills in.</p>`}
     </section>
-    ${picks.length ? `<section class="card" aria-labelledby="pk"><h2 id="pk">Picked</h2><ul class="hist">${picks.map((p) => `<li><span class="sw" style="background:${esc(p.tint)}" aria-hidden="true"></span><span class="t">${esc(p.title)}</span><span class="v">${ago(p.at)}</span></li>`).join("")}</ul></section>` : ""}
-    ${votes.length ? `<section class="card" aria-labelledby="rv"><h2 id="rv">Recent votes</h2><ul class="hist">${votes.map((v) => `<li><span class="sw" style="background:${esc(v.tint)}" aria-hidden="true"></span><span class="t">${esc(v.title)}</span><span class="v ${v.v}">${VOTE_LABEL[v.v]} · ${ago(v.at)}</span></li>`).join("")}</ul></section>` : ""}
+    ${picks.length ? `<section class="card" aria-labelledby="pk"><h2 id="pk">Picked</h2><ul class="hist">${picks.map((p) => `<li><span class="sw" style="background:${esc(p.tint)}" aria-hidden="true">${thumbImg(p.id)}</span><span class="t">${esc(p.title)}</span><span class="v">${ago(p.at)}</span></li>`).join("")}</ul></section>` : ""}
+    ${votes.length ? `<section class="card" aria-labelledby="rv"><h2 id="rv">Recent votes</h2><ul class="hist">${votes.map((v) => `<li><span class="sw" style="background:${esc(v.tint)}" aria-hidden="true">${thumbImg(v.id)}</span><span class="t">${esc(v.title)}</span><span class="v ${v.v}">${VOTE_LABEL[v.v]} · ${ago(v.at)}</span></li>`).join("")}</ul></section>` : ""}
+    ${aiCard()}
     <div class="bottom">
       <button type="button" class="outline-btn filled" data-act="ask">${ICON.share}Ask Claude about my style</button>
       ${TASTE.votes.length ? `<button type="button" class="link-btn danger" data-act="reset">Reset my taste</button>` : ""}
-      <p class="small-note">Drape ${APP_VERSION} · ${AI_MODE ? "AI on" : "sample ideas"} · saved on this phone</p>
+      <p class="small-note">Drape ${APP_VERSION} · ${aiOn() ? "Claude on" : "sample ideas"} · saved on this phone</p>
     </div>
   </main>`;
+}
+function aiCard(){
+  const on = aiOn(), h = AI.health || {};
+  const missing = on ? [h.claude ? null : "Claude key", h.images ? null : "image model", h.shopping ? null : "shopping key"].filter(Boolean) : [];
+  return `<section class="card" aria-labelledby="ai-h">
+    <h2 id="ai-h">Claude connection</h2>
+    <span class="ai-status"><span class="dot${on ? " on" : ""}" aria-hidden="true"></span>${on ? "On" : "Off"}</span>
+    <p>${on ? "Claude writes your ideas, each one gets an AI photo, and picks show real products." + (missing.length ? " Not set up yet on the server: " + esc(joinAnd(missing)) + "." : "")
+            : "Using the built-in sample ideas. Enter the access code you set on your AI server to switch Claude on."}</p>
+    ${on ? `<button type="button" class="link-btn" data-act="ai-off" style="align-self:flex-start;padding:0">Turn off</button>` : `
+    <div><label class="label" for="ai-code">Access code</label><input id="ai-code" class="field" type="password" autocomplete="off" value="${esc(AI.code)}"></div>
+    <details><summary>Server address</summary><input id="ai-url" class="field" type="url" inputmode="url" autocapitalize="off" spellcheck="false" value="${esc(AI.url || DEFAULT_WORKER)}"></details>
+    <button type="button" class="outline-btn filled" data-act="ai-connect"${S.checking ? " disabled" : ""}>${S.checking ? "Connecting…" : "Connect"}</button>`}
+  </section>`;
 }
 
 function renderModal(){
@@ -526,6 +779,7 @@ function renderToast(){
 /* ---------------- render ---------------- */
 function render(){
   const app = document.getElementById("app");
+  if (S.screen === "shop") ensureShop();
   let html = S.screen === "explore" ? renderExplore() : S.screen === "shop" ? renderShop() : S.screen === "profile" ? renderProfile() : renderStart();
   if (S.sheet && S.current) html += renderSheet();
   if (S.modal) html += renderModal();
@@ -566,7 +820,10 @@ function startRound(){
   if (ta) Q.text = ta.value.trim();
   save("query", Q);
   S.round = {votes:[]};
-  S.current = nextIdea();
+  S.gen++; S.fetching = null; S.queue = []; S.nextUp = null; S.aiErr = null; S.aiInsight = ""; S.anchor = null; S.sampleRound = false; S.shop = null;
+  S.current = null;
+  if (aiRound()) refill({count:4});
+  else S.current = nextIdea();
   go("explore");
 }
 function vote(v){
@@ -578,7 +835,10 @@ function vote(v){
   const card = document.getElementById("card");
   const done = () => {
     S.busy = false;
+    if (aiRound()) maybeRedirect();
     S.current = nextIdea();
+    // Every two votes, ask Claude for a batch that reflects them.
+    if (aiRound() && S.round.votes.length - (S.reqVotes || 0) >= 2) refill();
     toast(VOTE_LABEL[v] + " “" + i.title + "”", {rec, idea:i});
     render();
   };
@@ -595,6 +855,7 @@ function undo(){
   undoVote(t.rec);
   const ix = S.round.votes.lastIndexOf(t.rec);
   if (ix >= 0) S.round.votes.splice(ix, 1);
+  if (isAI(S.current) && S.current !== t.idea) S.nextUp = S.current; // shown again right after
   S.current = t.idea;
   clearTimeout(toastTimer);
   S.toast = null;
@@ -629,6 +890,13 @@ function toShop(){
 function moreLike(){
   const i = S.picked;
   if (i){ Q.type = i.type; save("query", Q); }
+  if (aiRound()){
+    // Ask Claude for close variations of the pick.
+    S.anchor = i; S.gen++; S.fetching = null; S.queue = []; S.nextUp = null; S.aiErr = null; S.current = null;
+    refill({count:4});
+    go("explore");
+    return;
+  }
   S.current = nextIdea();
   if (!S.current && Q.type !== "Surprise me"){ Q.type = "Surprise me"; save("query", Q); S.current = nextIdea(); }
   go("explore");
@@ -683,6 +951,11 @@ const ACTIONS = {
   "more-like"(){ moreLike(); },
   ask(){ askClaude(); },
   reset(){ S.modal = {title:"Reset your taste?", body:"This clears every vote and pick on this phone. Ideas start from scratch.", ok:"Reset", run(){ TASTE = {w:{}, votes:[]}; PICKS = []; save("taste", TASTE); save("picks", PICKS); S.round = {votes:[]}; toast("Taste reset"); }}; S.focus = ".modal .btn"; render(); },
+  "ai-connect"(){ connectAI(); },
+  "ai-off"(){ AI.on = false; save("ai", AI); S.queue = []; S.gen++; S.fetching = null; toast("Claude turned off — using sample ideas"); render(); },
+  "ai-retry"(){ S.aiErr = null; refill(); render(); },
+  "use-samples"(){ S.sampleRound = true; S.aiErr = null; S.current = nextSample(); render(); },
+  "shop-retry"(){ S.shop = null; render(); },
   "modal-cancel"(){ S.modal = null; render(); },
   "modal-ok"(){ const m = S.modal; S.modal = null; if (m && m.run) m.run(); render(); },
 };
@@ -736,6 +1009,7 @@ function bindSwipe(){
 /* ---------------- boot ---------------- */
 restoreSession();
 render();
+if (S.screen === "explore" && aiRound() && S.queue.length <= 1) refill();
 if ("serviceWorker" in navigator && location.protocol === "https:"){
   navigator.serviceWorker.register("sw.js").catch(() => {});
 }

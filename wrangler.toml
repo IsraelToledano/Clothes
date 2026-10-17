@@ -1,0 +1,19 @@
+# Cloudflare Worker for Drape's AI (see worker/worker.js).
+# Lives at the repo root so Cloudflare's GitHub build deploys the worker itself
+# rather than publishing the repo as a static site. GitHub Pages ignores this file.
+name = "clothes-ai"
+main = "worker/worker.js"
+compatibility_date = "2025-09-01"
+workers_dev = true
+preview_urls = false
+
+# Image model (FLUX.1 schnell) runs on Workers AI: no API key, free daily allowance.
+[ai]
+binding = "AI"
+
+[vars]
+CLAUDE_MODEL = "claude-sonnet-5-5"
+SHOP_MODEL = "claude-haiku-5-5"
+
+# Secrets are set in the Cloudflare dashboard, not here:
+#   ACCESS_CODE, ANTHROPIC_API_KEY, SERPER_API_KEY

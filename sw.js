@@ -1,6 +1,8 @@
 // Drape service worker: makes the app installable and usable offline.
 // Bump CACHE whenever index.html changes so phones pick up the new version.
-const CACHE = "drape-v0.1.0";
+const CACHE = "drape-v0.2.0";
+const IMG_CACHE = "drape-img-v1"; // AI photos: kept across app versions
+const IMG_MAX = 300;
 const ASSETS = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", (e) => {
@@ -10,7 +12,7 @@ self.addEventListener("install", (e) => {
 
 self.addEventListener("activate", (e) => {
   e.waitUntil(
-    caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+    caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE && k !== IMG_CACHE).map((k) => caches.delete(k))))
   );
   self.clients.claim();
 });
@@ -32,6 +34,22 @@ self.addEventListener("fetch", (e) => {
     return;
   }
 
+  // AI photos from the Drape worker: the same idea always gets the same photo,
+  // so keep each one on the phone and never draw it twice.
+  if (url.origin !== self.location.origin && url.pathname === "/image" && url.searchParams.has("p")) {
+    e.respondWith(
+      caches.open(IMG_CACHE).then((c) =>
+        c.match(e.request).then((hit) => hit || fetch(e.request).then((res) => {
+          if (res && res.ok) {
+            c.put(e.request, res.clone()).then(() => trim(c));
+          }
+          return res;
+        }))
+      )
+    );
+    return;
+  }
+
   if (url.origin !== self.location.origin) return;
 
   // App files: network-first so a new deploy shows up right away; cache only when offline.
@@ -45,3 +63,8 @@ self.addEventListener("fetch", (e) => {
       .catch(() => caches.match(e.request).then((hit) => hit || caches.match("./index.html")))
   );
 });
+
+async function trim(c) {
+  const keys = await c.keys();
+  for (let i = 0; i < keys.length - IMG_MAX; i++) await c.delete(keys[i]);
+}
