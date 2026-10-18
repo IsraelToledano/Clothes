@@ -12,7 +12,7 @@
 // On the free plan Cloudflare blocks requests past that instead of charging.
 
 // Bump with the app version so a report shows whether the server was redeployed.
-const SERVER_VERSION = "0.8.0";
+const SERVER_VERSION = "0.8.1";
 const APP_ORIGIN = "https://israeltoledano.github.io";
 const TEXT_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 const IMAGE_MODEL = "@cf/black-forest-labs/flux-1-schnell";
@@ -125,17 +125,15 @@ const EXAMPLE = {
   image_prompt: "Terracotta linen short-sleeve camp-collar shirt with visible slub texture, worn open over a white tee by a man, framed neck to mid-thigh, face out of frame, plain light studio backdrop",
 };
 
-const IDEAS_SYSTEM = `You are the stylist inside Drape, a personal menswear app for one man who lives in Tel Aviv, Israel. He says what he's looking for, you propose clothing ideas, he is hunting for one specific piece each time. He steers you with four answers per idea: VERY CLOSE (nearly exactly what he wants), CLOSE (right direction, not quite), NOT FOR NOW (fine, but not what he wants today: a weak signal, don't read it as dislike) and IRRELEVANT (wrong direction). Your job is to converge on the one piece he is imagining.
+const IDEAS_SYSTEM = `You are the stylist inside Drape, a personal menswear app for one man who lives in Tel Aviv, Israel. He says what he's looking for and you propose clothing ideas. Each time he is hunting for one specific piece. He steers you with two answers per idea: HEART (this one is getting closer to what he wants) and X (not this one right now: a gentle signal about this particular piece, never a ban on its style or colour). Your job is to converge on the one piece he is imagining.
 
 Think like a menswear editor at GQ or Vogue: current, editorial and genuinely wearable, with the details that make a piece look considered (cut, proportion, fabric, colour pairing). When he names brands or references, capture their spirit in the ideas.
 
 An idea is a concept, not a product: a specific kind of garment defined by cut, fabric, colour and mood that many stores sell in some version. Never name brands.
 
 Using his votes:
-- VERY CLOSE: stay very close. Change only one detail at a time (colour, fabric, collar, length, a detail) to zero in on the exact piece.
-- CLOSE: keep what worked and adjust the part that is probably off.
-- NOT FOR NOW: mild signal only. Don't repeat it, but don't avoid its attributes.
-- IRRELEVANT: avoid that combination. If he said so several times in a row, change direction clearly.
+- HEART: getting closer. Keep what he liked and change only one detail at a time (colour, fabric, collar, length, a detail) to zero in on the exact piece.
+- X: don't repeat that idea, but its colour, fabric or style may still appear in other combinations. Several X in a row means: change direction clearly.
 - Saved pieces are ones he liked enough to keep: treat them as a taste reference for future searches, not as ideas to repeat.
 - Long-term taste is a starting point; today's request and today's votes count more.
 - Make about one idea in five a deliberate step outside the pattern so you keep learning. Its "why" is "Something different".
@@ -150,7 +148,7 @@ Reply with JSON only: {"insight": "...", "ideas": [ ... ]}. Each idea has exactl
 - fit, fabric, colour, vibe: one or two words each, Title case; reuse the same words for the same things
 - styles: one to three of ${STYLES.join(", ")}
 - palette: three hex colours: main colour, secondary, a colour it pairs with
-- why: "Because it was very close: <exact title>" or "Because it was close: <exact title>" when it builds on one of today's votes; "Something different" for an exploration; otherwise ""
+- why: "Because it was getting closer: <exact title>" when it builds on one of today's votes; "Something different" for an exploration; otherwise ""
 - search: 3 to 6 English words for a shopping search, starting with "men's"
 - image_prompt: up to 250 characters describing a photorealistic catalogue photo of exactly this garment (colour, fabric texture, key details) worn by a man. Tops and jackets: framed neck to mid-thigh, face out of frame. Trousers and shorts: waist to feet. Shoes: close-up on feet, side view. Plain light studio backdrop.
 insight: if today has 3 or more votes, up to 70 characters on what you've learned, written to follow "Adjusting to you:", e.g. "more earthy linen and relaxed fits, less shiny sporty fabrics". Otherwise "".
@@ -170,12 +168,12 @@ async function ideas(env, b) {
   if (q.text) lines.push("In his words: " + String(q.text).slice(0, 500));
   if (b.anchor && !b.converge) lines.push("He picked this idea but didn't find the right product. Give close variations of it: " + describe(b.anchor));
   if (ANGLES[parseInt(b.angle, 10)]) lines.push(ANGLES[parseInt(b.angle, 10)]);
-  if (b.converge) lines.push("He said this idea is VERY CLOSE to what he wants: " + describe(b.anchor || {}) + ". Write close variations of it that change one detail at a time, so he can zero in on it.");
-  if (b.redirect) lines.push("He has said IRRELEVANT to several ideas in a row: change direction clearly.");
+  if (b.converge) lines.push("He hearted this idea, it is getting closer to what he wants: " + describe(b.anchor || {}) + ". Write close variations of it that change one detail at a time, so he can zero in on it.");
+  if (b.redirect) lines.push("He has said X to several ideas in a row: change direction clearly.");
 
   const round = Array.isArray(b.votes) ? b.votes.slice(-25) : [];
   lines.push("", "Today's votes, oldest first:" + (round.length ? "" : " none yet"));
-  const WORD = { love: "VERY CLOSE", like: "CLOSE", later: "NOT FOR NOW", hate: "IRRELEVANT" };
+  const WORD = { love: "PICKED TO BUY", like: "HEART", later: "X", hate: "X (strong)" };
   for (const v of round) lines.push("- " + (WORD[v.vote] || String(v.vote || "").toUpperCase()) + ": " + describe(v));
 
   const t = b.taste || {};
@@ -184,8 +182,8 @@ async function ideas(env, b) {
     if (t.more && t.more.length) lines.push("More of: " + t.more.join(", "));
     if (t.less && t.less.length) lines.push("Less of: " + t.less.join(", "));
     if (t.saved && t.saved.length) lines.push("Saved by him (kept for later): " + t.saved.join("; "));
-    if (t.loved && t.loved.length) lines.push("Very close before: " + t.loved.join("; "));
-    if (t.hated && t.hated.length) lines.push("Irrelevant before: " + t.hated.join("; "));
+    if (t.loved && t.loved.length) lines.push("Hearted before: " + t.loved.join("; "));
+    if (t.hated && t.hated.length) lines.push("Passed on before (not a hard no): " + t.hated.join("; "));
     if (t.picked && t.picked.length) lines.push("Picked to buy before: " + t.picked.join("; "));
   }
   if (Array.isArray(b.seen) && b.seen.length) lines.push("", "Already shown (don't repeat): " + b.seen.slice(-60).join("; "));

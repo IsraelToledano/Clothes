@@ -108,12 +108,12 @@ textarea::placeholder{color:#686E79}
 .specs div{display:flex;flex-direction:column;gap:3px;min-width:0}
 .specs dt{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .specs dd{margin:0;font-size:14px;font-weight:500;overflow-wrap:anywhere}
-.votes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;flex:none}
-.vote{height:60px;border-radius:18px;border:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12px;font-weight:700;color:var(--ink);padding:0 2px}
+.votes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;flex:none}
+.vote{height:58px;border-radius:29px;border:0;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:8px;font-size:16px;font-weight:700;color:var(--ink);padding:0 2px}
 .vote svg{width:20px;height:20px}
-.vote.later{background:var(--soft)}
+.vote.later{background:var(--hate)}
 .vote.hate{background:var(--hate)}
-.vote.like{background:var(--card);border:1px solid var(--line)}
+.vote.like{background:var(--accent);color:#fff}
 .vote.love{background:var(--accent);color:#fff}
 .vote:active{transform:scale(.97)}
 .empty{flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px;text-align:center;padding:0 8px}
@@ -168,7 +168,7 @@ textarea::placeholder{color:#686E79}
 .hist .sw{flex:none;width:32px;height:32px;border-radius:10px}
 .hist .t{flex:1;min-width:0;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hist .v{font-family:var(--mono);font-size:12px;color:var(--muted);flex:none}
-.hist .v.love{color:var(--accent)}
+.hist .v.love,.hist .v.like{color:var(--accent)}
 .modal{background:var(--card);border-radius:24px;padding:22px;margin:16px;max-width:400px;width:100%;display:flex;flex-direction:column;gap:14px}
 .modal h2{margin:0;font-family:var(--display);font-weight:800;font-size:22px}
 .modal p{margin:0;font-size:15px;line-height:1.45;color:var(--muted)}
@@ -224,9 +224,9 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "0.8.0";
+const APP_VERSION = "0.8.1";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
-const SERVER_EXPECTED = "0.8.0"; // the worker/worker.js version this app was built with
+const SERVER_EXPECTED = "0.8.1"; // the worker/worker.js version this app was built with
 
 /* ---------------- storage (on this phone only) ---------------- */
 const LS = "clothes:";
@@ -242,11 +242,11 @@ const STYLES = ["Relaxed","Minimal","Smart-casual","Streetwear","Vintage","Sport
 const BUDGETS = [{id:"u200",label:"Under ₪200"},{id:"200-400",label:"₪200–400"},{id:"400+",label:"₪400+"},{id:"any",label:"Any"}];
 const SIZES = ["S","M","L","XL","XXL"];
 const SHOE_SIZES = ["40","41","42","43","44","45","46"];
-const VAL = {hate:-2, later:0, like:1, love:3};
+const VAL = {hate:-2, later:-0.6, like:1.5, love:3}; // like/later are the two buttons; hate/love only exist in older saved votes and picks
 const QUEUE_MAX = 40, LOW_QUEUE = 8; // ideas kept waiting; when fewer are left, a new batch is requested
 const lowMark = () => S.hunt ? 2 : LOW_QUEUE; // while zeroing in on a "very close" piece, only top up when nearly out
 const SAVE_VAL = 1.5; // saving a piece counts as a gentle "yes" in your long-term taste
-const VOTE_LABEL = {hate:"Not it", later:"Not for now", like:"Close", love:"Very close"};
+const VOTE_LABEL = {hate:"Not it", later:"Not now", like:"Closer", love:"Picked"};
 
 /* ---------------- sample ideas (menswear) ---------------- */
 const SAMPLE_IDEAS = [
@@ -455,7 +455,7 @@ function because(i){
     if (v.v === "hate" || v.v === "later") continue;
     const o = byId(v.id); if (!o || o.id === i.id) continue;
     const theirs = new Set(attrsOf(o).map(akey));
-    if (mine.filter((k) => theirs.has(k)).length >= 2) return (v.v === "love" ? "Because it was very close: " : "Because it was close: ") + o.title;
+    if (mine.filter((k) => theirs.has(k)).length >= 2) return (v.v === "love" ? "Because you picked: " : "Because it was getting closer: ") + o.title;
   }
   return "";
 }
@@ -485,7 +485,7 @@ const uniq = (a) => Array.from(new Set(a));
 function tastePayload(){
   const {pos, neg} = tasteLists();
   const list = (v) => uniq(TASTE.votes.filter((x) => x.v === v).map((x) => x.title)).slice(-10);
-  return {more:pos.map(chipLabel), less:neg.map(chipLabel), loved:list("love"), hated:list("hate"), saved:uniq(SAVED.map((p) => p.title)).slice(-10), picked:uniq(PICKS.map((p) => p.title)).slice(-8)};
+  return {more:pos.map(chipLabel), less:neg.map(chipLabel), loved:uniq(list("like").concat(list("love"))).slice(-10), hated:list("hate").concat(list("later")).slice(-10), saved:uniq(SAVED.map((p) => p.title)).slice(-10), picked:uniq(PICKS.map((p) => p.title)).slice(-8)};
 }
 function ideaFields(i){ return {title:i.title, desc:i.desc, type:i.type, colour:i.colour, fabric:i.fabric, fit:i.fit, vibe:i.vibe, search:i.search || ""}; }
 function roundPayload(){ return S.round.votes.map((v) => { const i = byId(v.id) || {title:v.title}; return Object.assign(ideaFields(i), {vote:v.v}); }); }
@@ -586,21 +586,19 @@ function takeNext(){
   return pick;
 }
 
-// "Very close": throw away what's waiting and ask for close variations of this one, one detail at a time.
+// Hearted: ask for close variations of this one in the background, one detail at a time. No waiting.
 function converge(i){
-  S.hunt = i; S.queue = []; S.nextUp = null; S.peekId = null;
-  S.gen++; S.fetching = null;
-  refill({count:4, converge:true});
+  S.hunt = i;
+  refill({count:5}); // runs in the background; the new close variations go to the front of the queue
 }
 
-// After three hates in a row, drop most of what's waiting and ask the AI for a new direction.
+// After four "not now" in a row, ask the AI for a new direction (in the background, new ideas go first).
 function maybeRedirect(){
-  const last = S.round.votes.slice(-3);
-  if (last.length < 3 || last.some((v) => v.v !== "hate")) return;
+  const last = S.round.votes.slice(-4);
+  if (last.length < 4 || last.some((v) => v.v !== "later" && v.v !== "hate")) return;
   if (S.round.redirectAt === S.round.votes.length) return;
   S.round.redirectAt = S.round.votes.length;
-  S.queue = []; S.peekId = null; S.hunt = null;
-  S.gen++; S.fetching = null;
+  S.hunt = null;
   refill({redirect:true});
 }
 
@@ -705,7 +703,7 @@ function headCenter(){
 }
 function voteBtns(dis){
   const b = (v, ic, label, aria) => `<button type="button" class="vote ${v}"${dis ? " disabled" : ` data-act="vote" data-v="${v}"`} aria-label="${aria}">${ic}<span>${label}</span></button>`;
-  return `<section class="votes" aria-label="How close is this?">${b("hate", ICON.close, "Not it", "Not it, irrelevant")}${b("later", ICON.later, "Not now", "Not for now")}${b("like", ICON.thumb, "Close", "Close")}${b("love", ICON.heart, "Very close", "Very close")}</section>`;
+  return `<section class="votes" aria-label="Swipe or tap">${b("later", ICON.close, "Not now", "Not now")}${b("like", ICON.heart, "Getting closer", "Getting closer")}</section>`;
 }
 function renderExplore(){
   const i = S.current;
@@ -971,14 +969,14 @@ function vote(v){
   const card = document.getElementById("card");
   const done = () => {
     S.busy = false;
-    if (aiRound()){ if (v === "love") converge(i); else maybeRedirect(); }
+    if (aiRound()){ if (v === "like") converge(i); else maybeRedirect(); }
     S.current = nextIdea();
     toast(VOTE_LABEL[v] + " “" + i.title + "”", {rec, idea:i});
     render();
   };
   if (card && !matchMedia("(prefers-reduced-motion: reduce)").matches){
     card.style.transition = "transform .22s ease, opacity .22s ease";
-    card.style.transform = v === "hate" ? "translateX(-130%) rotate(-10deg)" : v === "love" ? "translateY(-120%)" : v === "later" ? "translateY(120%)" : "translateX(130%) rotate(10deg)";
+    card.style.transform = v === "later" ? "translateX(-130%) rotate(-10deg)" : "translateX(130%) rotate(10deg)";
     card.style.opacity = "0";
     setTimeout(done, 200);
   } else done();
@@ -1116,7 +1114,7 @@ document.addEventListener("keydown", (e) => {
   else if (S.sheet){ S.sheet = false; render(); }
 });
 
-/* ---------------- swipe: ← not it, → close, ↑ very close, ↓ not for now ---------------- */
+/* ---------------- swipe: ← not now, → getting closer ---------------- */
 function bindSwipe(){
   const card = document.getElementById("card");
   if (!card) return;
@@ -1135,10 +1133,8 @@ function bindSwipe(){
   const end = () => {
     if (x0 === null) return;
     x0 = null;
-    if (dx < -90) vote("hate");
+    if (dx < -90) vote("later");
     else if (dx > 90) vote("like");
-    else if (dy < -110 && Math.abs(dx) < 70) vote("love");
-    else if (dy > 110 && Math.abs(dx) < 70) vote("later");
     else { card.style.transition = "transform .18s ease"; card.style.transform = ""; }
   };
   card.addEventListener("pointerup", end);
