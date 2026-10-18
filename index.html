@@ -83,8 +83,12 @@ textarea::placeholder{color:#686E79}
 .ph{display:flex;flex-direction:column;align-items:center;gap:8px;padding:0 44px;text-align:center;color:#3B404A}
 .ph svg{width:40px;height:40px}
 .tag{position:absolute;z-index:1;top:12px;left:12px;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;background:#fff;color:var(--ink);padding:6px 10px;border-radius:999px}
-.swatches{position:absolute;z-index:1;bottom:12px;left:12px;display:flex;gap:6px}
-.swatches span{width:22px;height:22px;border-radius:11px;border:2px solid #fff}
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.stamp{position:absolute;z-index:2;top:50%;display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:14px;font-size:20px;font-weight:800;letter-spacing:.02em;background:#fff;pointer-events:none;opacity:0;transform:translateY(-50%) rotate(var(--rot));box-shadow:0 6px 24px rgba(0,0,0,.18)}
+.stamp svg{width:22px;height:22px}
+.stamp.no{right:16px;--rot:8deg;color:var(--ink);opacity:var(--no,0)}
+.stamp.yes{left:16px;--rot:-8deg;color:var(--accent);opacity:var(--yes,0)}
+.swipe-hint{position:absolute;z-index:1;bottom:12px;left:50%;transform:translateX(-50%);white-space:nowrap;background:rgba(22,24,29,.78);color:#fff;font-size:13px;font-weight:600;padding:8px 14px;border-radius:999px;pointer-events:none}
 .idea-body{padding:12px 16px 14px;display:flex;flex-direction:column;gap:6px;flex:none}
 .specline{margin:0;font-size:13px;font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .insight{position:absolute;z-index:1;top:46px;left:12px;right:12px;display:flex;gap:8px;align-items:center;background:rgba(22,24,29,.82);color:#fff;border-radius:12px;padding:7px 10px;font-size:12px;line-height:1.3;pointer-events:none}
@@ -224,9 +228,9 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "0.8.1";
+const APP_VERSION = "0.9.0";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
-const SERVER_EXPECTED = "0.8.1"; // the worker/worker.js version this app was built with
+const SERVER_EXPECTED = "0.9.0"; // the worker/worker.js version this app was built with
 
 /* ---------------- storage (on this phone only) ---------------- */
 const LS = "clothes:";
@@ -244,7 +248,6 @@ const SIZES = ["S","M","L","XL","XXL"];
 const SHOE_SIZES = ["40","41","42","43","44","45","46"];
 const VAL = {hate:-2, later:-0.6, like:1.5, love:3}; // like/later are the two buttons; hate/love only exist in older saved votes and picks
 const QUEUE_MAX = 40, LOW_QUEUE = 8; // ideas kept waiting; when fewer are left, a new batch is requested
-const lowMark = () => S.hunt ? 2 : LOW_QUEUE; // while zeroing in on a "very close" piece, only top up when nearly out
 const SAVE_VAL = 1.5; // saving a piece counts as a gentle "yes" in your long-term taste
 const VOTE_LABEL = {hate:"Not it", later:"Not now", like:"Closer", love:"Picked"};
 
@@ -396,14 +399,14 @@ function textSignals(text){
   return {pos, neg};
 }
 function hay(i){ return (i.title + " " + i.desc + " " + i.type + " " + i.fit + " " + i.fabric + " " + i.colour + " " + i.vibe + " " + i.styles.join(" ")).toLowerCase(); }
-function score(i, sig){
+function score(i, sig, steady){
   let s = 0;
   for (const a of attrsOf(i)) s += (TASTE.w[akey(a)] || 0) * (a[0] === "type" ? 0.3 : 1);
   for (const st of Q.styles) if (i.styles.includes(st)) s += 3;
   const h = hay(i);
   for (const w of sig.pos) if (h.includes(w)) s += 2;
   for (const w of sig.neg) if (h.includes(w)) s -= 4;
-  return s + Math.random() * 0.8;
+  return s + (steady ? 0 : Math.random() * 0.8);
 }
 function nextIdea(){ return aiRound() ? takeNext() : nextSample(); }
 function nextSample(){
@@ -502,26 +505,60 @@ function bodyFor(opts){
     month:new Date().toLocaleString("en", {month:"long"}),
     query:{type:Q.type || "Surprise me", styles:Q.styles, text:Q.text},
     votes:roundPayload(), taste:tastePayload(), seen:seenTitles(),
-    anchor:S.hunt ? ideaFields(S.hunt) : S.anchor ? ideaFields(S.anchor) : null, redirect:!!opts.redirect, converge:!!S.hunt, angle:opts.angle || 0,
+    anchor:opts.hunt ? ideaFields(opts.hunt) : S.anchor ? ideaFields(S.anchor) : null,
+    redirect:!!opts.redirect, converge:!!opts.hunt, angle:opts.angle || 0, round:S.roundId || "",
   };
 }
-// Put new ideas in the queue (fresh ones first). Returns how many were new.
-function acceptIdeas(res, gen){
+
+// "Same shirt, another colour" counts as a repeat: compare titles with colour words taken out.
+const COLOUR_WORDS = /\b(light|dark|pale|deep|soft|faded|bright|navy|blue|white|ecru|cream|ivory|off|black|grey|gray|charcoal|green|olive|sage|khaki|tan|sand|stone|beige|brown|camel|rust|terracotta|red|burgundy|pink|coral|orange|yellow|mustard|purple|lavender|lilac|teal|mint|indigo|university|sky|powder|forest|bottle|chocolate|mocha|oatmeal|natural)\b/g;
+function dupKey(i){
+  const own = String(i.colour || "").toLowerCase().split(/[^a-z]+/).filter((w) => w.length > 2);
+  let t = String(i.title || "").toLowerCase().replace(COLOUR_WORDS, " ");
+  for (const w of own) t = t.split(w).join(" ");
+  return t.replace(/[^a-z]+/g, " ").trim() + "|" + String(i.fabric || "").toLowerCase().trim();
+}
+function shownIdeas(){
+  const l = S.round.votes.map((v) => byId(v.id)).filter(Boolean).concat(S.queue);
+  if (S.current) l.push(S.current);
+  if (S.nextUp) l.push(S.nextUp);
+  return l;
+}
+
+// The order cards come in. The next two are fixed ("on deck") so their photos can be drawn ahead;
+// everything behind them is re-ranked by your swipes after every swipe.
+const ON_DECK = 2, PRELOAD_N = 3;
+function orderQueue(){
+  const sig = textSignals(Q.text);
+  const deck = S.queue.slice(0, ON_DECK), rest = S.queue.slice(ON_DECK);
+  for (const i of rest) i._r = score(i, sig, true) + (i._boost || 0) - (i._pos || 0) * 0.15;
+  rest.sort((a, b) => b._r - a._r);
+  S.queue = deck.concat(rest);
+}
+function preloadAhead(){ S.queue.slice(0, PRELOAD_N).forEach(preload); }
+
+// Add new ideas to the queue. Returns how many were new.
+function acceptIdeas(res, gen, boost){
   if (gen !== S.gen) return 0;
   const have = new Set(seenTitles().map((t) => t.toLowerCase()));
+  const keys = new Set(shownIdeas().map(dupKey));
   const list = [];
-  for (const raw of (res.ideas || [])){
-    const i = prepIdea(raw), k = String(i.title).toLowerCase();
-    if (have.has(k)) continue;
-    have.add(k); list.push(i);
-  }
+  (res.ideas || []).forEach((raw, ix) => {
+    const i = prepIdea(raw), k = String(i.title).toLowerCase(), d = dupKey(i);
+    if (have.has(k) || keys.has(d)) return;
+    have.add(k); keys.add(d);
+    i._boost = boost || 0; i._pos = ix;
+    list.push(i);
+  });
   if (res.insight) S.aiInsight = res.insight;
   if (!list.length) return 0;
   rememberIdeas(list);
-  S.queue = list.concat(S.queue).slice(0, QUEUE_MAX);
+  S.queue = S.queue.concat(list);
+  orderQueue();
+  S.queue = S.queue.slice(0, QUEUE_MAX);
   S.anchor = null;
   if (!S.current){ S.current = takeNext(); if (S.screen === "explore") render(); }
-  else if (!S.peekId && S.queue[0]){ S.peekId = S.queue[0].id; preload(S.queue[0]); }
+  else preloadAhead();
   return list.length;
 }
 function failIdeas(e, gen){
@@ -529,83 +566,93 @@ function failIdeas(e, gen){
   S.aiErr = e.message || "Something went wrong";
   if (!S.current && S.screen === "explore") render();
 }
+// When a request finishes: a heart that came in meanwhile goes first, then top up if running low.
+function afterFetch(){
+  if (S.pendingHunt && S.hunt){ S.pendingHunt = false; refill({hunt:S.hunt}); return; }
+  S.pendingHunt = false;
+  if (S.queue.length <= 2) refill();
+}
 
-// A batch of ideas, written with your latest votes. Runs in the background so the next card is already waiting.
+// A batch of ideas, written with your latest swipes. Runs in the background so the next cards are already waiting.
+// A recent heart keeps the batches close to that piece; otherwise each batch covers new kinds of garment.
 function refill(opts){
   opts = opts || {};
   if (!aiRound() || S.fetching) return;
   const gen = S.gen;
+  if (!S.roundId) S.roundId = Math.random().toString(36).slice(2, 8);
+  const hunt = opts.hunt || (S.hunt && S.round.votes.length - (S.huntAt || 0) <= 6 ? S.hunt : null);
+  const o = hunt ? Object.assign({}, opts, {hunt, count:opts.count || 5})
+    : opts.redirect || S.anchor ? opts
+    : Object.assign({}, opts, {angle:(S.batchN = (S.batchN || 3) + 1)});
   S.reqVotes = S.round.votes.length;
   S.aiErr = null;
-  S.fetching = aiCall("/ideas", bodyFor(opts)).then((res) => {
+  S.fetching = aiCall("/ideas", bodyFor(o)).then((res) => {
     if (gen !== S.gen) return;
     S.fetching = null;
-    const n = acceptIdeas(res, gen);
-    if (!n){
+    const n = acceptIdeas(res, gen, hunt ? 10 : opts.redirect ? 6 : 0);
+    if (!n && !S.current && !S.queue.length){
       // Nothing new came back: stop here instead of asking again in a loop.
-      if (!S.current && !S.queue.length){ S.aiErr = "The AI didn't come up with anything new. Try again, or change your search."; if (S.screen === "explore") render(); }
+      S.aiErr = "The AI didn't come up with anything new. Try again, or change your search.";
+      if (S.screen === "explore") render();
       return;
     }
-    if (S.queue.length <= 2) refill();
+    if (n) afterFetch();
   }).catch((e) => { if (gen !== S.gen) return; S.fetching = null; failIdeas(e, gen); });
 }
 
-// The first search: ask for a couple of dozen ideas at once, in parallel. The first card shows as soon as
-// the small request answers; the rest keep arriving behind it, so you don't wait between cards.
+// The first search: about twenty ideas at once, in parallel. Batch 0 is the AI's two best bets and
+// answers fastest, so the first card shows quickly; batches 1-3 each cover different kinds of garment.
 function burst(){
   if (!aiRound() || S.fetching) return;
   const gen = S.gen;
+  S.roundId = Math.random().toString(36).slice(2, 8);
+  S.batchN = 3;
   S.reqVotes = S.round.votes.length;
   S.aiErr = null;
-  const plan = [{count:2, angle:0}, {count:6, angle:1}, {count:6, angle:2}, {count:6, angle:3}, {count:6, angle:4}];
+  const plan = [{count:2, angle:0}, {count:6, angle:1}, {count:6, angle:2}, {count:6, angle:3}];
   let got = 0, lastErr = null;
-  S.fetching = Promise.all(plan.map((o) => aiCall("/ideas", bodyFor(o)).then((res) => { got += acceptIdeas(res, gen); }).catch((e) => { lastErr = e; }))).then(() => {
+  S.fetching = Promise.all(plan.map((o) => aiCall("/ideas", bodyFor(o)).then((res) => { got += acceptIdeas(res, gen, o.angle === 0 ? 3 : 0); }).catch((e) => { lastErr = e; }))).then(() => {
     if (gen !== S.gen) return;
     S.fetching = null;
     if (!got && lastErr) failIdeas(lastErr, gen);
     else if (!got && !S.current && !S.queue.length){ S.aiErr = "The AI didn't come up with anything new. Try again, or change your search."; if (S.screen === "explore") render(); }
+    else afterFetch();
   });
 }
 
-// Take the waiting idea that best fits your votes so far (the AI's order breaks ties).
-function bestIndex(){
-  const sig = textSignals(Q.text);
-  let best = 0, bestScore = -Infinity;
-  S.queue.forEach((i, ix) => { const s = score(i, sig) + Math.max(0, 8 - ix) * 0.6; if (s > bestScore){ best = ix; bestScore = s; } });
-  return best;
-}
 function takeNext(){
   if (S.nextUp){ const n = S.nextUp; S.nextUp = null; return n; }
-  if (!S.queue.length){ S.peekId = null; refill(); return null; }
-  let ix = S.peekId ? S.queue.findIndex((i) => i.id === S.peekId) : -1;
-  if (ix < 0) ix = bestIndex();
-  const pick = S.queue.splice(ix, 1)[0];
-  S.peekId = null;
-  if (S.queue.length <= lowMark()) refill();
-  if (S.queue.length){ const nx = S.queue[bestIndex()]; S.peekId = nx.id; preload(nx); }
+  if (!S.queue.length){ refill(); return null; }
+  orderQueue();
+  const pick = S.queue.shift();
+  if (S.queue.length <= LOW_QUEUE) refill();
+  preloadAhead();
   return pick;
 }
 
-// Hearted: ask for close variations of this one in the background, one detail at a time. No waiting.
+// Heart: ask for variations of this piece in the background. They come right after the two cards on deck.
 function converge(i){
-  S.hunt = i;
-  refill({count:5}); // runs in the background; the new close variations go to the front of the queue
+  S.hunt = i; S.huntAt = S.round.votes.length;
+  if (S.fetching) S.pendingHunt = true;
+  else refill({hunt:i});
 }
 
-// After four "not now" in a row, ask the AI for a new direction (in the background, new ideas go first).
+// After four "not now" in a row, ask the AI for a new direction (in the background; those ideas go first).
 function maybeRedirect(){
   const last = S.round.votes.slice(-4);
   if (last.length < 4 || last.some((v) => v.v !== "later" && v.v !== "hate")) return;
   if (S.round.redirectAt === S.round.votes.length) return;
   S.round.redirectAt = S.round.votes.length;
-  S.hunt = null;
-  refill({redirect:true});
+  S.hunt = null; S.pendingHunt = false;
+  for (const i of S.queue) i._boost = 0;
+  if (!S.fetching) refill({redirect:true});
 }
 
 function seedOf(id){ let h = 7; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) | 0; return Math.abs(h); }
 function imgUrl(i){
   if (!i || !isAI(i) || !i.image_prompt || !AI.code) return "";
-  return workerBase() + "/image?s=" + seedOf(i.id) + "&code=" + encodeURIComponent(AI.code) + "&p=" + encodeURIComponent(i.image_prompt);
+  // v=2: product-shot photos (a new URL, so older photos of a man wearing it aren't reused from the cache)
+  return workerBase() + "/image?v=2&s=" + seedOf(i.id) + "&t=" + encodeURIComponent(i.type || "") + "&code=" + encodeURIComponent(AI.code) + "&p=" + encodeURIComponent(i.image_prompt);
 }
 // A photo didn't load. Try it again as a plain fetch: that either recovers it (if the browser
 // refused the image but the server sent it) or tells us the server's real error, which is
@@ -623,7 +670,8 @@ async function imgFail(img){
   if (ph){ ph.classList.remove("wait"); if (ph.lastChild) ph.lastChild.textContent = "Photo unavailable · " + why.slice(0, 70); }
   img.remove();
 }
-function preload(i){ const u = imgUrl(i); if (u){ const im = new Image(); im.crossOrigin = "anonymous"; im.src = u; } }
+const PRELOADED = new Set();
+function preload(i){ const u = imgUrl(i); if (u && !PRELOADED.has(u)){ PRELOADED.add(u); const im = new Image(); im.crossOrigin = "anonymous"; im.src = u; } }
 function thumbImg(id){ const u = imgUrl(byId(id)); return u ? `<img src="${esc(u)}" alt="" crossorigin="anonymous" loading="lazy" onerror="this.remove()">` : ""; }
 
 async function connectAI(){
@@ -637,7 +685,7 @@ async function connectAI(){
     const r = await fetch(workerBase() + "/health?code=" + encodeURIComponent(AI.code));
     let j = null; try{ j = await r.json(); }catch(e){}
     if (!r.ok) throw new Error((j && j.error) || ("AI server error " + r.status));
-    AI.on = true; AI.health = {ideas:!!j.ideas, images:!!j.images, version:j.version || "before 0.7"};
+    AI.on = true; AI.health = {ideas:!!j.ideas, images:!!j.images, version:j.version || "before 0.7", imageModel:j.imageModel || ""};
     save("ai", AI);
     toast(j.ideas ? "AI is on" : "Connected, but the AI isn't set up on the server");
   }catch(e){
@@ -650,7 +698,7 @@ async function connectAI(){
 
 /* ---------------- session (survives the phone closing the app) ---------------- */
 function saveSession(){
-  save("session", {at:Date.now(), screen:S.screen === "profile" ? S.prev : S.screen, votes:S.round.votes.map((v) => ({id:v.id, title:v.title, tint:v.tint, v:v.v, f:v.f, src:v.src, at:v.at})), current:S.current && S.current.id, picked:S.picked && S.picked.id, queue:(S.nextUp ? [S.nextUp] : []).concat(S.queue).map((i) => i.id), insight:S.aiInsight, sampleRound:S.sampleRound});
+  save("session", {at:Date.now(), screen:S.screen === "profile" ? S.prev : S.screen, votes:S.round.votes.map((v) => ({id:v.id, title:v.title, tint:v.tint, v:v.v, f:v.f, src:v.src, at:v.at})), current:S.current && S.current.id, picked:S.picked && S.picked.id, queue:(S.nextUp ? [S.nextUp] : []).concat(S.queue).map((i) => i.id), insight:S.aiInsight, sampleRound:S.sampleRound, roundId:S.roundId || "", batchN:S.batchN || 0});
 }
 function restoreSession(){
   const s = load("session", null);
@@ -659,6 +707,7 @@ function restoreSession(){
   S.sampleRound = !!s.sampleRound;
   S.queue = (s.queue || []).map(byId).filter(Boolean);
   S.aiInsight = s.insight || "";
+  S.roundId = s.roundId || ""; S.batchN = s.batchN || 0;
   S.current = s.current ? byId(s.current) || null : null;
   S.picked = s.picked ? byId(s.picked) || null : null;
   if (s.screen === "explore" && (S.current || S.round.votes.length)){
@@ -703,7 +752,8 @@ function headCenter(){
 }
 function voteBtns(dis){
   const b = (v, ic, label, aria) => `<button type="button" class="vote ${v}"${dis ? " disabled" : ` data-act="vote" data-v="${v}"`} aria-label="${aria}">${ic}<span>${label}</span></button>`;
-  return `<section class="votes" aria-label="Swipe or tap">${b("later", ICON.close, "Not now", "Not now")}${b("like", ICON.heart, "Getting closer", "Getting closer")}</section>`;
+  // Swiping is the way to answer; these buttons stay for screen readers and keyboards only (← and → work too).
+  return `<section class="votes sr-only" aria-label="Answer">${b("later", ICON.close, "Not now", "Not now")}${b("like", ICON.heart, "Getting closer", "Getting closer")}</section>`;
 }
 function renderExplore(){
   const i = S.current;
@@ -743,7 +793,8 @@ function renderExplore(){
         <span class="tag">${isAI(i) ? "AI idea" : "Sample idea"} · not a real product</span>
         ${ideaImage(i)}
         ${insight ? `<div class="insight" role="status">${ICON.sliders}<span>${esc(insight)}</span></div>` : ""}
-        <div class="swatches" aria-hidden="true">${i.palette.map((c) => `<span style="background:${esc(c)}"></span>`).join("")}</div>
+        <span class="stamp no" aria-hidden="true">${ICON.close}Not now</span><span class="stamp yes" aria-hidden="true">${ICON.heart}Closer</span>
+        ${S.round.votes.length < 3 ? `<span class="swipe-hint" aria-hidden="true">← Not now · Getting closer →</span>` : ""}
       </div>
       <div class="idea-body">
         <div class="idea-head">${b ? `<span class="because">${esc(b)}</span>` : ""}<h1 id="idea-t" class="idea-title">${esc(i.title)}</h1><p class="idea-desc">${esc(i.desc)}</p></div>
@@ -954,7 +1005,7 @@ function startRound(){
   if (ta) Q.text = ta.value.trim();
   save("query", Q);
   S.round = {votes:[]};
-  S.gen++; S.fetching = null; S.queue = []; S.nextUp = null; S.peekId = null; S.hunt = null; S.aiErr = null; S.aiInsight = ""; S.anchor = null; S.sampleRound = false;
+  S.gen++; S.fetching = null; S.queue = []; S.nextUp = null; S.hunt = null; S.pendingHunt = false; S.roundId = ""; S.batchN = 0; S.aiErr = null; S.aiInsight = ""; S.anchor = null; S.sampleRound = false;
   S.current = null;
   if (aiRound()) burst();
   else S.current = nextIdea();
@@ -1024,7 +1075,7 @@ function moreLike(){
   if (i){ Q.type = i.type; save("query", Q); }
   if (aiRound()){
     // Ask the AI for close variations of the pick.
-    S.anchor = i; S.hunt = null; S.gen++; S.fetching = null; S.queue = []; S.nextUp = null; S.peekId = null; S.aiErr = null; S.current = null;
+    S.anchor = i; S.hunt = null; S.pendingHunt = false; S.gen++; S.fetching = null; S.queue = []; S.nextUp = null; S.aiErr = null; S.current = null;
     refill({count:4});
     go("explore");
     return;
@@ -1109,6 +1160,9 @@ document.addEventListener("change", (e) => {
   if (e.target.id === "shipIL"){ PREFS.shipIL = e.target.checked; save("prefs", PREFS); }
 });
 document.addEventListener("keydown", (e) => {
+  if ((e.key === "ArrowLeft" || e.key === "ArrowRight") && S.screen === "explore" && !S.modal && !S.sheet && !/^(INPUT|TEXTAREA)$/.test((e.target && e.target.tagName) || "")){
+    vote(e.key === "ArrowLeft" ? "later" : "like"); return;
+  }
   if (e.key !== "Escape") return;
   if (S.modal){ S.modal = null; render(); }
   else if (S.sheet){ S.sheet = false; render(); }
@@ -1128,14 +1182,16 @@ function bindSwipe(){
   card.addEventListener("pointermove", (e) => {
     if (x0 === null || e.pointerId !== pid) return;
     dx = e.clientX - x0; dy = e.clientY - y0;
-    card.style.transform = `translate(${dx}px, ${dy}px) rotate(${dx / 22}deg)`;
+    card.style.transform = `translate(${dx}px, ${dy * 0.3}px) rotate(${dx / 22}deg)`;
+    card.style.setProperty("--yes", Math.max(0, Math.min(1, dx / 90)).toFixed(2));
+    card.style.setProperty("--no", Math.max(0, Math.min(1, -dx / 90)).toFixed(2));
   });
   const end = () => {
     if (x0 === null) return;
     x0 = null;
     if (dx < -90) vote("later");
     else if (dx > 90) vote("like");
-    else { card.style.transition = "transform .18s ease"; card.style.transform = ""; }
+    else { card.style.transition = "transform .18s ease"; card.style.transform = ""; card.style.setProperty("--yes", 0); card.style.setProperty("--no", 0); }
   };
   card.addEventListener("pointerup", end);
   card.addEventListener("pointercancel", end);
@@ -1214,6 +1270,7 @@ function askSnapshot(){
   L.push(`ai: ${aiOn() ? "on" : "off"}${S.sampleRound ? " (this round uses sample ideas)" : ""}   server: ${AI.url || DEFAULT_WORKER}   health: ${JSON.stringify(AI.health || null)}`);
   L.push(`ai request: ${S.fetching ? "in flight" : "idle"}   last error: ${S.aiErr || "none"}   waiting ideas: ${S.queue.length}`);
   L.push(`server version: ${(AI.health && AI.health.version) || "unknown"}   (app expects ${SERVER_EXPECTED} or newer)`);
+  L.push(`photo model: ${(AI.health && AI.health.imageModel) || "unknown"}`);
   L.push(`last photo error: ${S.imgErr || "none"}`);
   L.push(`\nSEARCH: type=${Q.type || "-"}  styles=${(Q.styles || []).join(", ") || "-"}  text="${Q.text || ""}"`);
   L.push(`PREFS: ${JSON.stringify(PREFS)}`);
@@ -1312,7 +1369,7 @@ async function checkServer(){
   try{
     const r = await fetch(workerBase() + "/health?code=" + encodeURIComponent(AI.code), {cache:"no-store"});
     const j = await r.json();
-    if (r.ok){ AI.health = {ideas:!!j.ideas, images:!!j.images, version:j.version || "before 0.7"}; save("ai", AI); if (S.screen === "profile") render(); }
+    if (r.ok){ AI.health = {ideas:!!j.ideas, images:!!j.images, version:j.version || "before 0.7", imageModel:j.imageModel || ""}; save("ai", AI); if (S.screen === "profile") render(); }
   }catch(e){}
 }
 function afterUpdate(){
@@ -1328,7 +1385,7 @@ restoreSession();
 render();
 afterUpdate();
 checkServer();
-if (S.screen === "explore" && aiRound() && S.queue.length <= lowMark()) refill();
+if (S.screen === "explore" && aiRound()){ if (S.queue.length <= LOW_QUEUE) refill(); preloadAhead(); }
 if ("serviceWorker" in navigator && location.protocol === "https:"){
   navigator.serviceWorker.register("sw.js").catch(() => {});
 }

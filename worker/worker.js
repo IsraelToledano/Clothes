@@ -3,7 +3,7 @@
 //
 //   GET  /health  → checks the access code and that the AI binding is there
 //   POST /ideas   → an LLM writes new style ideas from the request and the votes so far
-//   GET  /image   → an AI photo for one idea (FLUX.1 schnell)
+//   GET  /image   → an AI product photo for one idea (FLUX.2 klein 4B, FLUX.1 schnell as backup)
 //
 // One setting in the Cloudflare dashboard (Worker → Settings → Variables and Secrets):
 //   ACCESS_CODE  secret: any passcode; type the same one into the app once.
@@ -12,10 +12,14 @@
 // On the free plan Cloudflare blocks requests past that instead of charging.
 
 // Bump with the app version so a report shows whether the server was redeployed.
-const SERVER_VERSION = "0.8.1";
+const SERVER_VERSION = "0.9.0";
 const APP_ORIGIN = "https://israeltoledano.github.io";
 const TEXT_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
-const IMAGE_MODEL = "@cf/black-forest-labs/flux-1-schnell";
+const IMAGE_MODEL = "@cf/black-forest-labs/flux-2-klein-4b"; // fast, distilled, better garments and anatomy
+const IMAGE_BACKUP = "@cf/black-forest-labs/flux-1-schnell";
+const IMG_W = 512, IMG_H = 768; // portrait like the card; two 512px tiles, about the cost of one schnell photo
+// If the main image model fails (not the daily limit), use the backup for a while and say why in /health.
+let imageTrouble = { until: 0, error: "" };
 
 const TYPES = ["T-shirts", "Shirts", "Overshirts", "Knitwear", "Jackets", "Trousers", "Shorts", "Shoes"];
 const STYLES = ["Relaxed", "Minimal", "Smart-casual", "Streetwear", "Vintage", "Sporty"];
@@ -44,12 +48,12 @@ export default {
 
       if (req.method === "GET" && url.pathname === "/health") {
         checkCode(env, url.searchParams.get("code"));
-        return json({ ok: true, ideas: !!env.AI, images: !!env.AI, version: SERVER_VERSION }, 200, origin);
+        return json({ ok: true, ideas: !!env.AI, images: !!env.AI, version: SERVER_VERSION, imageModel: imageModelNow() }, 200, origin);
       }
 
       if (req.method === "GET" && url.pathname === "/image") {
         checkCode(env, url.searchParams.get("code"));
-        return await image(env, url.searchParams.get("p"), url.searchParams.get("s"), origin);
+        return await image(env, url.searchParams.get("p"), url.searchParams.get("t"), origin);
       }
 
       if (req.method === "POST" && url.pathname === "/ideas") {
@@ -118,58 +122,137 @@ const IDEA_SCHEMA = {
 };
 
 const EXAMPLE = {
-  type: "Shirts", title: "Linen camp-collar shirt", desc: "Open collar, short sleeves, straight hem worn untucked.",
-  fit: "Relaxed", fabric: "Linen", colour: "Terracotta", vibe: "Summer", styles: ["Relaxed", "Vintage"],
-  palette: ["#B8643E", "#E8CDB9", "#F4EFE6"], why: "",
-  search: "men's terracotta linen camp collar shirt",
-  image_prompt: "Terracotta linen short-sleeve camp-collar shirt with visible slub texture, worn open over a white tee by a man, framed neck to mid-thigh, face out of frame, plain light studio backdrop",
+  type: "Shirts", title: "Washed oxford button-down", desc: "Soft broken-in oxford cloth, button-down collar, slightly relaxed body.",
+  fit: "Relaxed", fabric: "Oxford cotton", colour: "University Blue", vibe: "Preppy", styles: ["Smart-casual", "Minimal"],
+  palette: ["#9DB7D9", "#F4F1EA", "#1F2A44"], why: "J.Crew-style washed oxford",
+  search: "men's washed oxford button down shirt",
+  image_prompt: "University-blue washed oxford cloth shirt, button-down collar, chest pocket, long sleeves, slightly relaxed body, soft faded basketweave texture",
 };
 
-const IDEAS_SYSTEM = `You are the stylist inside Drape, a personal menswear app for one man who lives in Tel Aviv, Israel. He says what he's looking for and you propose clothing ideas. Each time he is hunting for one specific piece. He steers you with two answers per idea: HEART (this one is getting closer to what he wants) and X (not this one right now: a gentle signal about this particular piece, never a ban on its style or colour). Your job is to converge on the one piece he is imagining.
+const IDEAS_SYSTEM = `You are the stylist inside Drape, a personal menswear app for one man who lives in Tel Aviv, Israel. Each time he is hunting for one specific piece. He gives a brief, you propose clothing ideas, and he swipes on each: HEART (getting closer to what he wants) or X (not this one right now: a gentle signal about that piece, never a ban on its style or colour). Your job is to converge on the piece he is imagining.
 
-Think like a menswear editor at GQ or Vogue: current, editorial and genuinely wearable, with the details that make a piece look considered (cut, proportion, fabric, colour pairing). When he names brands or references, capture their spirit in the ideas.
+His brief comes first. Read his own words carefully and make every idea clearly answer them. When he names brands, every idea must look like something those brands actually sell, in their signature aesthetic. When there is no vote-based reason, say in "why" which reference an idea follows (e.g. "Ralph Lauren-style madras"). Brand names may appear in "why" and "search", never in the title or description.
 
-An idea is a concept, not a product: a specific kind of garment defined by cut, fabric, colour and mood that many stores sell in some version. Never name brands.
+Think like a menswear editor at GQ or Vogue: current, editorial and genuinely wearable, with the details that make a piece look considered (cut, proportion, fabric, colour pairing).
 
-Using his votes:
-- HEART: getting closer. Keep what he liked and change only one detail at a time (colour, fabric, collar, length, a detail) to zero in on the exact piece.
-- X: don't repeat that idea, but its colour, fabric or style may still appear in other combinations. Several X in a row means: change direction clearly.
-- Saved pieces are ones he liked enough to keep: treat them as a taste reference for future searches, not as ideas to repeat.
-- Long-term taste is a starting point; today's request and today's votes count more.
-- Make about one idea in five a deliberate step outside the pattern so you keep learning. Its "why" is "Something different".
+An idea is a concept, not a product: a specific kind of garment defined by cut, fabric, colour and details that real stores sell.
+
+Variety:
+- Every idea in a batch must be a clearly different garment: a different kind, fabric, collar, pattern or construction. Never the same garment in a few colours (e.g. three oxford shirts in blue, pink and white).
+- When the request names kinds for the batch, use exactly those kinds, one per idea, each interpreted through his brief.
 - Never repeat or closely copy anything in "Already shown".
-- Use exactly the requested type unless it is "Surprise me". Follow his styles and his own words, including what he says he doesn't want.
+
+His swipes:
+- HEART: getting closer. Keep its kind and spirit, and change something meaningful in each variation (fabric, collar, pattern, fit, sleeve length, a detail) to zero in on the exact piece. At most one variation may differ only in colour.
+- X: don't repeat that idea; its colour, fabric or style may still appear in other combinations. Several X in a row means: change direction clearly.
+- Saved pieces are ones he liked enough to keep: a taste reference, not ideas to repeat.
+- Long-term taste is a starting point; today's brief and today's swipes count more.
+- Use exactly the requested type unless it is "Surprise me". Follow his styles, including anything he says he doesn't want.
 - Think about Tel Aviv weather in the given month (long hot humid summers, short mild winters).
 
 Reply with JSON only: {"insight": "...", "ideas": [ ... ]}. Each idea has exactly these fields:
 - type: one of ${TYPES.join(", ")}
-- title: up to 32 characters, sentence case
+- title: up to 32 characters, sentence case, names the garment (e.g. "Madras check camp shirt")
 - desc: one sentence, up to 80 characters, about how it looks and wears
 - fit, fabric, colour, vibe: one or two words each, Title case; reuse the same words for the same things
 - styles: one to three of ${STYLES.join(", ")}
 - palette: three hex colours: main colour, secondary, a colour it pairs with
-- why: "Because it was getting closer: <exact title>" when it builds on one of today's votes; "Something different" for an exploration; otherwise ""
-- search: 3 to 6 English words for a shopping search, starting with "men's"
-- image_prompt: up to 250 characters describing a photorealistic catalogue photo of exactly this garment (colour, fabric texture, key details) worn by a man. Tops and jackets: framed neck to mid-thigh, face out of frame. Trousers and shorts: waist to feet. Shoes: close-up on feet, side view. Plain light studio backdrop.
-insight: if today has 3 or more votes, up to 70 characters on what you've learned, written to follow "Adjusting to you:", e.g. "more earthy linen and relaxed fits, less shiny sporty fabrics". Otherwise "".
+- why: "Because it was getting closer: <exact title>" when it builds on a hearted idea; otherwise the reference from his brief it follows (e.g. "Ralph Lauren-style rugby"), or "Something different" for an exploration, or ""
+- search: 3 to 7 English words for a shopping search, starting with "men's"; may include a brand he named
+- image_prompt: up to 250 characters describing only the garment itself for a product photo: exact colour, fabric and texture, collar, buttons, pockets, pattern, sleeve length, fit. No person, no body, no background.
+insight: if today has 3 or more swipes, up to 70 characters on what you've learned, written to follow "Adjusting to you:", e.g. "more washed oxford and madras, less shiny fabrics". Otherwise "".
 
 Example idea: ${JSON.stringify(EXAMPLE)}`;
 
-// When several batches are written at once, each one takes a different angle so they don't overlap.
-const ANGLES = ["", "Angle for this batch: classic, timeless versions of what he asked for.", "Angle for this batch: sharp, fashion-forward, editorial takes.", "Angle for this batch: relaxed, easy everyday versions.", "Angle for this batch: bolder colour, fabric or detail choices."];
+// Kinds of each type. Every batch gets its own slice, so one search covers many different
+// garments instead of one garment in many colours.
+const KINDS = {
+  "Shirts": ["Oxford button-down shirt", "Poplin shirt with a spread collar", "Linen shirt", "Camp-collar (Cuban) shirt", "Chambray or denim shirt", "Seersucker shirt", "Flannel or brushed-cotton shirt", "Gingham or madras check shirt", "Band-collar (grandad) shirt", "Knitted polo shirt", "Rugby shirt", "Western or workwear shirt", "Bengal or candy-stripe shirt", "Corduroy shirt", "Short-sleeve resort shirt", "Popover (half-placket) shirt"],
+  "T-shirts": ["Heavyweight boxy tee", "Pocket tee", "Breton stripe tee", "Henley", "Ringer tee", "Slub-cotton crew neck", "Long-sleeve tee", "Waffle-knit tee", "Garment-dyed vintage tee", "Polo-collar tee", "Mock-neck tee", "Linen-blend tee"],
+  "Overshirts": ["Chore-style overshirt", "Wool shirt jacket", "Corduroy overshirt", "Quilted overshirt", "Utility overshirt with flap pockets", "Denim overshirt", "Suede overshirt", "Flannel shacket", "Linen overshirt", "Waxed-cotton overshirt"],
+  "Knitwear": ["Cable-knit crewneck", "Merino crewneck", "Shawl-collar cardigan", "Quarter-zip sweater", "Fisherman sweater", "Brushed mohair sweater", "Knitted polo", "Cotton cardigan", "Fair Isle sweater", "Ribbed turtleneck", "Cricket V-neck jumper", "Waffle-knit sweater"],
+  "Jackets": ["Harrington jacket", "Denim trucker jacket", "Suede bomber", "Unstructured blazer", "Field jacket", "Waxed jacket", "Chore coat", "Coach jacket", "Overcoat", "Varsity jacket", "Quilted liner jacket", "Leather jacket"],
+  "Trousers": ["Pleated chinos", "Straight-leg jeans", "Linen drawstring trousers", "Corduroy trousers", "Wool flannel trousers", "Fatigue trousers", "Carpenter trousers", "Wide-leg trousers", "Tapered chinos", "Seersucker trousers"],
+  "Shorts": ["Pleated chino shorts", "Linen drawstring shorts", "Swim shorts", "Denim shorts", "Cargo shorts", "Seersucker shorts", "Rugby shorts", "Terry shorts"],
+  "Shoes": ["White leather sneakers", "Penny loafers", "Suede desert boots", "Retro runners", "Canvas low-tops", "Boat shoes", "Chelsea boots", "Leather sandals", "Espadrilles", "Derby shoes", "Moccasins", "Tennis shoes"],
+};
+KINDS["Surprise me"] = TYPES.slice();
+
+// What well-known brands stand for, so "Ralph Lauren meets J.Crew" turns into concrete clothes.
+const BRANDS = [
+  [/ralph\s*lauren|\bpolo\s+ralph|\brl\b/i, "Ralph Lauren: preppy American heritage. Oxford button-downs, madras and gingham, cable knits, chambray, rugby stripes, chinos, navy blazers. Navy, white, red, cream, forest green. Crisp, classic, a little rich."],
+  [/j\.?\s*crew|jcrew/i, "J.Crew: classic American casual. Washed, broken-in oxfords and poplins, slub linen, garment-dyed tees, chambray, stripes, chinos. Relaxed and easy, softly faded colours."],
+  [/abercrombie|a&f\b/i, "Abercrombie: clean, young American casual. Relaxed fits, linen-blend shirts, polos, washed tees, neutral colours."],
+  [/banana\s*republic/i, "Banana Republic: polished smart-casual. Refined linen and cotton, knit polos, tailored chinos, earthy neutrals."],
+  [/tommy|hilfiger/i, "Tommy Hilfiger: bright preppy. Navy, red and white, stripes, polos, oxford shirts, chinos."],
+  [/lacoste/i, "Lacoste: French sporty-chic. Piqué polos, clean knits, tennis whites, bright solid colours."],
+  [/\bgant\b/i, "Gant: East Coast preppy. Oxford shirts, rugby shirts, cable knits, classic colours."],
+  [/uniqlo/i, "Uniqlo: simple essentials. Clean basics, oxford shirts, linen, Supima tees, quiet colours."],
+  [/\bcos\b/i, "COS: Scandinavian minimal. Boxy shapes, clean lines, no visible details, muted neutrals."],
+  [/arket/i, "Arket: modern Nordic basics. Sturdy natural fabrics, utility touches, muted colours."],
+  [/massimo\s*dutti/i, "Massimo Dutti: refined Mediterranean smart-casual. Linen, suede, fine knits, earthy tones."],
+  [/\bzara\b/i, "Zara: on-trend city fashion. Boxy and relaxed shapes, textured fabrics, current colours."],
+  [/aim[eé]\s*leon\s*dore|\bald\b/i, "Aimé Leon Dore: New York prep meets streetwear. Vintage-inspired knits, rugby shirts, pleated trousers, rich muted colours."],
+  [/todd\s*snyder/i, "Todd Snyder: American menswear with an edge. Italian fabrics, camp shirts, suede, military details."],
+  [/drake'?s/i, "Drake's: English ivy. Oxford cloth, madras, chore jackets, Shetland knits, relaxed tailoring."],
+  [/loro\s*piana|brunello|cucinelli|quiet\s*luxury|old\s*money/i, "Quiet luxury (Loro Piana, Brunello Cucinelli): understated, luxurious fabrics (cashmere, fine linen, suede), no logos, cream, camel, grey, soft blue."],
+  [/sunspel/i, "Sunspel: refined English basics. Fine cotton tees and polos, clean and simple."],
+  [/our\s*legacy|acne/i, "Our Legacy / Acne Studios: Scandinavian contemporary. Unusual fabrics, boxy cuts, washed colours."],
+  [/\ba\.?p\.?c\.?(?=\s|$|[,.!])/i, "A.P.C.: Parisian minimal. Raw denim, clean shirts, quiet colours."],
+  [/carhartt/i, "Carhartt WIP: workwear. Canvas, chore jackets, carpenter trousers, earthy colours."],
+  [/st[uü]ssy|supreme/i, "Stüssy: surf-skate streetwear. Graphic tees, camp shirts, relaxed fits."],
+  [/levi'?s/i, "Levi's: American denim heritage. Jeans, truckers, western shirts, washed tees."],
+  [/\bboss\b|\bhugo\b/i, "Boss: sharp modern business-casual. Slim, clean, dark and neutral colours."],
+];
+const brandNotes = (text) => BRANDS.filter(([re]) => re.test(String(text || ""))).map(([, note]) => note);
+
+// A seeded shuffle: batches of one search never overlap, and each search starts somewhere new.
+function shuffled(list, seed) {
+  const a = list.slice();
+  let h = 2166136261;
+  for (const c of String(seed)) h = Math.imul(h ^ c.charCodeAt(0), 16777619);
+  for (let i = a.length - 1; i > 0; i--) {
+    h = Math.imul(h ^ (h >>> 15), 2246822507);
+    h = Math.imul(h ^ (h >>> 13), 3266489909);
+    h ^= h >>> 16;
+    const j = (h >>> 0) % (i + 1);
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+// Batch 0 is "your best bets"; batch n (1, 2, ...) takes the next slice of kinds.
+function kindsFor(type, angle, seed, count) {
+  const list = KINDS[type] || KINDS["Surprise me"];
+  if (!(angle >= 1)) return [];
+  const order = shuffled(list, seed || "drape");
+  const start = ((angle - 1) * count) % order.length;
+  const out = [];
+  for (let k = 0; k < Math.min(count, order.length); k++) out.push(order[(start + k) % order.length]);
+  return out;
+}
 
 async function ideas(env, b) {
   const count = Math.max(1, Math.min(6, parseInt(b.count, 10) || 4));
   const q = b.query || {};
+  const type = pickFrom(TYPES, q.type) || "Surprise me";
   const lines = [];
+  lines.push("HIS BRIEF (the most important input; every idea must clearly answer it):");
+  lines.push("- Looking for: " + type);
+  if (Array.isArray(q.styles) && q.styles.length) lines.push("- Styles: " + q.styles.join(", "));
+  if (q.text) lines.push('- In his words: "' + String(q.text).slice(0, 500) + '"');
+  const notes = brandNotes(q.text);
+  if (notes.length) { lines.push("- What the brands he named stand for:"); for (const n of notes) lines.push("  * " + n); }
   lines.push("Month: " + (b.month || new Date().toLocaleString("en", { month: "long" })));
-  lines.push("Looking for: " + (q.type || "Surprise me"));
-  if (Array.isArray(q.styles) && q.styles.length) lines.push("Styles: " + q.styles.join(", "));
-  if (q.text) lines.push("In his words: " + String(q.text).slice(0, 500));
-  if (b.anchor && !b.converge) lines.push("He picked this idea but didn't find the right product. Give close variations of it: " + describe(b.anchor));
-  if (ANGLES[parseInt(b.angle, 10)]) lines.push(ANGLES[parseInt(b.angle, 10)]);
-  if (b.converge) lines.push("He hearted this idea, it is getting closer to what he wants: " + describe(b.anchor || {}) + ". Write close variations of it that change one detail at a time, so he can zero in on it.");
-  if (b.redirect) lines.push("He has said X to several ideas in a row: change direction clearly.");
+
+  const hunt = b.converge && b.anchor;
+  const kinds = hunt || b.anchor || b.redirect ? [] : kindsFor(type, parseInt(b.angle, 10), b.round, count);
+  const typeWord = type === "Surprise me" ? "garment" : type.toLowerCase();
+  lines.push("");
+  if (hunt) lines.push("He hearted this idea, it is getting closer to what he wants: " + describe(b.anchor) + ". Write " + count + " variations of it, each changing something meaningful (fabric, collar, pattern, fit, sleeve length or a detail). At most one may differ only in colour.");
+  else if (b.anchor) lines.push("He picked this idea but didn't find the right product. Give close variations of it, each changing something meaningful: " + describe(b.anchor));
+  else if (b.redirect) lines.push("He has said X to several ideas in a row: change direction clearly, with different kinds of " + typeWord + " than the ones he passed on.");
+  else if (kinds.length) lines.push("Kinds for this batch, one idea each, in this order, each interpreted through his brief: " + kinds.join("; ") + ".");
+  else lines.push("Your best bets for his brief: each a different kind of " + typeWord + ".");
 
   const round = Array.isArray(b.votes) ? b.votes.slice(-25) : [];
   lines.push("", "Today's votes, oldest first:" + (round.length ? "" : " none yet"));
@@ -187,7 +270,8 @@ async function ideas(env, b) {
     if (t.picked && t.picked.length) lines.push("Picked to buy before: " + t.picked.join("; "));
   }
   if (Array.isArray(b.seen) && b.seen.length) lines.push("", "Already shown (don't repeat): " + b.seen.slice(-60).join("; "));
-  lines.push("", `Write ${count} new ideas, best bet first. JSON only.`);
+  const words = q.text ? ' Remember his words: "' + String(q.text).slice(0, 200) + '".' : "";
+  lines.push("", `Write ${count} new ideas${kinds.length ? ", one per kind above" : ", best bet first"}.${words} JSON only.`);
 
   const messages = [{ role: "system", content: IDEAS_SYSTEM }, { role: "user", content: lines.join("\n") }];
   const model = env.TEXT_MODEL || TEXT_MODEL;
@@ -212,9 +296,9 @@ async function ideas(env, b) {
     fit: clip(i.fit, 24), fabric: clip(i.fabric, 24), colour: clip(i.colour, 24), vibe: clip(i.vibe, 24),
     styles: (Array.isArray(i.styles) ? i.styles : []).map((s) => pickFrom(STYLES, s)).filter(Boolean).slice(0, 3),
     palette: fixPalette(i.palette),
-    why: clip(i.why, 70),
+    why: clip(i.why, 60),
     search: clip(i.search, 80) || ("men's " + clip(i.colour, 24) + " " + clip(i.title, 48)).toLowerCase(),
-    image_prompt: clip(i.image_prompt || [i.colour, i.fabric, i.title, "worn by a man"].join(" "), 420),
+    image_prompt: clip(i.image_prompt || [i.colour, i.fabric, i.title].join(" "), 420),
   }));
   return { ideas: list, insight: clip(out.insight, 90) };
 }
@@ -243,31 +327,74 @@ function fixPalette(p) {
 
 /* ---------------- /image ---------------- */
 
-const IMAGE_STYLE = "Photorealistic menswear e-commerce photo, soft even studio light, sharp fabric detail, natural colours, no text, no logos, no watermark.";
+// Product photos, like a store's: the garment alone on an invisible mannequin. No person means
+// no odd heads or hands, and the garment looks like something you can actually buy.
+const SHOE_WORDS = /\b(sneakers?|trainers?|loafers?|boots?|sandals?|espadrilles?|derbys?|derbies|moccasins?|mules?|slides|runners|low-tops?|shoes?)\b/i;
+const PERSON_BITS = /\b(worn|wearing|wears|framed|frame|face|faces|man|men|model|person|people|head|hands?|feet|body|torso|backdrop|background|studio|photo|catalogue|catalog)\b/i;
 
-async function image(env, prompt, _seed, origin) {
-  prompt = clip(prompt, 600);
-  if (!prompt) throw new HttpError(400, "Missing prompt");
-  // The app sends "s" only so each idea has its own cached photo URL. The model no
-  // longer accepts a seed, and if it rejects another setting, retry with the prompt alone.
-  const full = prompt + " " + IMAGE_STYLE;
-  let out;
+// Older ideas described a man wearing the piece; keep only the parts about the garment.
+function cleanPrompt(p) {
+  const parts = String(p || "").split(/[,.;]/).map((x) => x.trim()).filter(Boolean);
+  const keep = parts.filter((x, ix) => ix === 0 || !PERSON_BITS.test(x));
+  return keep.join(", ").replace(/\s*\b(worn|wearing)\b.*$/i, "").replace(/\s+by a man\b.*$/i, "").trim();
+}
+function productPrompt(p, type) {
+  const g = cleanPrompt(p) || clip(p, 300);
+  const shoes = type === "Shoes" || (!type && SHOE_WORDS.test(g) && !/\b(shirt|tee|jacket|trousers|shorts|sweater)\b/i.test(g));
+  if (shoes) return `Professional e-commerce product photo of a pair of men's shoes: ${g}. Three-quarter side view, both shoes, centered, on a plain light grey background, soft even studio light, sharp material detail, true-to-life colours. No feet, no person, no text, no logos.`;
+  const lower = type === "Trousers" || type === "Shorts";
+  return `Professional e-commerce product photo of a men's garment: ${g}. Shown alone on an invisible ghost mannequin (hollow inside, no person, no head, no hands), front view, ${lower ? "full length from waistband to hem" : "whole garment in frame, collar to hem"}, centered, on a plain light grey background, soft even studio light, sharp fabric texture, true-to-life colours, realistic real-world garment construction. No text, no logos, no watermark.`;
+}
+const imageModelNow = () => (imageTrouble.until > Date.now() ? "flux-1-schnell (flux-2-klein-4b failed: " + imageTrouble.error + ")" : "flux-2-klein-4b");
+
+async function runMainImage(env, prompt) {
+  const form = new FormData();
+  form.append("prompt", prompt);
+  form.append("width", String(IMG_W));
+  form.append("height", String(IMG_H));
+  // FormData has no body or boundary of its own: a Response serializes it and sets the Content-Type.
+  const r = new Response(form);
+  return runAI(env, IMAGE_MODEL, { multipart: { body: r.body, contentType: r.headers.get("content-type") } });
+}
+async function runBackupImage(env, prompt) {
   try {
-    out = await runAI(env, IMAGE_MODEL, { prompt: full, steps: 4 });
+    return await runAI(env, IMAGE_BACKUP, { prompt, steps: 4 });
   } catch (e) {
     if (!(e instanceof HttpError) || e.status === 429 || !/propert|5006|schema|invalid/i.test(e.message)) throw e;
-    out = await runAI(env, IMAGE_MODEL, { prompt: full });
+    return runAI(env, IMAGE_BACKUP, { prompt });
   }
-  const headers = { "Content-Type": "image/jpeg", "Cache-Control": "public, max-age=31536000, immutable", ...cors(origin) };
-  // Models have returned a base64 string, raw bytes or a stream; accept all of them.
-  if (out instanceof ReadableStream) return new Response(out, { headers });
-  if (out instanceof ArrayBuffer || ArrayBuffer.isView(out)) return new Response(out, { headers });
+}
+
+async function image(env, prompt, type, origin) {
+  prompt = clip(prompt, 600);
+  if (!prompt) throw new HttpError(400, "Missing prompt");
+  const full = productPrompt(prompt, pickFrom(TYPES, type));
+  let bytes = null, used = "flux-2-klein-4b";
+  if (imageTrouble.until <= Date.now()) {
+    try { bytes = await imageBytes(await runMainImage(env, full)); }
+    catch (e) {
+      if (e instanceof HttpError && e.status === 429) throw e;
+      imageTrouble = { until: Date.now() + 10 * 60 * 1000, error: String((e && e.message) || e).slice(0, 160) };
+    }
+  }
+  if (!bytes) { used = "flux-1-schnell"; bytes = await imageBytes(await runBackupImage(env, full)); }
+  const png = bytes[0] === 0x89 && bytes[1] === 0x50;
+  const headers = { "Content-Type": png ? "image/png" : "image/jpeg", "Cache-Control": "public, max-age=31536000, immutable", "X-Drape-Image-Model": used, ...cors(origin) };
+  return new Response(bytes, { headers });
+}
+
+// Models have returned a base64 string, raw bytes or a stream; accept all of them.
+async function imageBytes(out) {
+  if (out instanceof ReadableStream) return new Uint8Array(await new Response(out).arrayBuffer());
+  if (out instanceof ArrayBuffer) return new Uint8Array(out);
+  if (ArrayBuffer.isView(out)) return new Uint8Array(out.buffer, out.byteOffset, out.byteLength);
   let b64 = out && (out.image || out.result || (typeof out === "string" ? out : ""));
   if (b64 && typeof b64 === "object" && b64.image) b64 = b64.image;
   if (typeof b64 !== "string" || !b64) throw new HttpError(502, "The image model returned nothing usable (" + Object.keys(out || {}).join(",") + ")");
   b64 = b64.replace(/^data:image\/\w+;base64,/, "");
   const bin = atob(b64);
+  if (bin.length < 100) throw new HttpError(502, "The image model returned an empty image");
   const bytes = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  return new Response(bytes, { headers });
+  return bytes;
 }

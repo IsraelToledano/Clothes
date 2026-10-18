@@ -13,8 +13,8 @@ Completely free: no API keys and no credit card.
 ## How it works (v0.3)
 
 - **Start**: pick a type of clothing, any styles, and optionally describe what you want in your own words.
-- **Explore**: one idea at a time. Answer with the two buttons or swipe (← not now, → getting closer). Not now is a gentle signal about that piece, not a ban on its style. **Save** keeps a piece in your profile, separate from buying it, and saved pieces shape future searches. A heart makes the AI write close variations of that piece in the background, one detail at a time.
-  - With AI on, the first search asks for about two dozen ideas at once (five requests in parallel), so cards are waiting before you need them. More are written in the background whenever fewer than eight are left, using your latest votes. Four "not now" in a row make it change direction. Each idea gets an AI photo.
+- **Explore**: one idea at a time. Swipe: ← not now, → getting closer (← and → keys work too; screen readers get buttons). Not now is a gentle signal about that piece, not a ban on its style. **Save** keeps a piece in your profile, separate from buying it, and saved pieces shape future searches. A heart makes the AI write variations of that piece in the background; they come right after the next two cards.
+  - With AI on, the first search asks for about 20 ideas at once (four requests in parallel). Each batch is given different kinds of garment (for shirts: oxford, linen, madras, rugby, chambray, camp collar...), so you don't get one shirt in five colours. Your own words lead the brief, and brands you name (Ralph Lauren, J.Crew, COS...) are spelled out for the AI as concrete styles. More ideas are written in the background whenever fewer than eight are left, using your latest swipes. Four "not now" in a row make it change direction. The photos of the next three cards are drawn ahead, so swiping doesn't wait.
   - With AI off, or when today's free AI allowance runs out, ideas come from a built-in sample list (`SAMPLE_IDEAS` in `index.html`).
   - Either way, a local taste model re-orders what's waiting after every vote.
 - **Pick**: "This is it" asks for budget, size and shipping to Israel.
@@ -31,7 +31,7 @@ Everything you do is saved on the phone (`localStorage`, keys prefixed `clothes:
 | Route | What it does | Model |
 |---|---|---|
 | `POST /ideas` | Writes new ideas from the request, today's votes and long-term taste | Llama 3.3 70B (`@cf/meta/llama-3.3-70b-instruct-fp8-fast`) |
-| `GET /image` | Draws a photo for one idea | FLUX.1 schnell (`@cf/black-forest-labs/flux-1-schnell`) |
+| `GET /image` | Draws a product photo for one idea (the garment alone on an invisible mannequin, no person) | FLUX.2 klein 4B (`@cf/black-forest-labs/flux-2-klein-4b`), 512×768; FLUX.1 schnell as backup |
 | `GET /health` | Checks the access code | — |
 
 ### Setup
@@ -42,7 +42,7 @@ Everything you do is saved on the phone (`localStorage`, keys prefixed `clothes:
 
 ### The free limit
 
-Workers AI gives 10,000 free "neurons" a day, shared by ideas and photos. That's roughly 70 votes a day. It resets at 00:00 UTC (03:00 in Israel). On the free plan Cloudflare blocks requests past the limit instead of charging, so the app shows sample ideas until it resets.
+Workers AI gives 10,000 free "neurons" a day, shared by ideas and photos. A search costs about 1,000 to start (around 20 ideas written at once), then about 100 per card (its photo plus its share of new ideas): roughly 80–90 swipes a day. It resets at 00:00 UTC (03:00 in Israel). On the free plan Cloudflare blocks requests past the limit instead of charging, so the app shows sample ideas until it resets.
 
 ## Files
 
