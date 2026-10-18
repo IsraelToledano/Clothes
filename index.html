@@ -228,9 +228,9 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "0.9.0";
+const APP_VERSION = "0.9.1";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
-const SERVER_EXPECTED = "0.9.0"; // the worker/worker.js version this app was built with
+const SERVER_EXPECTED = "0.9.1"; // the worker/worker.js version this app was built with
 
 /* ---------------- storage (on this phone only) ---------------- */
 const LS = "clothes:";
@@ -246,7 +246,9 @@ const STYLES = ["Relaxed","Minimal","Smart-casual","Streetwear","Vintage","Sport
 const BUDGETS = [{id:"u200",label:"Under ₪200"},{id:"200-400",label:"₪200–400"},{id:"400+",label:"₪400+"},{id:"any",label:"Any"}];
 const SIZES = ["S","M","L","XL","XXL"];
 const SHOE_SIZES = ["40","41","42","43","44","45","46"];
-const VAL = {hate:-2, later:-0.6, like:1.5, love:3}; // like/later are the two buttons; hate/love only exist in older saved votes and picks
+// like/later are the two swipes. "Not now" is deliberately soft: it moves that kind of piece back a little
+// without ruling out its style. hate/love only exist in older votes and picks.
+const VAL = {hate:-1, later:-0.3, like:1.5, love:3};
 const QUEUE_MAX = 40, LOW_QUEUE = 8; // ideas kept waiting; when fewer are left, a new batch is requested
 const SAVE_VAL = 1.5; // saving a piece counts as a gentle "yes" in your long-term taste
 const VOTE_LABEL = {hate:"Not it", later:"Not now", like:"Closer", love:"Picked"};
@@ -399,9 +401,15 @@ function textSignals(text){
   return {pos, neg};
 }
 function hay(i){ return (i.title + " " + i.desc + " " + i.type + " " + i.fit + " " + i.fabric + " " + i.colour + " " + i.vibe + " " + i.styles.join(" ")).toLowerCase(); }
+// What you asked for on the start screen (type, styles) is never held against an idea.
+const asked = (kind, v) => (kind === "style" && Q.styles.includes(v)) || (kind === "type" && v === Q.type);
 function score(i, sig, steady){
   let s = 0;
-  for (const a of attrsOf(i)) s += (TASTE.w[akey(a)] || 0) * (a[0] === "type" ? 0.3 : 1);
+  for (const a of attrsOf(i)){
+    let w = TASTE.w[akey(a)] || 0;
+    if (w < 0 && asked(a[0], a[1])) w = 0;
+    s += w * (a[0] === "type" ? 0.3 : 1);
+  }
   for (const st of Q.styles) if (i.styles.includes(st)) s += 3;
   const h = hay(i);
   for (const w of sig.pos) if (h.includes(w)) s += 2;
@@ -463,7 +471,7 @@ function because(i){
   return "";
 }
 function tasteLists(){
-  const ent = Object.entries(TASTE.w).filter(([k]) => !k.startsWith("type:"));
+  const ent = Object.entries(TASTE.w).filter(([k, w]) => { const ix = k.indexOf(":"); return !k.startsWith("type:") && !(w < 0 && asked(k.slice(0, ix), k.slice(ix + 1))); });
   return {
     pos: ent.filter((e) => e[1] >= 2).sort((a, b) => b[1] - a[1]).slice(0, 6).map((e) => e[0]),
     neg: ent.filter((e) => e[1] <= -2).sort((a, b) => a[1] - b[1]).slice(0, 6).map((e) => e[0]),
@@ -539,6 +547,7 @@ function preloadAhead(){ S.queue.slice(0, PRELOAD_N).forEach(preload); }
 
 // Add new ideas to the queue. Returns how many were new.
 function acceptIdeas(res, gen, boost){
+  if (res && res.model) S.textModel = res.model;
   if (gen !== S.gen) return 0;
   const have = new Set(seenTitles().map((t) => t.toLowerCase()));
   const keys = new Set(shownIdeas().map(dupKey));
@@ -685,7 +694,7 @@ async function connectAI(){
     const r = await fetch(workerBase() + "/health?code=" + encodeURIComponent(AI.code));
     let j = null; try{ j = await r.json(); }catch(e){}
     if (!r.ok) throw new Error((j && j.error) || ("AI server error " + r.status));
-    AI.on = true; AI.health = {ideas:!!j.ideas, images:!!j.images, version:j.version || "before 0.7", imageModel:j.imageModel || ""};
+    AI.on = true; AI.health = {ideas:!!j.ideas, images:!!j.images, version:j.version || "before 0.7", textModel:j.textModel || "", imageModel:j.imageModel || ""};
     save("ai", AI);
     toast(j.ideas ? "AI is on" : "Connected, but the AI isn't set up on the server");
   }catch(e){
@@ -1270,6 +1279,7 @@ function askSnapshot(){
   L.push(`ai: ${aiOn() ? "on" : "off"}${S.sampleRound ? " (this round uses sample ideas)" : ""}   server: ${AI.url || DEFAULT_WORKER}   health: ${JSON.stringify(AI.health || null)}`);
   L.push(`ai request: ${S.fetching ? "in flight" : "idle"}   last error: ${S.aiErr || "none"}   waiting ideas: ${S.queue.length}`);
   L.push(`server version: ${(AI.health && AI.health.version) || "unknown"}   (app expects ${SERVER_EXPECTED} or newer)`);
+  L.push(`idea model: ${S.textModel || "-"} (last reply)   server says: ${(AI.health && AI.health.textModel) || "unknown"}`);
   L.push(`photo model: ${(AI.health && AI.health.imageModel) || "unknown"}`);
   L.push(`last photo error: ${S.imgErr || "none"}`);
   L.push(`\nSEARCH: type=${Q.type || "-"}  styles=${(Q.styles || []).join(", ") || "-"}  text="${Q.text || ""}"`);
@@ -1369,7 +1379,7 @@ async function checkServer(){
   try{
     const r = await fetch(workerBase() + "/health?code=" + encodeURIComponent(AI.code), {cache:"no-store"});
     const j = await r.json();
-    if (r.ok){ AI.health = {ideas:!!j.ideas, images:!!j.images, version:j.version || "before 0.7", imageModel:j.imageModel || ""}; save("ai", AI); if (S.screen === "profile") render(); }
+    if (r.ok){ AI.health = {ideas:!!j.ideas, images:!!j.images, version:j.version || "before 0.7", textModel:j.textModel || "", imageModel:j.imageModel || ""}; save("ai", AI); if (S.screen === "profile") render(); }
   }catch(e){}
 }
 function afterUpdate(){
@@ -1381,6 +1391,18 @@ function afterUpdate(){
 }
 
 /* ---------------- boot ---------------- */
+// v0.9.1: rebuild the taste weights with the softer values (older versions pushed every "not now"
+// hard against cotton, smart-casual and so on).
+function rebuildTaste(){
+  const w = {};
+  const add = (i, n) => { for (const a of attrsOf(i)){ const k = akey(a); w[k] = (w[k] || 0) + n; } };
+  for (const v of TASTE.votes){ const i = byId(v.id); if (i && VAL[v.v]) add(i, VAL[v.v] * (v.f || 1)); }
+  for (const x of SAVED) add(x, SAVE_VAL);
+  for (const k in w) if (Math.abs(w[k]) < 1e-9) delete w[k];
+  TASTE.w = w; TASTE.ver = 2;
+  save("taste", TASTE);
+}
+if (TASTE.ver !== 2) rebuildTaste();
 restoreSession();
 render();
 afterUpdate();

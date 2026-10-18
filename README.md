@@ -30,7 +30,7 @@ Everything you do is saved on the phone (`localStorage`, keys prefixed `clothes:
 
 | Route | What it does | Model |
 |---|---|---|
-| `POST /ideas` | Writes new ideas from the request, today's votes and long-term taste | Llama 3.3 70B (`@cf/meta/llama-3.3-70b-instruct-fp8-fast`) |
+| `POST /ideas` | Writes new ideas from the brief, today's swipes and long-term taste | Gemma 4 26B (`@cf/google/gemma-4-26b-a4b-it`); Llama 3.3 70B as backup |
 | `GET /image` | Draws a product photo for one idea (the garment alone on an invisible mannequin, no person) | FLUX.2 klein 4B (`@cf/black-forest-labs/flux-2-klein-4b`), 512×768; FLUX.1 schnell as backup |
 | `GET /health` | Checks the access code | — |
 
@@ -42,7 +42,7 @@ Everything you do is saved on the phone (`localStorage`, keys prefixed `clothes:
 
 ### The free limit
 
-Workers AI gives 10,000 free "neurons" a day, shared by ideas and photos. A search costs about 1,000 to start (around 20 ideas written at once), then about 100 per card (its photo plus its share of new ideas): roughly 80–90 swipes a day. It resets at 00:00 UTC (03:00 in Israel). On the free plan Cloudflare blocks requests past the limit instead of charging, so the app shows sample ideas until it resets.
+Workers AI gives 10,000 free "neurons" a day, shared by ideas and photos. A search costs about 200 to start (around 20 ideas written at once), then about 60 per card (its photo, about 52, plus its share of new ideas): roughly 150 swipes a day. If Gemma fails and the backup (Llama) answers, ideas cost about six times more; the Drape report shows which model answered. It resets at 00:00 UTC (03:00 in Israel). On the free plan Cloudflare blocks requests past the limit instead of charging, so the app shows sample ideas until it resets.
 
 ## Files
 

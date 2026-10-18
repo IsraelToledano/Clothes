@@ -2,7 +2,7 @@
 // Cloudflare's built-in AI, inside its free daily allowance. No API keys.
 //
 //   GET  /health  → checks the access code and that the AI binding is there
-//   POST /ideas   → an LLM writes new style ideas from the request and the votes so far
+//   POST /ideas   → an LLM writes new style ideas from the request and the swipes so far (Gemma 4, Llama 3.3 as backup)
 //   GET  /image   → an AI product photo for one idea (FLUX.2 klein 4B, FLUX.1 schnell as backup)
 //
 // One setting in the Cloudflare dashboard (Worker → Settings → Variables and Secrets):
@@ -12,9 +12,12 @@
 // On the free plan Cloudflare blocks requests past that instead of charging.
 
 // Bump with the app version so a report shows whether the server was redeployed.
-const SERVER_VERSION = "0.9.0";
+const SERVER_VERSION = "0.9.1";
 const APP_ORIGIN = "https://israeltoledano.github.io";
-const TEXT_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
+// Gemma 4 26B (4B active) is fast and costs about a sixth of Llama 3.3 70B per idea in the free allowance.
+const TEXT_MODEL = "@cf/google/gemma-4-26b-a4b-it";
+const TEXT_BACKUP = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
+let textTrouble = { until: 0, error: "" };
 const IMAGE_MODEL = "@cf/black-forest-labs/flux-2-klein-4b"; // fast, distilled, better garments and anatomy
 const IMAGE_BACKUP = "@cf/black-forest-labs/flux-1-schnell";
 const IMG_W = 512, IMG_H = 768; // portrait like the card; two 512px tiles, about the cost of one schnell photo
@@ -48,7 +51,7 @@ export default {
 
       if (req.method === "GET" && url.pathname === "/health") {
         checkCode(env, url.searchParams.get("code"));
-        return json({ ok: true, ideas: !!env.AI, images: !!env.AI, version: SERVER_VERSION, imageModel: imageModelNow() }, 200, origin);
+        return json({ ok: true, ideas: !!env.AI, images: !!env.AI, version: SERVER_VERSION, textModel: textModelNow(), imageModel: imageModelNow() }, 200, origin);
       }
 
       if (req.method === "GET" && url.pathname === "/image") {
@@ -274,18 +277,16 @@ async function ideas(env, b) {
   lines.push("", `Write ${count} new ideas${kinds.length ? ", one per kind above" : ", best bet first"}.${words} JSON only.`);
 
   const messages = [{ role: "system", content: IDEAS_SYSTEM }, { role: "user", content: lines.join("\n") }];
-  const model = env.TEXT_MODEL || TEXT_MODEL;
-  let out;
-  try {
-    out = parseJSON((await runAI(env, model, { messages, max_tokens: 2400, temperature: 0.8, response_format: { type: "json_schema", json_schema: IDEA_SCHEMA } })).response);
-  } catch (e) {
-    if (e instanceof HttpError && e.status === 429) throw e;
-    out = null;
+  let out = null, used = TEXT_MODEL;
+  if (textTrouble.until <= Date.now()) {
+    try { out = await mainText(env, messages); }
+    catch (e) {
+      if (e instanceof HttpError && e.status === 429) throw e;
+      textTrouble = { until: Date.now() + 10 * 60 * 1000, error: String((e && e.message) || e).slice(0, 160) };
+    }
+    if (out && !Array.isArray(out.ideas)) out = null; // one odd reply: use the backup for this request only
   }
-  // JSON mode can fail ("couldn't be met"); ask once more as plain text and pull the JSON out.
-  if (!out || !Array.isArray(out.ideas)) {
-    out = parseJSON((await runAI(env, model, { messages, max_tokens: 2400, temperature: 0.7 })).response);
-  }
+  if (!out) { used = TEXT_BACKUP; out = await backupText(env, messages); }
   if (!out || !Array.isArray(out.ideas)) throw new HttpError(502, "The AI's reply wasn't usable. Try again.");
 
   const list = out.ideas.slice(0, count).filter((i) => i && i.title).map((i) => ({
@@ -300,15 +301,64 @@ async function ideas(env, b) {
     search: clip(i.search, 80) || ("men's " + clip(i.colour, 24) + " " + clip(i.title, 48)).toLowerCase(),
     image_prompt: clip(i.image_prompt || [i.colour, i.fabric, i.title].join(" "), 420),
   }));
-  return { ideas: list, insight: clip(out.insight, 90) };
+  return { ideas: list, insight: clip(out.insight, 90), model: used.split("/").pop() };
+}
+
+const textModelNow = () => (textTrouble.until > Date.now() ? "llama-3.3-70b (gemma-4 failed: " + textTrouble.error + ")" : "gemma-4-26b-a4b-it");
+
+// The reply's text, whatever shape the model returns it in (Workers AI "response", or OpenAI-style "choices").
+function textOf(r) {
+  if (r == null) return "";
+  if (typeof r === "string") return r;
+  if (r.response != null) return r.response;
+  const c = Array.isArray(r.choices) && r.choices[0];
+  if (c) {
+    const m = c.message || {};
+    if (Array.isArray(m.content)) return m.content.map((x) => (x && (x.text || x.content)) || "").join("");
+    if (m.content != null) return m.content;
+    if (c.text != null) return c.text;
+  }
+  if (r.output_text) return r.output_text;
+  if (Array.isArray(r.output)) return r.output.flatMap((o) => (o && Array.isArray(o.content) ? o.content : [])).map((x) => (x && x.text) || "").join("");
+  return r;
+}
+// Settings the model doesn't accept come back as a quick validation error: try the next, simpler form.
+const settingRejected = (e) => e instanceof HttpError && e.status !== 429 && /propert|5006|schema|invalid|unknown|unsupported|response_format|max_completion/i.test(e.message);
+async function mainText(env, messages) {
+  const tries = [
+    { messages, max_completion_tokens: 2400, temperature: 0.8, response_format: { type: "json_object" } },
+    { messages, max_completion_tokens: 2400, temperature: 0.8 },
+    { messages, max_tokens: 2400, temperature: 0.8 },
+  ];
+  let last;
+  for (const t of tries) {
+    try { return parseJSON(textOf(await runAI(env, TEXT_MODEL, t))); }
+    catch (e) { last = e; if (!settingRejected(e)) throw e; }
+  }
+  throw last;
+}
+async function backupText(env, messages) {
+  let out = null;
+  try {
+    out = parseJSON(textOf(await runAI(env, TEXT_BACKUP, { messages, max_tokens: 2400, temperature: 0.8, response_format: { type: "json_schema", json_schema: IDEA_SCHEMA } })));
+  } catch (e) {
+    if (e instanceof HttpError && e.status === 429) throw e;
+  }
+  // JSON mode can fail ("couldn't be met"); ask once more as plain text and pull the JSON out.
+  if (!out || !Array.isArray(out.ideas)) out = parseJSON(textOf(await runAI(env, TEXT_BACKUP, { messages, max_tokens: 2400, temperature: 0.7 })));
+  return out;
 }
 
 function parseJSON(r) {
   if (r && typeof r === "object") return r;
   const s = String(r || "");
   try { return JSON.parse(s); } catch (e) {}
-  const a = s.indexOf("{"), z = s.lastIndexOf("}");
-  if (a >= 0 && z > a) { try { return JSON.parse(s.slice(a, z + 1)); } catch (e) {} }
+  const fence = s.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (fence) { try { return JSON.parse(fence[1]); } catch (e) {} }
+  // Pull the JSON object out of any text around it (start from the one that holds "ideas").
+  const z = s.lastIndexOf("}"), k = s.indexOf('"ideas"');
+  const starts = [k > 0 ? s.lastIndexOf("{", k) : -1, s.indexOf("{")].filter((x) => x >= 0);
+  for (const a of starts) if (z > a) { try { return JSON.parse(s.slice(a, z + 1)); } catch (e) {} }
   return null;
 }
 function pickFrom(list, v) {
