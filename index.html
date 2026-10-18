@@ -33,7 +33,7 @@ button{cursor:pointer}
 button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 a{color:var(--accent)}
 .screen{min-height:100vh;min-height:100dvh;max-width:520px;margin:0 auto;padding:calc(14px + var(--safe-t)) 16px calc(20px + var(--safe-b));display:flex;flex-direction:column;gap:14px}
-.screen.fixed{height:100vh;height:100dvh;min-height:0;overflow:hidden}
+.screen.fixed{height:100vh;height:100dvh;min-height:0;overflow:hidden;gap:10px}
 .screen.roomy{gap:22px}
 .top{display:flex;align-items:center;justify-content:space-between;min-height:44px;gap:8px}
 .wordmark{font-family:var(--display);font-weight:800;font-size:28px;letter-spacing:-.03em}
@@ -78,25 +78,40 @@ textarea::placeholder{color:#686E79}
 .recent .v{font-family:var(--mono);font-size:11px;color:var(--muted)}
 .recent .v.love{color:var(--accent)}
 .idea{flex:1 1 auto;min-height:0;background:var(--card);border-radius:24px;overflow:hidden;display:flex;flex-direction:column;touch-action:none;user-select:none;-webkit-user-select:none;will-change:transform}
-.idea-img{position:relative;flex:1 1 auto;min-height:130px;display:flex;align-items:center;justify-content:center}
-.idea-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.idea-img{position:relative;flex:1 1 auto;min-height:200px;display:flex;align-items:center;justify-content:center}
+.idea-img img{-webkit-user-drag:none;-webkit-touch-callout:none;pointer-events:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .ph{display:flex;flex-direction:column;align-items:center;gap:8px;padding:0 44px;text-align:center;color:#3B404A}
 .ph svg{width:40px;height:40px}
 .tag{position:absolute;z-index:1;top:12px;left:12px;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;background:#fff;color:var(--ink);padding:6px 10px;border-radius:999px}
 .swatches{position:absolute;z-index:1;bottom:12px;left:12px;display:flex;gap:6px}
 .swatches span{width:22px;height:22px;border-radius:11px;border:2px solid #fff}
-.idea-body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:12px;flex:none}
+.idea-body{padding:12px 16px 14px;display:flex;flex-direction:column;gap:6px;flex:none}
+.specline{margin:0;font-size:13px;font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.insight{position:absolute;z-index:1;top:46px;left:12px;right:12px;display:flex;gap:8px;align-items:center;background:rgba(22,24,29,.82);color:#fff;border-radius:12px;padding:7px 10px;font-size:12px;line-height:1.3;pointer-events:none}
+.insight svg{width:14px;height:14px;flex:none}
+.insight span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.acts{display:grid;grid-template-columns:auto 1fr;gap:8px;flex:none}
+.acts .outline-btn{min-height:46px;font-size:14px}
+.save-btn{width:auto;padding:0 18px}
+.save-btn.on{background:var(--ink);color:#fff}
+.hist.saved li{padding:6px 0}
+.sv-open{flex:1;min-width:0;display:flex;align-items:center;gap:12px;background:none;border:0;padding:0;text-align:left;color:var(--ink)}
+.sv-open .t{display:flex;flex-direction:column;font-weight:600}
+.sv-open small{font-size:12px;font-weight:400;color:var(--muted);overflow:hidden;text-overflow:ellipsis}
+.icon-btn.sm{width:36px;height:36px;border-radius:18px}
 .idea-head{display:flex;flex-direction:column;gap:6px}
 .because{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.idea-title{margin:0;font-family:var(--display);font-weight:800;font-size:26px;line-height:1.08;letter-spacing:-.02em}
-.idea-desc{margin:0;font-size:15px;line-height:1.4;color:var(--muted)}
+.idea-title{margin:0;font-family:var(--display);font-weight:800;font-size:22px;line-height:1.08;letter-spacing:-.02em}
+.idea-desc{margin:0;font-size:14px;line-height:1.35;color:var(--muted)}
+.idea .idea-desc{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .specs{margin:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
 .specs div{display:flex;flex-direction:column;gap:3px;min-width:0}
 .specs dt{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .specs dd{margin:0;font-size:14px;font-weight:500;overflow-wrap:anywhere}
-.votes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;flex:none}
-.vote{height:68px;border-radius:20px;border:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:14px;font-weight:700;color:var(--ink)}
-.vote svg{width:22px;height:22px}
+.votes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;flex:none}
+.vote{height:60px;border-radius:18px;border:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12px;font-weight:700;color:var(--ink);padding:0 2px}
+.vote svg{width:20px;height:20px}
+.vote.later{background:var(--soft)}
 .vote.hate{background:var(--hate)}
 .vote.like{background:var(--card);border:1px solid var(--line)}
 .vote.love{background:var(--accent);color:#fff}
@@ -209,9 +224,9 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "0.7.0";
+const APP_VERSION = "0.8.0";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
-const SERVER_EXPECTED = "0.7.0"; // the worker/worker.js version this app was built with
+const SERVER_EXPECTED = "0.8.0"; // the worker/worker.js version this app was built with
 
 /* ---------------- storage (on this phone only) ---------------- */
 const LS = "clothes:";
@@ -227,8 +242,11 @@ const STYLES = ["Relaxed","Minimal","Smart-casual","Streetwear","Vintage","Sport
 const BUDGETS = [{id:"u200",label:"Under ₪200"},{id:"200-400",label:"₪200–400"},{id:"400+",label:"₪400+"},{id:"any",label:"Any"}];
 const SIZES = ["S","M","L","XL","XXL"];
 const SHOE_SIZES = ["40","41","42","43","44","45","46"];
-const VAL = {hate:-2, like:1, love:2};
-const VOTE_LABEL = {hate:"Hated", like:"Liked", love:"Loved"};
+const VAL = {hate:-2, later:0, like:1, love:3};
+const QUEUE_MAX = 40, LOW_QUEUE = 8; // ideas kept waiting; when fewer are left, a new batch is requested
+const lowMark = () => S.hunt ? 2 : LOW_QUEUE; // while zeroing in on a "very close" piece, only top up when nearly out
+const SAVE_VAL = 1.5; // saving a piece counts as a gentle "yes" in your long-term taste
+const VOTE_LABEL = {hate:"Not it", later:"Not for now", like:"Close", love:"Very close"};
 
 /* ---------------- sample ideas (menswear) ---------------- */
 const SAMPLE_IDEAS = [
@@ -271,7 +289,7 @@ function rememberIdeas(list){
   if (ids.length > 400) for (const id of ids.slice(0, ids.length - 400)) delete AIDB[id];
   save("ai-ideas", AIDB);
 }
-const byId = (id) => AIDB[id] || SAMPLE_BY_ID[id];
+const byId = (id) => AIDB[id] || SAMPLE_BY_ID[id] || SAVED.find((x) => x.id === id);
 const isAI = (i) => !!(i && String(i.id).startsWith("ai-"));
 
 // A soft background for the photo area: the idea's main colour mixed with white.
@@ -297,6 +315,9 @@ const ICON = {
   bag: sv('<path d="M6 7h12l-1 13H7L6 7z"/><path d="M9 7a3 3 0 0 1 6 0"/>'),
   sliders: sv('<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>'),
   image: sv('<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/>', {w:1.6}),
+  later: sv('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
+  mark: sv('<path d="M6 3h12v18l-6-4-6 4V3z"/>'),
+  marked: sv('<path d="M6 3h12v18l-6-4-6 4V3z"/>', {fill:"currentColor"}),
   check: sv('<path d="M5 12l5 5 9-10"/>', {w:3}),
   ext: sv('<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>', {w:2.2}),
   refresh: sv('<path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/>'),
@@ -310,6 +331,7 @@ let Q = load("query", {type:"", styles:[], text:""});
 let TASTE = load("taste", {w:{}, votes:[]});
 let PREFS = load("prefs", {budget:"any", size:"M", shoe:"43", shipIL:true});
 let PICKS = load("picks", []);
+let SAVED = load("saved", []); // pieces you kept: full idea + when
 const S = {screen:"start", prev:"start", round:{votes:[]}, current:null, picked:null, sheet:false, modal:null, toast:null, busy:false,
   // AI: ideas waiting to be shown, the request in flight, what the AI has learned this round
   queue:[], fetching:null, gen:0, aiErr:null, aiInsight:"", anchor:null, sampleRound:false, checking:false};
@@ -324,18 +346,34 @@ const attrsOf = (i) => [["type",i.type],["fit",i.fit],["fabric",i.fabric],["colo
 const akey = (a) => a[0] + ":" + a[1];
 
 function recordVote(idea, v, f, src){
-  for (const a of attrsOf(idea)){ const k = akey(a); TASTE.w[k] = (TASTE.w[k] || 0) + VAL[v] * f; }
+  if (VAL[v]) for (const a of attrsOf(idea)){ const k = akey(a); TASTE.w[k] = (TASTE.w[k] || 0) + VAL[v] * f; }
   const rec = {id:idea.id, title:idea.title, tint:idea.tint, v, f, src, at:Date.now()};
   TASTE.votes.push(rec);
   if (TASTE.votes.length > 600) TASTE.votes = TASTE.votes.slice(-600);
   save("taste", TASTE);
   return rec;
 }
+const isSaved = (id) => SAVED.some((x) => x.id === id);
+function applySave(idea, sign){
+  for (const a of attrsOf(idea)){ const k = akey(a); TASTE.w[k] = (TASTE.w[k] || 0) + sign * SAVE_VAL; if (Math.abs(TASTE.w[k]) < 1e-9) delete TASTE.w[k]; }
+  save("taste", TASTE);
+}
+function toggleSave(i){
+  if (!i) return;
+  if (isSaved(i.id)){
+    SAVED = SAVED.filter((x) => x.id !== i.id); applySave(i, -1);
+    save("saved", SAVED); toast("Removed from saved"); return;
+  }
+  SAVED.push(Object.assign({}, i, {savedAt:Date.now()}));
+  if (SAVED.length > 200) SAVED = SAVED.slice(-200);
+  applySave(i, 1);
+  save("saved", SAVED); toast("Saved · find it in your profile");
+}
 function undoVote(rec){
   const i = TASTE.votes.lastIndexOf(rec);
   if (i < 0) return false;
   const idea = byId(rec.id);
-  if (idea) for (const a of attrsOf(idea)){
+  if (idea && VAL[rec.v]) for (const a of attrsOf(idea)){
     const k = akey(a); TASTE.w[k] = (TASTE.w[k] || 0) - VAL[rec.v] * rec.f;
     if (Math.abs(TASTE.w[k]) < 1e-9) delete TASTE.w[k];
   }
@@ -414,10 +452,10 @@ function roundInsight(){
 function because(i){
   const mine = attrsOf(i).filter((a) => a[0] !== "type").map(akey);
   for (const v of S.round.votes.slice().reverse()){
-    if (v.v === "hate") continue;
+    if (v.v === "hate" || v.v === "later") continue;
     const o = byId(v.id); if (!o || o.id === i.id) continue;
     const theirs = new Set(attrsOf(o).map(akey));
-    if (mine.filter((k) => theirs.has(k)).length >= 2) return (v.v === "love" ? "Because you loved: " : "Because you liked: ") + o.title;
+    if (mine.filter((k) => theirs.has(k)).length >= 2) return (v.v === "love" ? "Because it was very close: " : "Because it was close: ") + o.title;
   }
   return "";
 }
@@ -447,7 +485,7 @@ const uniq = (a) => Array.from(new Set(a));
 function tastePayload(){
   const {pos, neg} = tasteLists();
   const list = (v) => uniq(TASTE.votes.filter((x) => x.v === v).map((x) => x.title)).slice(-10);
-  return {more:pos.map(chipLabel), less:neg.map(chipLabel), loved:list("love"), hated:list("hate"), picked:uniq(PICKS.map((p) => p.title)).slice(-8)};
+  return {more:pos.map(chipLabel), less:neg.map(chipLabel), loved:list("love"), hated:list("hate"), saved:uniq(SAVED.map((p) => p.title)).slice(-10), picked:uniq(PICKS.map((p) => p.title)).slice(-8)};
 }
 function ideaFields(i){ return {title:i.title, desc:i.desc, type:i.type, colour:i.colour, fabric:i.fabric, fit:i.fit, vibe:i.vibe, search:i.search || ""}; }
 function roundPayload(){ return S.round.votes.map((v) => { const i = byId(v.id) || {title:v.title}; return Object.assign(ideaFields(i), {vote:v.v}); }); }
@@ -458,56 +496,101 @@ function seenTitles(){
   return uniq(t);
 }
 
-function refill(opts){
-  opts = opts || {};
-  if (!aiRound() || S.fetching) return;
-  const gen = S.gen, at = S.round.votes.length;
-  S.reqVotes = at;
-  const body = {
-    count:opts.count || 4,
+function bodyFor(opts){
+  return {
+    count:opts.count || 6,
     month:new Date().toLocaleString("en", {month:"long"}),
     query:{type:Q.type || "Surprise me", styles:Q.styles, text:Q.text},
     votes:roundPayload(), taste:tastePayload(), seen:seenTitles(),
-    anchor:S.anchor ? ideaFields(S.anchor) : null, redirect:!!opts.redirect,
+    anchor:S.hunt ? ideaFields(S.hunt) : S.anchor ? ideaFields(S.anchor) : null, redirect:!!opts.redirect, converge:!!S.hunt, angle:opts.angle || 0,
   };
+}
+// Put new ideas in the queue (fresh ones first). Returns how many were new.
+function acceptIdeas(res, gen){
+  if (gen !== S.gen) return 0;
+  const have = new Set(seenTitles().map((t) => t.toLowerCase()));
+  const list = [];
+  for (const raw of (res.ideas || [])){
+    const i = prepIdea(raw), k = String(i.title).toLowerCase();
+    if (have.has(k)) continue;
+    have.add(k); list.push(i);
+  }
+  if (res.insight) S.aiInsight = res.insight;
+  if (!list.length) return 0;
+  rememberIdeas(list);
+  S.queue = list.concat(S.queue).slice(0, QUEUE_MAX);
+  S.anchor = null;
+  if (!S.current){ S.current = takeNext(); if (S.screen === "explore") render(); }
+  else if (!S.peekId && S.queue[0]){ S.peekId = S.queue[0].id; preload(S.queue[0]); }
+  return list.length;
+}
+function failIdeas(e, gen){
+  if (gen !== S.gen) return;
+  S.aiErr = e.message || "Something went wrong";
+  if (!S.current && S.screen === "explore") render();
+}
+
+// A batch of ideas, written with your latest votes. Runs in the background so the next card is already waiting.
+function refill(opts){
+  opts = opts || {};
+  if (!aiRound() || S.fetching) return;
+  const gen = S.gen;
+  S.reqVotes = S.round.votes.length;
   S.aiErr = null;
-  S.fetching = aiCall("/ideas", body).then((res) => {
+  S.fetching = aiCall("/ideas", bodyFor(opts)).then((res) => {
     if (gen !== S.gen) return;
     S.fetching = null;
-    const have = new Set(seenTitles().map((t) => t.toLowerCase()));
-    const list = (res.ideas || []).map(prepIdea).filter((i) => !have.has(String(i.title).toLowerCase()));
-    if (res.insight) S.aiInsight = res.insight;
-    if (!list.length){
+    const n = acceptIdeas(res, gen);
+    if (!n){
       // Nothing new came back: stop here instead of asking again in a loop.
       if (!S.current && !S.queue.length){ S.aiErr = "The AI didn't come up with anything new. Try again, or change your search."; if (S.screen === "explore") render(); }
       return;
     }
-    rememberIdeas(list);
-    // Fresh ideas (written with your latest votes) go first; keep one older one in reserve.
-    S.queue = list.concat(S.queue.slice(0, 1));
-    S.anchor = null;
-    if (list[0]) preload(list[0]);
-    if (!S.current){ S.current = takeNext(); if (S.screen === "explore") render(); }
-    else if (S.queue.length <= 1 || S.round.votes.length - at >= 3) refill();
-  }).catch((e) => {
+    if (S.queue.length <= 2) refill();
+  }).catch((e) => { if (gen !== S.gen) return; S.fetching = null; failIdeas(e, gen); });
+}
+
+// The first search: ask for a couple of dozen ideas at once, in parallel. The first card shows as soon as
+// the small request answers; the rest keep arriving behind it, so you don't wait between cards.
+function burst(){
+  if (!aiRound() || S.fetching) return;
+  const gen = S.gen;
+  S.reqVotes = S.round.votes.length;
+  S.aiErr = null;
+  const plan = [{count:2, angle:0}, {count:6, angle:1}, {count:6, angle:2}, {count:6, angle:3}, {count:6, angle:4}];
+  let got = 0, lastErr = null;
+  S.fetching = Promise.all(plan.map((o) => aiCall("/ideas", bodyFor(o)).then((res) => { got += acceptIdeas(res, gen); }).catch((e) => { lastErr = e; }))).then(() => {
     if (gen !== S.gen) return;
     S.fetching = null;
-    S.aiErr = e.message || "Something went wrong";
-    if (!S.current && S.screen === "explore") render();
+    if (!got && lastErr) failIdeas(lastErr, gen);
+    else if (!got && !S.current && !S.queue.length){ S.aiErr = "The AI didn't come up with anything new. Try again, or change your search."; if (S.screen === "explore") render(); }
   });
 }
 
 // Take the waiting idea that best fits your votes so far (the AI's order breaks ties).
-function takeNext(){
-  if (S.nextUp){ const n = S.nextUp; S.nextUp = null; return n; }
-  if (!S.queue.length){ refill(); return null; }
+function bestIndex(){
   const sig = textSignals(Q.text);
   let best = 0, bestScore = -Infinity;
-  S.queue.forEach((i, ix) => { const s = score(i, sig) + (S.queue.length - ix) * 0.6; if (s > bestScore){ best = ix; bestScore = s; } });
-  const pick = S.queue.splice(best, 1)[0];
-  if (S.queue.length <= 1) refill();
-  if (S.queue[0]) preload(S.queue[0]);
+  S.queue.forEach((i, ix) => { const s = score(i, sig) + Math.max(0, 8 - ix) * 0.6; if (s > bestScore){ best = ix; bestScore = s; } });
+  return best;
+}
+function takeNext(){
+  if (S.nextUp){ const n = S.nextUp; S.nextUp = null; return n; }
+  if (!S.queue.length){ S.peekId = null; refill(); return null; }
+  let ix = S.peekId ? S.queue.findIndex((i) => i.id === S.peekId) : -1;
+  if (ix < 0) ix = bestIndex();
+  const pick = S.queue.splice(ix, 1)[0];
+  S.peekId = null;
+  if (S.queue.length <= lowMark()) refill();
+  if (S.queue.length){ const nx = S.queue[bestIndex()]; S.peekId = nx.id; preload(nx); }
   return pick;
+}
+
+// "Very close": throw away what's waiting and ask for close variations of this one, one detail at a time.
+function converge(i){
+  S.hunt = i; S.queue = []; S.nextUp = null; S.peekId = null;
+  S.gen++; S.fetching = null;
+  refill({count:4, converge:true});
 }
 
 // After three hates in a row, drop most of what's waiting and ask the AI for a new direction.
@@ -516,7 +599,7 @@ function maybeRedirect(){
   if (last.length < 3 || last.some((v) => v.v !== "hate")) return;
   if (S.round.redirectAt === S.round.votes.length) return;
   S.round.redirectAt = S.round.votes.length;
-  S.queue = S.queue.slice(0, 1);
+  S.queue = []; S.peekId = null; S.hunt = null;
   S.gen++; S.fetching = null;
   refill({redirect:true});
 }
@@ -596,6 +679,7 @@ function renderStart(){
     <fieldset><legend class="label">Style <span class="hint">· pick any</span></legend><div class="chips">${STYLES.map((s) => { const on = Q.styles.includes(s); return `<button type="button" class="chip" data-act="style" data-v="${esc(s)}" aria-pressed="${on}">${on ? ICON.check : ""}${esc(s)}</button>`; }).join("")}</div></fieldset>
     <div><label class="label" for="txt">In your own words <span class="hint">· optional</span></label><textarea id="txt" rows="3" placeholder="e.g. something light to throw over a tee on summer evenings, nothing too sporty">${esc(Q.text)}</textarea></div>
     <div class="bottom sticky"><button type="button" class="cta" data-act="go">Show me ideas ${ICON.arrow}</button>
+      ${SAVED.length ? `<button type="button" class="link-btn" data-act="profile">Saved pieces · ${SAVED.length}</button>` : ""}
       ${aiOn() ? "" : `<p class="small-note" style="margin-top:6px">Sample ideas for now · <button type="button" class="link-btn" data-act="profile">turn on AI</button></p>`}</div>
   </main>`;
 }
@@ -606,7 +690,7 @@ function steps(stage){
 
 function ideaImage(i){
   const u = i.image || imgUrl(i);
-  if (u) return `<div class="ph wait">${ICON.image}<span class="mono-label">Drawing the photo…</span></div><img src="${esc(u)}" alt="${esc("AI photo of " + i.title + ": " + i.desc)}" crossorigin="anonymous" onload="this.classList.add('ok');this.previousElementSibling.classList.remove('wait')" onerror="imgFail(this)">`;
+  if (u) return `<div class="ph wait">${ICON.image}<span class="mono-label">Drawing the photo…</span></div><img src="${esc(u)}" alt="${esc("AI photo of " + i.title + ": " + i.desc)}" crossorigin="anonymous" draggable="false" onload="this.classList.add('ok');this.previousElementSibling.classList.remove('wait')" onerror="imgFail(this)">`;
   return `<div class="ph">${ICON.image}<span class="mono-label">${isAI(i) ? "No photo" : "Sample idea · no photo"}</span></div>`;
 }
 
@@ -619,17 +703,21 @@ function headCenter(){
   if (!u) return metaHtml();
   return `<button type="button" class="undo-pill" data-act="undo" aria-label="Undo: ${esc(VOTE_LABEL[u.rec.v].toLowerCase() + " " + u.idea.title)}"><span>${esc(VOTE_LABEL[u.rec.v])} “${esc(u.idea.title)}”</span><b>Undo</b></button>`;
 }
+function voteBtns(dis){
+  const b = (v, ic, label, aria) => `<button type="button" class="vote ${v}"${dis ? " disabled" : ` data-act="vote" data-v="${v}"`} aria-label="${aria}">${ic}<span>${label}</span></button>`;
+  return `<section class="votes" aria-label="How close is this?">${b("hate", ICON.close, "Not it", "Not it, irrelevant")}${b("later", ICON.later, "Not now", "Not for now")}${b("like", ICON.thumb, "Close", "Close")}${b("love", ICON.heart, "Very close", "Very close")}</section>`;
+}
 function renderExplore(){
   const i = S.current;
-  const head = `<header class="top"><button type="button" class="icon-btn" data-act="home" aria-label="End round">${ICON.close}</button>${headCenter()}${hbtns(true)}</header>${steps(1)}`;
+  const head = `<header class="top"><button type="button" class="icon-btn" data-act="home" aria-label="End round">${ICON.close}</button>${headCenter()}${hbtns(true)}</header>`;
   if (!i && aiRound() && (S.fetching || !S.aiErr)){
     return `<main class="screen fixed">${head}
       <article class="idea" aria-busy="true" aria-labelledby="wait-t">
         <div class="idea-img shimmer"><div class="ph wait">${ICON.sliders}<span class="mono-label" id="wait-t">${S.round.votes.length ? "Adjusting to your votes…" : "Picking ideas for you…"}</span></div></div>
         <div class="idea-body"><span class="sk" style="width:62%;height:24px"></span><span class="sk" style="width:90%"></span><span class="sk" style="width:70%"></span></div>
       </article>
-      <section class="votes" aria-label="Vote on this idea"><button type="button" class="vote hate" disabled>${ICON.close}Hate it</button><button type="button" class="vote like" disabled>${ICON.thumb}Like it</button><button type="button" class="vote love" disabled>${ICON.heart}Love it</button></section>
-      <button type="button" class="outline-btn" disabled>${ICON.bag}This is it — show me where to buy</button>
+      ${voteBtns(true)}
+      <div class="acts"><button type="button" class="outline-btn save-btn" disabled>${ICON.mark}Save</button><button type="button" class="outline-btn" disabled>${ICON.bag}This is it — where to buy</button></div>
     </main>`;
   }
   if (!i && aiRound()){
@@ -650,28 +738,22 @@ function renderExplore(){
     </div></main>`;
   }
   const insight = (aiRound() && S.round.votes.length >= 3 && S.aiInsight ? S.aiInsight : roundInsight()).replace(/[.\s]+$/, "");
-  const recent = S.round.votes.slice(-3).reverse();
   const b = i.why || because(i);
   return `<main class="screen fixed">${head}
-    ${insight ? `<div class="banner" role="status">${ICON.sliders}<p><strong>Adjusting to you:</strong> ${esc(insight)}.</p></div>` : ""}
-    ${recent.length >= 2 ? `<section class="recent-wrap" aria-labelledby="lv"><h2 id="lv" class="mono-label" style="margin:0 0 8px;font-weight:400">Your last votes</h2><ul class="recent">${recent.map((v) => `<li><span class="sw" style="background:${esc(v.tint)}" aria-hidden="true">${thumbImg(v.id)}</span><span class="tx"><span class="t">${esc(v.title)}</span><span class="v ${v.v}">${VOTE_LABEL[v.v]}</span></span></li>`).join("")}</ul></section>` : ""}
     <article class="idea" id="card" aria-labelledby="idea-t">
       <div class="idea-img" style="background:${esc(i.tint)}">
         <span class="tag">${isAI(i) ? "AI idea" : "Sample idea"} · not a real product</span>
         ${ideaImage(i)}
+        ${insight ? `<div class="insight" role="status">${ICON.sliders}<span>${esc(insight)}</span></div>` : ""}
         <div class="swatches" aria-hidden="true">${i.palette.map((c) => `<span style="background:${esc(c)}"></span>`).join("")}</div>
       </div>
       <div class="idea-body">
         <div class="idea-head">${b ? `<span class="because">${esc(b)}</span>` : ""}<h1 id="idea-t" class="idea-title">${esc(i.title)}</h1><p class="idea-desc">${esc(i.desc)}</p></div>
-        <dl class="specs">${[["Fit",i.fit],["Fabric",i.fabric],["Colour",i.colour],["Vibe",i.vibe]].map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>
+        <p class="specline">${[i.colour, i.fabric, i.fit, i.vibe].filter(Boolean).map(esc).join(" · ")}</p>
       </div>
     </article>
-    <section class="votes" aria-label="Vote on this idea">
-      <button type="button" class="vote hate" data-act="vote" data-v="hate">${ICON.close}Hate it</button>
-      <button type="button" class="vote like" data-act="vote" data-v="like">${ICON.thumb}Like it</button>
-      <button type="button" class="vote love" data-act="vote" data-v="love">${ICON.heart}Love it</button>
-    </section>
-    <button type="button" class="outline-btn" data-act="pick">${ICON.bag}This is it — show me where to buy</button>
+    ${voteBtns(false)}
+    <div class="acts"><button type="button" class="outline-btn save-btn${isSaved(i.id) ? " on" : ""}" data-act="save" aria-pressed="${isSaved(i.id)}">${isSaved(i.id) ? ICON.marked + "Saved" : ICON.mark + "Save"}</button><button type="button" class="outline-btn" data-act="pick">${ICON.bag}This is it — where to buy</button></div>
   </main>`;
 }
 
@@ -777,13 +859,14 @@ function renderProfile(){
   const picks = PICKS.slice(-6).reverse();
   return `<main class="screen">
     <header class="top"><button type="button" class="icon-btn" data-act="profile-back" aria-label="Back">${ICON.back}</button><span class="meta">Your taste</span>${hbtns(false)}</header>
-    <div style="display:flex;flex-direction:column;gap:6px"><h1 class="h1" style="font-size:32px">Your taste so far</h1><span class="mono-label">${TASTE.votes.length} vote${TASTE.votes.length === 1 ? "" : "s"} · ${PICKS.length} pick${PICKS.length === 1 ? "" : "s"}</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><h1 class="h1" style="font-size:32px">Your taste so far</h1><span class="mono-label">${TASTE.votes.length} vote${TASTE.votes.length === 1 ? "" : "s"} · ${SAVED.length} saved · ${PICKS.length} pick${PICKS.length === 1 ? "" : "s"}</span></div>
     <section class="card" aria-label="What you like and dislike">
       ${pos.length || neg.length ? `
         ${pos.length ? `<div style="display:flex;flex-direction:column;gap:8px"><span class="mono-label">More of</span><div class="tchips">${pos.map((k) => `<span class="tchip plus">+ ${esc(chipLabel(k))}</span>`).join("")}</div></div>` : ""}
         ${neg.length ? `<div style="display:flex;flex-direction:column;gap:8px"><span class="mono-label">Less of</span><div class="tchips">${neg.map((k) => `<span class="tchip minus">– ${esc(chipLabel(k))}</span>`).join("")}</div></div>` : ""}`
       : `<p>Vote on a few ideas and this fills in.</p>`}
     </section>
+    <section class="card" aria-labelledby="sv"><h2 id="sv">Saved${SAVED.length ? " · " + SAVED.length : ""}</h2>${SAVED.length ? `<ul class="hist saved">${SAVED.slice().reverse().map((p) => `<li><button type="button" class="sv-open" data-act="open-saved" data-v="${esc(p.id)}"><span class="sw" style="background:${esc(p.tint)}" aria-hidden="true">${thumbImg(p.id)}</span><span class="t">${esc(p.title)}<small>${esc([p.colour, p.fabric].filter(Boolean).join(" · "))} · where to buy</small></span></button><button type="button" class="icon-btn sm" data-act="unsave" data-v="${esc(p.id)}" aria-label="Remove ${esc(p.title)} from saved">${ICON.close}</button></li>`).join("")}</ul>` : `<p>Tap Save on any idea to keep it here. Saved pieces also shape future searches.</p>`}</section>
     ${picks.length ? `<section class="card" aria-labelledby="pk"><h2 id="pk">Picked</h2><ul class="hist">${picks.map((p) => `<li><span class="sw" style="background:${esc(p.tint)}" aria-hidden="true">${thumbImg(p.id)}</span><span class="t">${esc(p.title)}</span><span class="v">${ago(p.at)}</span></li>`).join("")}</ul></section>` : ""}
     ${votes.length ? `<section class="card" aria-labelledby="rv"><h2 id="rv">Recent votes</h2><ul class="hist">${votes.map((v) => `<li><span class="sw" style="background:${esc(v.tint)}" aria-hidden="true">${thumbImg(v.id)}</span><span class="t">${esc(v.title)}</span><span class="v ${v.v}">${VOTE_LABEL[v.v]} · ${ago(v.at)}</span></li>`).join("")}</ul></section>` : ""}
     ${aiCard()}
@@ -873,9 +956,9 @@ function startRound(){
   if (ta) Q.text = ta.value.trim();
   save("query", Q);
   S.round = {votes:[]};
-  S.gen++; S.fetching = null; S.queue = []; S.nextUp = null; S.aiErr = null; S.aiInsight = ""; S.anchor = null; S.sampleRound = false;
+  S.gen++; S.fetching = null; S.queue = []; S.nextUp = null; S.peekId = null; S.hunt = null; S.aiErr = null; S.aiInsight = ""; S.anchor = null; S.sampleRound = false;
   S.current = null;
-  if (aiRound()) refill({count:4});
+  if (aiRound()) burst();
   else S.current = nextIdea();
   go("explore");
 }
@@ -888,16 +971,14 @@ function vote(v){
   const card = document.getElementById("card");
   const done = () => {
     S.busy = false;
-    if (aiRound()) maybeRedirect();
+    if (aiRound()){ if (v === "love") converge(i); else maybeRedirect(); }
     S.current = nextIdea();
-    // Every three votes, ask for a batch that reflects them (keeps within the free daily allowance).
-    if (aiRound() && S.round.votes.length - (S.reqVotes || 0) >= 3) refill();
     toast(VOTE_LABEL[v] + " “" + i.title + "”", {rec, idea:i});
     render();
   };
   if (card && !matchMedia("(prefers-reduced-motion: reduce)").matches){
     card.style.transition = "transform .22s ease, opacity .22s ease";
-    card.style.transform = v === "hate" ? "translateX(-130%) rotate(-10deg)" : v === "love" ? "translateY(-120%)" : "translateX(130%) rotate(10deg)";
+    card.style.transform = v === "hate" ? "translateX(-130%) rotate(-10deg)" : v === "love" ? "translateY(-120%)" : v === "later" ? "translateY(120%)" : "translateX(130%) rotate(10deg)";
     card.style.opacity = "0";
     setTimeout(done, 200);
   } else done();
@@ -945,7 +1026,7 @@ function moreLike(){
   if (i){ Q.type = i.type; save("query", Q); }
   if (aiRound()){
     // Ask the AI for close variations of the pick.
-    S.anchor = i; S.gen++; S.fetching = null; S.queue = []; S.nextUp = null; S.aiErr = null; S.current = null;
+    S.anchor = i; S.hunt = null; S.gen++; S.fetching = null; S.queue = []; S.nextUp = null; S.peekId = null; S.aiErr = null; S.current = null;
     refill({count:4});
     go("explore");
     return;
@@ -992,6 +1073,9 @@ const ACTIONS = {
   vote(el){ vote(el.dataset.v); },
   undo(){ undo(); },
   pick(){ pickCurrent(); },
+  save(){ toggleSave(S.current); render(); },
+  "unsave"(el){ const i = SAVED.find((x) => x.id === el.dataset.v); if (i) toggleSave(i); render(); },
+  "open-saved"(el){ const i = SAVED.find((x) => x.id === el.dataset.v); if (!i) return; S.picked = i; S.current = i; S.sheet = false; go("shop"); },
   broaden(){ Q.type = "Surprise me"; save("query", Q); S.current = nextIdea(); render(); },
   scrim(el, e){ if (e.target !== el) return; if (S.modal){ S.modal = null; } else S.sheet = false; render(); },
   "sheet-close"(){ S.sheet = false; render(); },
@@ -1005,7 +1089,7 @@ const ACTIONS = {
   ask(){ askClaude(); },
   "ask-report"(){ askTap(); },
   refresh(){ appRefresh(); },
-  reset(){ S.modal = {title:"Reset your taste?", body:"This clears every vote and pick on this phone. Ideas start from scratch.", ok:"Reset", run(){ TASTE = {w:{}, votes:[]}; PICKS = []; save("taste", TASTE); save("picks", PICKS); S.round = {votes:[]}; toast("Taste reset"); }}; S.focus = ".modal .btn"; render(); },
+  reset(){ S.modal = {title:"Reset your taste?", body:"This clears every vote and pick on this phone. Your saved pieces stay, and still count toward your taste.", ok:"Reset", run(){ TASTE = {w:{}, votes:[]}; PICKS = []; SAVED.forEach((x) => { for (const a of attrsOf(x)){ const k = akey(a); TASTE.w[k] = (TASTE.w[k] || 0) + SAVE_VAL; } }); save("taste", TASTE); save("picks", PICKS); S.round = {votes:[]}; toast("Taste reset"); }}; S.focus = ".modal .btn"; render(); },
   "ai-connect"(){ connectAI(); },
   "ai-off"(){ AI.on = false; save("ai", AI); S.queue = []; S.gen++; S.fetching = null; toast("AI turned off — using sample ideas"); render(); },
   "ai-retry"(){ S.aiErr = null; refill(); render(); },
@@ -1032,7 +1116,7 @@ document.addEventListener("keydown", (e) => {
   else if (S.sheet){ S.sheet = false; render(); }
 });
 
-/* ---------------- swipe: ← hate, → like, ↑ love ---------------- */
+/* ---------------- swipe: ← not it, → close, ↑ very close, ↓ not for now ---------------- */
 function bindSwipe(){
   const card = document.getElementById("card");
   if (!card) return;
@@ -1046,7 +1130,7 @@ function bindSwipe(){
   card.addEventListener("pointermove", (e) => {
     if (x0 === null || e.pointerId !== pid) return;
     dx = e.clientX - x0; dy = e.clientY - y0;
-    card.style.transform = `translate(${dx}px, ${Math.min(0, dy)}px) rotate(${dx / 22}deg)`;
+    card.style.transform = `translate(${dx}px, ${dy}px) rotate(${dx / 22}deg)`;
   });
   const end = () => {
     if (x0 === null) return;
@@ -1054,6 +1138,7 @@ function bindSwipe(){
     if (dx < -90) vote("hate");
     else if (dx > 90) vote("like");
     else if (dy < -110 && Math.abs(dx) < 70) vote("love");
+    else if (dy > 110 && Math.abs(dx) < 70) vote("later");
     else { card.style.transition = "transform .18s ease"; card.style.transform = ""; }
   };
   card.addEventListener("pointerup", end);
@@ -1147,12 +1232,13 @@ function askSnapshot(){
   const {pos, neg} = tasteLists();
   L.push(`\nTASTE: more of: ${pos.map(chipLabel).join(", ") || "-"}   less of: ${neg.map(chipLabel).join(", ") || "-"}`);
   L.push(`PICKS: ${PICKS.slice(-8).map((x) => x.title).join("; ") || "-"}`);
+  L.push(`SAVED: ${SAVED.slice(-8).map((x) => x.title).join("; ") || "-"}`);
   return L.join("\n");
 }
 // The full data (the access code is left out on purpose).
 function askData(meta){
   let snap; try{ snap = askSnapshot(); }catch(e){ snap = "(snapshot failed: " + (e && e.message || e) + ")"; }
-  const full = {query:Q, prefs:PREFS, taste:TASTE, picks:PICKS, round:S.round, current:S.current, queue:S.queue, ai:{url:AI.url, on:AI.on, health:AI.health}};
+  const full = {query:Q, prefs:PREFS, taste:TASTE, picks:PICKS, saved:SAVED.map((x) => x.title), round:S.round, current:S.current, queue:S.queue, ai:{url:AI.url, on:AI.on, health:AI.health}};
   return `DRAPE REPORT\n\n${snap}\n\nMETA: ${JSON.stringify(meta)}\n\n--- FULL DATA ---\n${JSON.stringify(full)}`;
 }
 async function askFiles(){
@@ -1246,7 +1332,7 @@ restoreSession();
 render();
 afterUpdate();
 checkServer();
-if (S.screen === "explore" && aiRound() && S.queue.length <= 1) refill();
+if (S.screen === "explore" && aiRound() && S.queue.length <= lowMark()) refill();
 if ("serviceWorker" in navigator && location.protocol === "https:"){
   navigator.serviceWorker.register("sw.js").catch(() => {});
 }

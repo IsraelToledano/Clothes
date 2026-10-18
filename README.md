@@ -1,6 +1,6 @@
 # Drape
 
-A personal style finder for menswear. Tell it what you're looking for, vote on style ideas (hate / like / love), and the ideas adapt to your votes. When one clicks, pick it and search for it in real stores.
+A personal style finder for menswear. Tell it what you're looking for, steer it with each idea (very close / close / not for now / not it), and it zeroes in on the one piece you have in mind. Save the ones you like, and when one clicks, pick it and search for it in real stores.
 
 Completely free: no API keys and no credit card.
 
@@ -13,8 +13,8 @@ Completely free: no API keys and no credit card.
 ## How it works (v0.3)
 
 - **Start**: pick a type of clothing, any styles, and optionally describe what you want in your own words.
-- **Explore**: one idea at a time. Vote with the buttons or swipe (← hate, → like, ↑ love).
-  - With AI on, an AI model writes the ideas in batches of 4, with a new batch every three votes, so each batch reflects how you've voted. Three hates in a row make it change direction. Each idea gets an AI photo.
+- **Explore**: one idea at a time. Answer with the buttons or swipe (← not it, → close, ↑ very close, ↓ not for now). **Save** keeps a piece in your profile, separate from buying it, and saved pieces shape future searches. "Very close" makes the AI write close variations of that piece, one detail at a time.
+  - With AI on, the first search asks for about two dozen ideas at once (five requests in parallel), so cards are waiting before you need them. More are written in the background whenever fewer than eight are left, using your latest votes. Three "not it" in a row make it change direction. Each idea gets an AI photo.
   - With AI off, or when today's free AI allowance runs out, ideas come from a built-in sample list (`SAMPLE_IDEAS` in `index.html`).
   - Either way, a local taste model re-orders what's waiting after every vote.
 - **Pick**: "This is it" asks for budget, size and shipping to Israel.
