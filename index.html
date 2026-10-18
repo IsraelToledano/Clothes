@@ -228,7 +228,7 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "0.9.1";
+const APP_VERSION = "0.9.2";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
 const SERVER_EXPECTED = "0.9.1"; // the worker/worker.js version this app was built with
 
@@ -470,11 +470,18 @@ function because(i){
   }
   return "";
 }
+// "More of": what your hearts and saves add up to. "Less of": only what you passed on at least four times
+// and never hearted or saved. Weights alone over-count things almost every idea has (cotton, relaxed fit),
+// and what you asked for on the start screen is never "less of".
 function tasteLists(){
-  const ent = Object.entries(TASTE.w).filter(([k, w]) => { const ix = k.indexOf(":"); return !k.startsWith("type:") && !(w < 0 && asked(k.slice(0, ix), k.slice(ix + 1))); });
+  const yes = {}, no = {};
+  const count = (i, bag) => { for (const a of attrsOf(i)) bag[akey(a)] = (bag[akey(a)] || 0) + 1; };
+  for (const v of TASTE.votes){ const i = byId(v.id); if (!i) continue; if (v.v === "like" || v.v === "love") count(i, yes); else if (v.v === "later" || v.v === "hate") count(i, no); }
+  for (const x of SAVED) count(x, yes);
+  const usable = (k) => { const ix = k.indexOf(":"); return !k.startsWith("type:") && !asked(k.slice(0, ix), k.slice(ix + 1)); };
   return {
-    pos: ent.filter((e) => e[1] >= 2).sort((a, b) => b[1] - a[1]).slice(0, 6).map((e) => e[0]),
-    neg: ent.filter((e) => e[1] <= -2).sort((a, b) => a[1] - b[1]).slice(0, 6).map((e) => e[0]),
+    pos: Object.entries(TASTE.w).filter(([k, w]) => w >= 2 && !k.startsWith("type:")).sort((a, b) => b[1] - a[1]).slice(0, 6).map((e) => e[0]),
+    neg: Object.entries(no).filter(([k, n]) => n >= 4 && !yes[k] && usable(k)).sort((a, b) => b[1] - a[1]).slice(0, 6).map((e) => e[0]),
   };
 }
 
@@ -747,7 +754,7 @@ function steps(stage){
 function ideaImage(i){
   const u = i.image || imgUrl(i);
   if (u) return `<div class="ph wait">${ICON.image}<span class="mono-label">Drawing the photo…</span></div><img src="${esc(u)}" alt="${esc("AI photo of " + i.title + ": " + i.desc)}" crossorigin="anonymous" draggable="false" onload="this.classList.add('ok');this.previousElementSibling.classList.remove('wait')" onerror="imgFail(this)">`;
-  return `<div class="ph">${ICON.image}<span class="mono-label">${isAI(i) ? "No photo" : "Sample idea · no photo"}</span></div>`;
+  return `<div class="ph">${ICON.image}<span class="mono-label">${isAI(i) ? "No photo" : "Sample idea · no photo"}</span>${!isAI(i) && /allowance/i.test(S.sampleWhy || "") ? `<span class="small-note">AI ideas and photos are back after 03:00, when the free daily allowance resets. Start a new search then.</span>` : ""}</div>`;
 }
 
 function metaHtml(){
@@ -1014,7 +1021,7 @@ function startRound(){
   if (ta) Q.text = ta.value.trim();
   save("query", Q);
   S.round = {votes:[]};
-  S.gen++; S.fetching = null; S.queue = []; S.nextUp = null; S.hunt = null; S.pendingHunt = false; S.roundId = ""; S.batchN = 0; S.aiErr = null; S.aiInsight = ""; S.anchor = null; S.sampleRound = false;
+  S.gen++; S.fetching = null; S.queue = []; S.nextUp = null; S.hunt = null; S.pendingHunt = false; S.roundId = ""; S.batchN = 0; S.aiErr = null; S.aiInsight = ""; S.anchor = null; S.sampleRound = false; S.sampleWhy = "";
   S.current = null;
   if (aiRound()) burst();
   else S.current = nextIdea();
@@ -1151,7 +1158,7 @@ const ACTIONS = {
   "ai-connect"(){ connectAI(); },
   "ai-off"(){ AI.on = false; save("ai", AI); S.queue = []; S.gen++; S.fetching = null; toast("AI turned off — using sample ideas"); render(); },
   "ai-retry"(){ S.aiErr = null; refill(); render(); },
-  "use-samples"(){ S.sampleRound = true; S.aiErr = null; S.current = nextSample(); render(); },
+  "use-samples"(){ S.sampleRound = true; S.sampleWhy = S.aiErr; S.aiErr = null; S.current = nextSample(); render(); },
   "modal-cancel"(){ S.modal = null; render(); },
   "modal-ok"(){ const m = S.modal; S.modal = null; if (m && m.run) m.run(); render(); },
 };
