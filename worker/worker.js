@@ -4,7 +4,7 @@
 //   GET  /health  → checks the access code and that the AI binding is there
 //   POST /ideas   → an LLM writes new style ideas from the request and the swipes so far (Gemma 4, Llama 3.3 as backup)
 //   GET  /diag    → a tiny test call to each AI model, with Cloudflare's exact answer (for the Drape report)
-//   GET  /image   → an AI product photo for one idea (FLUX.2 klein 4B, FLUX.1 schnell as backup)
+//   GET  /image   → an AI product photo for one idea (FLUX.1 schnell, FLUX.2 klein 4B as backup)
 //
 // One setting in the Cloudflare dashboard (Worker → Settings → Variables and Secrets):
 //   ACCESS_CODE  secret: any passcode; type the same one into the app once.
@@ -13,14 +13,16 @@
 // On the free plan Cloudflare blocks requests past that instead of charging.
 
 // Bump with the app version so a report shows whether the server was redeployed.
-const SERVER_VERSION = "0.9.3";
+const SERVER_VERSION = "0.9.4";
 const APP_ORIGIN = "https://israeltoledano.github.io";
 // Gemma 4 26B (4B active) is fast and costs about a sixth of Llama 3.3 70B per idea in the free allowance.
 const TEXT_MODEL = "@cf/google/gemma-4-26b-a4b-it";
 const TEXT_BACKUP = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 let textTrouble = { until: 0, error: "" };
-const IMAGE_MODEL = "@cf/black-forest-labs/flux-2-klein-4b"; // fast, distilled, better garments and anatomy
-const IMAGE_BACKUP = "@cf/black-forest-labs/flux-1-schnell";
+// Measured live (Oct 2026): schnell draws a product shot in 1-2s, klein takes 9-14s, same quality
+// with the product-shot prompt. So schnell first, klein as backup.
+const IMAGE_MODEL = "@cf/black-forest-labs/flux-1-schnell";
+const IMAGE_BACKUP = "@cf/black-forest-labs/flux-2-klein-4b";
 const IMG_W = 512, IMG_H = 768; // portrait like the card; two 512px tiles, about the cost of one schnell photo
 // If the main image model fails (not the daily limit), use the backup for a while and say why in /health.
 let imageTrouble = { until: 0, error: "" };
@@ -268,11 +270,12 @@ function shuffled(list, seed) {
   return a;
 }
 // Batch 0 is "your best bets"; batch n (1, 2, ...) takes the next slice of kinds.
-function kindsFor(type, angle, seed, count) {
+function kindsFor(type, angle, seed, count, kindStart) {
   const list = KINDS[type] || KINDS["Surprise me"];
-  if (!(angle >= 1)) return [];
+  const byOffset = Number.isInteger(kindStart) && kindStart >= 0;
+  if (!byOffset && !(angle >= 1)) return [];
   const order = shuffled(list, seed || "drape");
-  const start = ((angle - 1) * count) % order.length;
+  const start = (byOffset ? kindStart : (angle - 1) * count) % order.length;
   const out = [];
   for (let k = 0; k < Math.min(count, order.length); k++) out.push(order[(start + k) % order.length]);
   return out;
@@ -293,7 +296,7 @@ async function ideas(env, b) {
   lines.push("Month: " + (b.month || new Date().toLocaleString("en", { month: "long" })));
 
   const hunt = b.converge && b.anchor;
-  const kinds = hunt || b.anchor || b.redirect ? [] : kindsFor(type, parseInt(b.angle, 10), b.round, count);
+  const kinds = hunt || b.anchor || b.redirect ? [] : kindsFor(type, parseInt(b.angle, 10), b.round, count, b.kindStart);
   const typeWord = type === "Surprise me" ? "garment" : type.toLowerCase();
   lines.push("");
   if (hunt) lines.push("He hearted this idea, it is getting closer to what he wants: " + describe(b.anchor) + ". Write " + count + " variations of it, each changing something meaningful (fabric, collar, pattern, fit, sleeve length or a detail). At most one may differ only in colour.");
@@ -448,23 +451,23 @@ function productPrompt(p, type) {
   const lower = type === "Trousers" || type === "Shorts";
   return `Professional e-commerce product photo of a men's garment: ${g}. Shown alone on an invisible ghost mannequin (hollow inside, no person, no head, no hands), front view, ${lower ? "full length from waistband to hem" : "whole garment in frame, collar to hem"}, centered, on a plain light grey background, soft even studio light, sharp fabric texture, true-to-life colours, realistic real-world garment construction. No text, no logos, no watermark.`;
 }
-const imageModelNow = () => (imageTrouble.until > Date.now() ? "flux-1-schnell (flux-2-klein-4b failed: " + imageTrouble.error + ")" : "flux-2-klein-4b");
+const imageModelNow = () => (imageTrouble.until > Date.now() ? "flux-2-klein-4b (flux-1-schnell failed: " + imageTrouble.error + ")" : "flux-1-schnell");
 
-async function runMainImage(env, prompt) {
+async function runKlein(env, prompt) {
   const form = new FormData();
   form.append("prompt", prompt);
   form.append("width", String(IMG_W));
   form.append("height", String(IMG_H));
   // FormData has no body or boundary of its own: a Response serializes it and sets the Content-Type.
   const r = new Response(form);
-  return runAI(env, IMAGE_MODEL, { multipart: { body: r.body, contentType: r.headers.get("content-type") } });
+  return runAI(env, "@cf/black-forest-labs/flux-2-klein-4b", { multipart: { body: r.body, contentType: r.headers.get("content-type") } });
 }
-async function runBackupImage(env, prompt) {
+async function runSchnell(env, prompt) {
   try {
-    return await runAI(env, IMAGE_BACKUP, { prompt, steps: 4 });
+    return await runAI(env, "@cf/black-forest-labs/flux-1-schnell", { prompt, steps: 4 });
   } catch (e) {
     if (!(e instanceof HttpError) || e.status === 429 || !/propert|5006|schema|invalid/i.test(e.message)) throw e;
-    return runAI(env, IMAGE_BACKUP, { prompt });
+    return runAI(env, "@cf/black-forest-labs/flux-1-schnell", { prompt });
   }
 }
 
@@ -472,16 +475,16 @@ async function image(env, prompt, type, origin) {
   prompt = clip(prompt, 600);
   if (!prompt) throw new HttpError(400, "Missing prompt");
   const full = productPrompt(prompt, pickFrom(TYPES, type));
-  let bytes = null, used = "flux-2-klein-4b";
+  let bytes = null, used = "flux-1-schnell";
   if (imageTrouble.until <= Date.now()) {
-    try { bytes = await imageBytes(await timeLimit(runMainImage(env, full), +env.IMAGE_LIMIT_MS || 20000, "FLUX.2 klein")); }
+    try { bytes = await imageBytes(await timeLimit(runSchnell(env, full), +env.IMAGE_LIMIT_MS || 15000, "FLUX.1 schnell")); }
     catch (e) {
       if (e instanceof HttpError && e.status === 429) throw e;
       const busy = e instanceof HttpError && e.status === 503;
       imageTrouble = { until: Date.now() + (busy ? 60 : 600) * 1000, error: String((e && e.message) || e).slice(0, 200) };
     }
   }
-  if (!bytes) { used = "flux-1-schnell"; bytes = await imageBytes(await timeLimit(runBackupImage(env, full), 30000, "FLUX.1 schnell")); }
+  if (!bytes) { used = "flux-2-klein-4b"; bytes = await imageBytes(await timeLimit(runKlein(env, full), 30000, "FLUX.2 klein")); }
   const png = bytes[0] === 0x89 && bytes[1] === 0x50;
   const headers = { "Content-Type": png ? "image/png" : "image/jpeg", "Cache-Control": "public, max-age=31536000, immutable", "X-Drape-Image-Model": used, ...cors(origin) };
   return new Response(bytes, { headers });
@@ -516,11 +519,12 @@ async function diag(env) {
   };
   await tryIt("gemma", async () => clip(String(textOf(await rawRun(env, TEXT_MODEL, { messages: msg, max_completion_tokens: 5 }))), 20));
   await tryIt("llama", async () => clip(String(textOf(await rawRun(env, TEXT_BACKUP, { messages: msg, max_tokens: 5 }))), 20));
+  await tryIt("schnell", async () => (await imageBytes(await rawRun(env, IMAGE_MODEL, { prompt: "a plain white t-shirt on a grey background", steps: 1 }))).length + " bytes");
   await tryIt("klein", async () => {
     const form = new FormData();
     form.append("prompt", "a plain white t-shirt on a grey background"); form.append("width", "256"); form.append("height", "256");
     const r = new Response(form);
-    const bytes = await imageBytes(await rawRun(env, IMAGE_MODEL, { multipart: { body: r.body, contentType: r.headers.get("content-type") } }));
+    const bytes = await imageBytes(await rawRun(env, IMAGE_BACKUP, { multipart: { body: r.body, contentType: r.headers.get("content-type") } }));
     return bytes.length + " bytes";
   });
   out.textModelNow = textModelNow(); out.imageModelNow = imageModelNow();

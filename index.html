@@ -96,7 +96,7 @@ textarea::placeholder{color:#686E79}
 .swipe-hint{position:absolute;z-index:1;bottom:12px;left:50%;transform:translateX(-50%);white-space:nowrap;background:rgba(22,24,29,.78);color:#fff;font-size:13px;font-weight:600;padding:8px 14px;border-radius:999px;pointer-events:none}
 .idea-body{padding:12px 16px 14px;display:flex;flex-direction:column;gap:6px;flex:none}
 .specline{margin:0;font-size:13px;font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.insight{position:absolute;z-index:1;top:46px;left:12px;right:12px;display:flex;gap:8px;align-items:center;background:rgba(22,24,29,.82);color:#fff;border-radius:12px;padding:7px 10px;font-size:12px;line-height:1.3;pointer-events:none}
+.insight{position:absolute;z-index:1;bottom:12px;left:12px;right:12px;display:flex;gap:8px;align-items:center;background:rgba(22,24,29,.82);color:#fff;border-radius:12px;padding:7px 10px;font-size:12px;line-height:1.3;pointer-events:none}
 .insight svg{width:14px;height:14px;flex:none}
 .insight span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .acts{display:grid;grid-template-columns:auto 1fr;gap:8px;flex:none}
@@ -233,9 +233,9 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "0.9.4";
+const APP_VERSION = "0.9.5";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
-const SERVER_EXPECTED = "0.9.3"; // the worker/worker.js version this app was built with
+const SERVER_EXPECTED = "0.9.4"; // the worker/worker.js version this app was built with
 
 /* ---------------- storage (on this phone only) ---------------- */
 const LS = "clothes:";
@@ -532,6 +532,7 @@ function bodyFor(opts){
     votes:roundPayload(), taste:tastePayload(), seen:seenTitles(),
     anchor:opts.hunt ? ideaFields(opts.hunt) : S.anchor ? ideaFields(S.anchor) : null,
     redirect:!!opts.redirect, converge:!!opts.hunt, angle:opts.angle || 0, round:S.roundId || "",
+    kindStart:Number.isInteger(opts.kindStart) ? opts.kindStart : undefined,
   };
 }
 
@@ -553,10 +554,15 @@ function shownIdeas(){
 // The order cards come in. The next two are fixed ("on deck") so their photos can be drawn ahead;
 // everything behind them is re-ranked by your swipes after every swipe.
 const ON_DECK = 2, PRELOAD_N = 3;
+const PLAIN = new Set("shirt shirts tee the a an with and in of classic cotton blend fit long short sleeve sleeved men mens button down collar".split(" "));
+const words = (i) => new Set(String((i.title || "") + " " + (i.fabric || "")).toLowerCase().replace(/[^a-z\s-]/g, " ").split(/[\s-]+/).filter((w) => w.length > 2 && !PLAIN.has(w)));
 function orderQueue(){
   const sig = textSignals(Q.text);
   const deck = S.queue.slice(0, ON_DECK), rest = S.queue.slice(ON_DECK);
-  for (const i of rest) i._r = score(i, sig, true) + (i._boost || 0) - (i._pos || 0) * 0.15;
+  // What's just been seen or is about to be: a madras right after two madras ones waits its turn.
+  const recent = S.round.votes.slice(-3).map((v) => byId(v.id)).concat([S.current], deck).filter(Boolean).map(words);
+  const near = (i) => { const w = words(i); return recent.reduce((n, r) => n + ([...w].some((x) => r.has(x)) ? 1 : 0), 0); };
+  for (const i of rest) i._r = score(i, sig, true) + (i._boost || 0) - (i._pos || 0) * 0.15 - (i._boost === 10 ? 0 : near(i) * 2.5);
   rest.sort((a, b) => b._r - a._r);
   S.queue = deck.concat(rest);
 }
@@ -609,7 +615,7 @@ function refill(opts){
   const hunt = opts.hunt || (S.hunt && S.round.votes.length - (S.huntAt || 0) <= 6 ? S.hunt : null);
   const o = hunt ? Object.assign({}, opts, {hunt, count:opts.count || 5})
     : opts.redirect || S.anchor ? opts
-    : Object.assign({}, opts, {angle:(S.batchN = (S.batchN || 3) + 1)});
+    : Object.assign({}, opts, {kindStart:nextKinds(opts.count || 6)});
   S.reqVotes = S.round.votes.length;
   S.aiErr = null;
   S.fetchAt = Date.now();
@@ -627,16 +633,20 @@ function refill(opts){
   }).catch((e) => { if (gen !== S.gen) return; S.fetching = null; failIdeas(e, gen); });
 }
 
+// Which slice of garment kinds the next batch gets (the server shuffles the kinds once per search).
+function nextKinds(n){ const k = S.kindPos || 0; S.kindPos = k + n; return k; }
+
 // The first search: about twenty ideas at once, in parallel. Batch 0 is the AI's two best bets and
 // answers fastest, so the first card shows quickly; batches 1-3 each cover different kinds of garment.
 function burst(){
   if (!aiRound() || S.fetching) return;
   const gen = S.gen;
   S.roundId = Math.random().toString(36).slice(2, 8);
-  S.batchN = 3;
+  S.kindPos = 0;
   S.reqVotes = S.round.votes.length;
   S.aiErr = null;
-  const plan = [{count:2, angle:0}, {count:6, angle:1}, {count:6, angle:2}, {count:6, angle:3}];
+  // One idea first (answers in a few seconds), then two, then three batches of six, each with its own kinds.
+  const plan = [{count:1, angle:0}, {count:2, kindStart:nextKinds(2)}, {count:6, kindStart:nextKinds(6)}, {count:6, kindStart:nextKinds(6)}, {count:6, kindStart:nextKinds(6)}];
   let got = 0, lastErr = null;
   S.fetchAt = Date.now();
   S.fetching = Promise.all(plan.map((o) => aiCall("/ideas", bodyFor(o)).then((res) => { got += acceptIdeas(res, gen, o.angle === 0 ? 3 : 0); }).catch((e) => { lastErr = e; }))).then(() => {
@@ -726,7 +736,7 @@ async function connectAI(){
 
 /* ---------------- session (survives the phone closing the app) ---------------- */
 function saveSession(){
-  save("session", {at:Date.now(), screen:S.screen === "profile" ? S.prev : S.screen, votes:S.round.votes.map((v) => ({id:v.id, title:v.title, tint:v.tint, v:v.v, f:v.f, src:v.src, at:v.at})), current:S.current && S.current.id, picked:S.picked && S.picked.id, queue:(S.nextUp ? [S.nextUp] : []).concat(S.queue).map((i) => i.id), insight:S.aiInsight, sampleRound:S.sampleRound, roundId:S.roundId || "", batchN:S.batchN || 0});
+  save("session", {at:Date.now(), screen:S.screen === "profile" ? S.prev : S.screen, votes:S.round.votes.map((v) => ({id:v.id, title:v.title, tint:v.tint, v:v.v, f:v.f, src:v.src, at:v.at})), current:S.current && S.current.id, picked:S.picked && S.picked.id, queue:(S.nextUp ? [S.nextUp] : []).concat(S.queue).map((i) => i.id), insight:S.aiInsight, sampleRound:S.sampleRound, roundId:S.roundId || "", kindPos:S.kindPos || 0});
 }
 function restoreSession(){
   const s = load("session", null);
@@ -735,7 +745,7 @@ function restoreSession(){
   S.sampleRound = !!s.sampleRound;
   S.queue = (s.queue || []).map(byId).filter(Boolean);
   S.aiInsight = s.insight || "";
-  S.roundId = s.roundId || ""; S.batchN = s.batchN || 0;
+  S.roundId = s.roundId || ""; S.kindPos = s.kindPos || 0;
   S.current = s.current ? byId(s.current) || null : null;
   S.picked = s.picked ? byId(s.picked) || null : null;
   if (s.screen === "explore" && (S.current || S.round.votes.length)){
@@ -1075,7 +1085,7 @@ function startRound(){
   if (ta) Q.text = ta.value.trim();
   save("query", Q);
   S.round = {votes:[]};
-  S.gen++; S.fetching = null; S.queue = []; S.nextUp = null; S.hunt = null; S.pendingHunt = false; S.roundId = ""; S.batchN = 0; S.aiErr = null; S.aiInsight = ""; S.anchor = null; S.sampleRound = false; S.sampleWhy = "";
+  S.gen++; S.fetching = null; S.queue = []; S.nextUp = null; S.hunt = null; S.pendingHunt = false; S.roundId = ""; S.kindPos = 0; S.aiErr = null; S.aiInsight = ""; S.anchor = null; S.sampleRound = false; S.sampleWhy = "";
   S.current = null;
   if (aiRound()) burst();
   else S.current = nextIdea();

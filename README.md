@@ -32,7 +32,7 @@ Everything you do is saved on the phone (`localStorage`, keys prefixed `clothes:
 |---|---|---|
 | `POST /ideas` | Writes new ideas from the brief, today's swipes and long-term taste | Gemma 4 26B (`@cf/google/gemma-4-26b-a4b-it`); Llama 3.3 70B as backup |
 | `GET /diag` | One tiny test call per model with Cloudflare's exact answer ("Run a quick AI check" in the app; the result goes into the Drape report) | all three |
-| `GET /image` | Draws a product photo for one idea (the garment alone on an invisible mannequin, no person) | FLUX.2 klein 4B (`@cf/black-forest-labs/flux-2-klein-4b`), 512×768; FLUX.1 schnell as backup |
+| `GET /image` | Draws a product photo for one idea (the garment alone on an invisible mannequin, no person) | FLUX.1 schnell (`@cf/black-forest-labs/flux-1-schnell`, 1–2s); FLUX.2 klein 4B as backup (9–14s when measured) |
 | `GET /health` | Checks the access code | — |
 
 ### Setup
@@ -54,3 +54,7 @@ Workers AI gives 10,000 free "neurons" a day, shared by ideas and photos. A sear
 When you change `index.html`, bump `CACHE` in `sw.js` and `APP_VERSION` in `index.html` so phones load the new version.
 
 On the phone, tap the version badge next to the logo (or **Update app** in the taste profile) to load the latest version. It keeps your search, votes and the round in progress, then says whether it updated.
+
+## Live test
+
+`.github/workflows/live-test.yml` runs the real app against the real worker (Actions → live test → Run workflow). It signs in with a short-lived GitHub token for this repo (no stored secret), swipes through ten cards with a fixed brief, and saves timings, errors, screenshots and the AI photos to the `live-results` branch. One run uses roughly 1,000–1,500 of the 10,000 daily neurons.
