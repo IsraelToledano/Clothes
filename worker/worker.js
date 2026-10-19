@@ -13,7 +13,7 @@
 // On the free plan Cloudflare blocks requests past that instead of charging.
 
 // Bump with the app version so a report shows whether the server was redeployed.
-const SERVER_VERSION = "0.9.4";
+const SERVER_VERSION = "0.9.5";
 const APP_ORIGIN = "https://israeltoledano.github.io";
 // Gemma 4 26B (4B active) is fast and costs about a sixth of Llama 3.3 70B per idea in the free allowance.
 const TEXT_MODEL = "@cf/google/gemma-4-26b-a4b-it";
@@ -330,8 +330,9 @@ async function ideas(env, b) {
     try { out = await mainText(env, messages); }
     catch (e) {
       if (e instanceof HttpError && e.status === 429) throw e;
+      // Slow or busy once: use the backup for this request only. A real failure: skip the main model for 10 minutes.
       const busy = e instanceof HttpError && e.status === 503;
-      textTrouble = { until: Date.now() + (busy ? 60 : 600) * 1000, error: String((e && e.message) || e).slice(0, 200) };
+      if (!busy) textTrouble = { until: Date.now() + 600 * 1000, error: String((e && e.message) || e).slice(0, 200) };
     }
     if (out && !Array.isArray(out.ideas)) out = null; // one odd reply: use the backup for this request only
   }
@@ -481,7 +482,7 @@ async function image(env, prompt, type, origin) {
     catch (e) {
       if (e instanceof HttpError && e.status === 429) throw e;
       const busy = e instanceof HttpError && e.status === 503;
-      imageTrouble = { until: Date.now() + (busy ? 60 : 600) * 1000, error: String((e && e.message) || e).slice(0, 200) };
+      if (!busy) imageTrouble = { until: Date.now() + 600 * 1000, error: String((e && e.message) || e).slice(0, 200) };
     }
   }
   if (!bytes) { used = "flux-2-klein-4b"; bytes = await imageBytes(await timeLimit(runKlein(env, full), 30000, "FLUX.2 klein")); }

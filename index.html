@@ -233,9 +233,9 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "0.9.6";
+const APP_VERSION = "0.9.7";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
-const SERVER_EXPECTED = "0.9.4"; // the worker/worker.js version this app was built with
+const SERVER_EXPECTED = "0.9.5"; // the worker/worker.js version this app was built with
 
 /* ---------------- storage (on this phone only) ---------------- */
 const LS = "clothes:";
@@ -254,7 +254,8 @@ const SHOE_SIZES = ["40","41","42","43","44","45","46"];
 // like/later are the two swipes. "Not now" is deliberately soft: it moves that kind of piece back a little
 // without ruling out its style. hate/love only exist in older votes and picks.
 const VAL = {hate:-1, later:-0.3, like:1.5, love:3};
-const QUEUE_MAX = 40, LOW_QUEUE = 8; // ideas kept waiting; when fewer are left, a new batch is requested
+const QUEUE_MAX = 40, LOW_QUEUE = 10; // ideas kept waiting; when fewer are left, a new batch is requested
+const BATCH = 4; // ideas per background request (a batch of 4 answers in about 10-14s, measured live)
 const SAVE_VAL = 1.5; // saving a piece counts as a gentle "yes" in your long-term taste
 const VOTE_LABEL = {hate:"Not it", later:"Not now", like:"Closer", love:"Picked"};
 
@@ -526,7 +527,7 @@ function seenTitles(){
 
 function bodyFor(opts){
   return {
-    count:opts.count || 6,
+    count:opts.count || BATCH,
     month:new Date().toLocaleString("en", {month:"long"}),
     query:{type:Q.type || "Surprise me", styles:Q.styles, text:Q.text},
     votes:roundPayload(), taste:tastePayload(), seen:seenTitles(),
@@ -562,7 +563,11 @@ function orderQueue(){
   // What's just been seen or is about to be: a madras right after two madras ones waits its turn.
   const recent = S.round.votes.slice(-3).map((v) => byId(v.id)).concat([S.current], deck).filter(Boolean).map(words);
   const near = (i) => { const w = words(i); return recent.reduce((n, r) => n + ([...w].some((x) => r.has(x)) ? 1 : 0), 0); };
-  for (const i of rest) i._r = score(i, sig, true) + (i._boost || 0) - (i._pos || 0) * 0.15 - (i._boost === 10 ? 0 : near(i) * 2.5);
+  // ...and a third chambray in one search waits behind things you haven't seen yet.
+  const seenWords = {};
+  for (const v of S.round.votes){ const o = byId(v.id); if (o && v.v !== "like") for (const w of words(o)) seenWords[w] = (seenWords[w] || 0) + 1; }
+  const repeats = (i) => Math.max(0, ...[...words(i)].map((w) => seenWords[w] || 0));
+  for (const i of rest) i._r = score(i, sig, true) + (i._boost || 0) - (i._pos || 0) * 0.15 - (i._boost === 10 ? 0 : near(i) * 2.5 + repeats(i) * 1.5);
   rest.sort((a, b) => b._r - a._r);
   S.queue = deck.concat(rest);
 }
@@ -613,7 +618,7 @@ function refill(opts){
   const hunt = opts.hunt || (S.hunt && S.round.votes.length - (S.huntAt || 0) <= 6 ? S.hunt : null);
   const o = hunt ? Object.assign({}, opts, {hunt, count:opts.count || 5})
     : opts.redirect || S.anchor ? opts
-    : Object.assign({}, opts, {kindStart:nextKinds(opts.count || 6)});
+    : Object.assign({}, opts, {count:opts.count || BATCH, kindStart:nextKinds(opts.count || BATCH)});
   S.reqVotes = S.round.votes.length;
   S.aiErr = null;
   S.fetchAt = Date.now();
@@ -643,8 +648,9 @@ function burst(){
   S.kindPos = 0;
   S.reqVotes = S.round.votes.length;
   S.aiErr = null;
-  // Three single ideas first (each answers in a few seconds), then 3, 6 and 6, each with its own kinds.
-  const plan = [{count:1, angle:0}, {count:1, kindStart:nextKinds(1)}, {count:1, kindStart:nextKinds(1)}, {count:3, kindStart:nextKinds(3)}, {count:6, kindStart:nextKinds(6)}, {count:6, kindStart:nextKinds(6)}];
+  // Many small requests in parallel, smallest first: three single ideas (about 2s each, measured live),
+  // then 2, 2, 3, 3, 4 and 4 (5-14s), so a fast swiper never runs out. Each gets its own kinds.
+  const plan = [{count:1, angle:0}].concat([1, 1, 2, 2, 3, 3, 4, 4].map((n) => ({count:n, kindStart:nextKinds(n)})));
   let got = 0, lastErr = null;
   S.fetchAt = Date.now();
   S.fetching = Promise.all(plan.map((o) => aiCall("/ideas", bodyFor(o)).then((res) => { got += acceptIdeas(res, gen, o.angle === 0 ? 3 : 0); }).catch((e) => { lastErr = e; }))).then(() => {
