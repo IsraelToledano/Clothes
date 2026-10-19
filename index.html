@@ -233,9 +233,9 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "0.9.3";
+const APP_VERSION = "0.9.4";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
-const SERVER_EXPECTED = "0.9.2"; // the worker/worker.js version this app was built with
+const SERVER_EXPECTED = "0.9.3"; // the worker/worker.js version this app was built with
 
 /* ---------------- storage (on this phone only) ---------------- */
 const LS = "clothes:";
@@ -496,11 +496,16 @@ function tasteLists(){
    Between batches the local taste model re-orders what's waiting, so a vote
    changes what comes next straight away. */
 const workerBase = () => String(AI.url || DEFAULT_WORKER).trim().replace(/\/+$/, "");
+// Never wait forever: the server gives each model a time limit and falls back, and the app gives up
+// after AI_TIMEOUT so a stuck request shows an error with "Try again" instead of an endless spinner.
+const AI_TIMEOUT = 75000;
 async function aiCall(path, body){
   let r;
-  try{ r = await fetch(workerBase() + path, {method:"POST", headers:{"Content-Type":"text/plain"}, body:JSON.stringify(Object.assign({}, body, {code:AI.code}))}); }
-  catch(e){ throw new Error("No connection to the AI server"); }
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), AI_TIMEOUT);
+  try{ r = await fetch(workerBase() + path, {method:"POST", headers:{"Content-Type":"text/plain"}, body:JSON.stringify(Object.assign({}, body, {code:AI.code})), signal:ctl.signal}); }
+  catch(e){ clearTimeout(t); throw new Error(ctl.signal.aborted ? "The AI didn't answer within " + Math.round(AI_TIMEOUT / 1000) + " seconds." : "No connection to the AI server"); }
   let j = null; try{ j = await r.json(); }catch(e){}
+  clearTimeout(t);
   if (!r.ok) throw new Error((j && j.error) || ("AI server error " + r.status));
   return j;
 }
@@ -607,6 +612,7 @@ function refill(opts){
     : Object.assign({}, opts, {angle:(S.batchN = (S.batchN || 3) + 1)});
   S.reqVotes = S.round.votes.length;
   S.aiErr = null;
+  S.fetchAt = Date.now();
   S.fetching = aiCall("/ideas", bodyFor(o)).then((res) => {
     if (gen !== S.gen) return;
     S.fetching = null;
@@ -632,6 +638,7 @@ function burst(){
   S.aiErr = null;
   const plan = [{count:2, angle:0}, {count:6, angle:1}, {count:6, angle:2}, {count:6, angle:3}];
   let got = 0, lastErr = null;
+  S.fetchAt = Date.now();
   S.fetching = Promise.all(plan.map((o) => aiCall("/ideas", bodyFor(o)).then((res) => { got += acceptIdeas(res, gen, o.angle === 0 ? 3 : 0); }).catch((e) => { lastErr = e; }))).then(() => {
     if (gen !== S.gen) return;
     S.fetching = null;
@@ -804,13 +811,25 @@ async function runDiag(){
   }catch(e){ S.diag = {gemma:"FAILED: no connection to the AI server"}; }
   S.diagBusy = false; render();
 }
+function waitText(){
+  const sec = S.waitSince ? (Date.now() - S.waitSince) / 1000 : 0;
+  if (sec > 40) return "Still waiting for the AI… trying its backup";
+  if (sec > 12) return "The AI is slow right now… still working";
+  return S.round.votes.length ? "Adjusting to your votes…" : "Picking ideas for you…";
+}
+// While the loading card is up, refresh its text every few seconds.
+setInterval(() => {
+  const el = document.getElementById("wait-t");
+  if (el) el.textContent = waitText(); else S.waitSince = 0;
+  if (el && !S.waitSince) S.waitSince = Date.now();
+}, 2000);
 function renderExplore(){
   const i = S.current;
   const head = `<header class="top"><button type="button" class="icon-btn" data-act="home" aria-label="End round">${ICON.close}</button>${headCenter()}${hbtns(true)}</header>`;
   if (!i && aiRound() && (S.fetching || !S.aiErr)){
     return `<main class="screen fixed">${head}
       <article class="idea" aria-busy="true" aria-labelledby="wait-t">
-        <div class="idea-img shimmer"><div class="ph wait">${ICON.sliders}<span class="mono-label" id="wait-t">${S.round.votes.length ? "Adjusting to your votes…" : "Picking ideas for you…"}</span></div></div>
+        <div class="idea-img shimmer"><div class="ph wait">${ICON.sliders}<span class="mono-label" id="wait-t">${waitText()}</span></div></div>
         <div class="idea-body"><span class="sk" style="width:62%;height:24px"></span><span class="sk" style="width:90%"></span><span class="sk" style="width:70%"></span></div>
       </article>
       ${voteBtns(true)}
@@ -1320,7 +1339,7 @@ function askSnapshot(){
   L.push(`screen: ${S.screen}${S.sheet ? " + pick sheet" : ""}${S.modal ? " + dialog" : ""}`);
   L.push(`ua: ${navigator.userAgent}`);
   L.push(`ai: ${aiOn() ? "on" : "off"}${S.sampleRound ? " (this round uses sample ideas)" : ""}   server: ${AI.url || DEFAULT_WORKER}   health: ${JSON.stringify(AI.health || null)}`);
-  L.push(`ai request: ${S.fetching ? "in flight" : "idle"}   last error: ${S.aiErr || "none"}   waiting ideas: ${S.queue.length}`);
+  L.push(`ai request: ${S.fetching ? "in flight for " + Math.round((Date.now() - (S.fetchAt || Date.now())) / 1000) + "s" : "idle"}   last error: ${S.aiErr || "none"}   waiting ideas: ${S.queue.length}`);
   L.push(`server version: ${(AI.health && AI.health.version) || "unknown"}   (app expects ${SERVER_EXPECTED} or newer)`);
   L.push(`idea model: ${S.textModel || "-"} (last reply)   server says: ${(AI.health && AI.health.textModel) || "unknown"}`);
   L.push(`photo model: ${(AI.health && AI.health.imageModel) || "unknown"}`);

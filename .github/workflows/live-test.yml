@@ -1,0 +1,48 @@
+# Live test: runs the real app against the real AI server (the Cloudflare Worker) and saves
+# timings, errors, screenshots and the AI photos to the "live-results" branch.
+# It signs in to the worker with a short-lived GitHub token for this repo, so no secret is stored.
+# Each run uses a small part of the free daily AI allowance (roughly 1,000-1,500 of 10,000 neurons).
+name: live test
+on:
+  workflow_dispatch:
+  push:
+    branches: [live-test]
+permissions:
+  contents: write
+  id-token: write
+concurrency:
+  group: live-test
+  cancel-in-progress: false
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install a browser
+        run: |
+          npm i --no-save --no-package-lock playwright@1.48.2
+          npx playwright install --with-deps chromium
+      - name: Run the live test
+        run: node tests/live.mjs
+        env:
+          WORKER: https://clothes.srul7022.workers.dev
+        continue-on-error: true
+      - name: Save results to the live-results branch
+        if: always()
+        run: |
+          mkdir -p results
+          cp -r results /tmp/results
+          git config user.name "drape-live-test"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -q -B live-results origin/main
+          rm -rf live-results && mkdir -p live-results && cp -r /tmp/results/. live-results/
+          git add -f live-results
+          git commit -qm "Live test results $(date -u +%Y-%m-%dT%H:%M:%SZ)" || true
+          git push -qf origin live-results

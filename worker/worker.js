@@ -13,7 +13,7 @@
 // On the free plan Cloudflare blocks requests past that instead of charging.
 
 // Bump with the app version so a report shows whether the server was redeployed.
-const SERVER_VERSION = "0.9.2";
+const SERVER_VERSION = "0.9.3";
 const APP_ORIGIN = "https://israeltoledano.github.io";
 // Gemma 4 26B (4B active) is fast and costs about a sixth of Llama 3.3 70B per idea in the free allowance.
 const TEXT_MODEL = "@cf/google/gemma-4-26b-a4b-it";
@@ -51,24 +51,24 @@ export default {
       if (url.pathname === "/") return json({ ok: true, service: "drape-ai", version: SERVER_VERSION }, 200, origin);
 
       if (req.method === "GET" && url.pathname === "/health") {
-        checkCode(env, url.searchParams.get("code"));
+        await checkCode(env, url.searchParams.get("code"));
         return json({ ok: true, ideas: !!env.AI, images: !!env.AI, version: SERVER_VERSION, textModel: textModelNow(), imageModel: imageModelNow() }, 200, origin);
       }
 
       if (req.method === "GET" && url.pathname === "/diag") {
-        checkCode(env, url.searchParams.get("code"));
+        await checkCode(env, url.searchParams.get("code"));
         return json(await diag(env), 200, origin);
       }
 
       if (req.method === "GET" && url.pathname === "/image") {
-        checkCode(env, url.searchParams.get("code"));
+        await checkCode(env, url.searchParams.get("code"));
         return await image(env, url.searchParams.get("p"), url.searchParams.get("t"), origin);
       }
 
       if (req.method === "POST" && url.pathname === "/ideas") {
         let body;
         try { body = JSON.parse(await req.text()); } catch (e) { throw new HttpError(400, "Request isn't valid JSON"); }
-        checkCode(env, body && body.code);
+        await checkCode(env, body && body.code);
         return json(await ideas(env, body), 200, origin);
       }
 
@@ -80,9 +80,41 @@ export default {
   },
 };
 
-function checkCode(env, code) {
+async function checkCode(env, code) {
   if (!env.ACCESS_CODE) throw new HttpError(503, "Set ACCESS_CODE in the worker's settings first");
-  if (!code || String(code).trim() !== String(env.ACCESS_CODE).trim()) throw new HttpError(401, "Wrong access code");
+  if (code && String(code).trim() === String(env.ACCESS_CODE).trim()) return;
+  // The repo's live test (GitHub Actions) signs in with a short-lived GitHub token for this repo,
+  // so the test needs no stored secret.
+  if (code && String(code).split(".").length === 3 && await githubTestToken(code)) return;
+  throw new HttpError(401, "Wrong access code");
+}
+
+const GH_ISSUER = "https://token.actions.githubusercontent.com";
+const GH_REPO = "israeltoledano/clothes";
+let jwks = null;
+const b64url = (s) => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4)), (c) => c.charCodeAt(0));
+async function githubTestToken(tok) {
+  try {
+    const [h, p, sig] = String(tok).split(".");
+    const head = JSON.parse(new TextDecoder().decode(b64url(h)));
+    const claims = JSON.parse(new TextDecoder().decode(b64url(p)));
+    if (claims.iss !== GH_ISSUER || claims.aud !== "drape-live-test" || String(claims.repository || "").toLowerCase() !== GH_REPO) return false;
+    if (!(claims.exp * 1000 > Date.now()) || head.alg !== "RS256") return false;
+    if (!jwks || Date.now() - jwks.at > 3600 * 1000 || !jwks.keys.some((k) => k.kid === head.kid)) {
+      const r = await fetch(GH_ISSUER + "/.well-known/jwks");
+      jwks = { at: Date.now(), keys: (await r.json()).keys || [] };
+    }
+    const k = jwks.keys.find((x) => x.kid === head.kid);
+    if (!k) return false;
+    const key = await crypto.subtle.importKey("jwk", { kty: k.kty, n: k.n, e: k.e, alg: "RS256", ext: true }, { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["verify"]);
+    return await crypto.subtle.verify("RSASSA-PKCS1-v1_5", key, b64url(sig), new TextEncoder().encode(h + "." + p));
+  } catch (e) { return false; }
+}
+
+// A model call that hangs must not hang the app: give up after a while and use the backup.
+function timeLimit(promise, ms, what) {
+  let t;
+  return Promise.race([promise, new Promise((_, no) => { t = setTimeout(() => no(new HttpError(503, what + " took longer than " + Math.round(ms / 1000) + "s")), ms); })]).finally(() => clearTimeout(t));
 }
 
 // Workers AI errors: turn "used up the daily free allocation" into a clear message.
@@ -247,6 +279,7 @@ function kindsFor(type, angle, seed, count) {
 }
 
 async function ideas(env, b) {
+  const t0 = Date.now();
   const count = Math.max(1, Math.min(6, parseInt(b.count, 10) || 4));
   const q = b.query || {};
   const type = pickFrom(TYPES, q.type) || "Surprise me";
@@ -314,7 +347,7 @@ async function ideas(env, b) {
     search: clip(i.search, 80) || ("men's " + clip(i.colour, 24) + " " + clip(i.title, 48)).toLowerCase(),
     image_prompt: clip(i.image_prompt || [i.colour, i.fabric, i.title].join(" "), 420),
   }));
-  return { ideas: list, insight: clip(out.insight, 90), model: used.split("/").pop() };
+  return { ideas: list, insight: clip(out.insight, 90), model: used.split("/").pop() + (used === TEXT_MODEL ? " (form " + mainForm + ")" : ""), ms: Date.now() - t0 };
 }
 
 const textModelNow = () => (textTrouble.until > Date.now() ? "llama-3.3-70b (gemma-4 failed: " + textTrouble.error + ")" : "gemma-4-26b-a4b-it");
@@ -337,15 +370,22 @@ function textOf(r) {
 }
 // Settings the model doesn't accept come back as a quick validation error: try the next, simpler form.
 const settingRejected = (e) => e instanceof HttpError && e.status !== 429 && /propert|5006|schema|invalid|unknown|unsupported|response_format|max_completion/i.test(e.message);
+// Which request form the model accepted last time (so later calls skip the ones it rejects).
+let mainForm = 0;
 async function mainText(env, messages) {
   const tries = [
+    { messages, max_completion_tokens: 2400, temperature: 0.8, response_format: { type: "json_object" }, chat_template_kwargs: { enable_thinking: false } },
     { messages, max_completion_tokens: 2400, temperature: 0.8, response_format: { type: "json_object" } },
     { messages, max_completion_tokens: 2400, temperature: 0.8 },
     { messages, max_tokens: 2400, temperature: 0.8 },
   ];
   let last;
-  for (const t of tries) {
-    try { return parseJSON(textOf(await runAI(env, TEXT_MODEL, t))); }
+  for (let i = mainForm; i < tries.length; i++) {
+    try {
+      const out = parseJSON(textOf(await timeLimit(runAI(env, TEXT_MODEL, tries[i]), +env.TEXT_LIMIT_MS || 25000, "Gemma")));
+      mainForm = i;
+      return out;
+    }
     catch (e) { last = e; if (!settingRejected(e)) throw e; }
   }
   throw last;
@@ -353,12 +393,12 @@ async function mainText(env, messages) {
 async function backupText(env, messages) {
   let out = null;
   try {
-    out = parseJSON(textOf(await runAI(env, TEXT_BACKUP, { messages, max_tokens: 2400, temperature: 0.8, response_format: { type: "json_schema", json_schema: IDEA_SCHEMA } })));
+    out = parseJSON(textOf(await timeLimit(runAI(env, TEXT_BACKUP, { messages, max_tokens: 2400, temperature: 0.8, response_format: { type: "json_schema", json_schema: IDEA_SCHEMA } }), 40000, "Llama")));
   } catch (e) {
     if (e instanceof HttpError && e.status === 429) throw e;
   }
   // JSON mode can fail ("couldn't be met"); ask once more as plain text and pull the JSON out.
-  if (!out || !Array.isArray(out.ideas)) out = parseJSON(textOf(await runAI(env, TEXT_BACKUP, { messages, max_tokens: 2400, temperature: 0.7 })));
+  if (!out || !Array.isArray(out.ideas)) out = parseJSON(textOf(await timeLimit(runAI(env, TEXT_BACKUP, { messages, max_tokens: 2400, temperature: 0.7 }), 40000, "Llama")));
   return out;
 }
 
@@ -434,14 +474,14 @@ async function image(env, prompt, type, origin) {
   const full = productPrompt(prompt, pickFrom(TYPES, type));
   let bytes = null, used = "flux-2-klein-4b";
   if (imageTrouble.until <= Date.now()) {
-    try { bytes = await imageBytes(await runMainImage(env, full)); }
+    try { bytes = await imageBytes(await timeLimit(runMainImage(env, full), +env.IMAGE_LIMIT_MS || 20000, "FLUX.2 klein")); }
     catch (e) {
       if (e instanceof HttpError && e.status === 429) throw e;
       const busy = e instanceof HttpError && e.status === 503;
       imageTrouble = { until: Date.now() + (busy ? 60 : 600) * 1000, error: String((e && e.message) || e).slice(0, 200) };
     }
   }
-  if (!bytes) { used = "flux-1-schnell"; bytes = await imageBytes(await runBackupImage(env, full)); }
+  if (!bytes) { used = "flux-1-schnell"; bytes = await imageBytes(await timeLimit(runBackupImage(env, full), 30000, "FLUX.1 schnell")); }
   const png = bytes[0] === 0x89 && bytes[1] === 0x50;
   const headers = { "Content-Type": png ? "image/png" : "image/jpeg", "Cache-Control": "public, max-age=31536000, immutable", "X-Drape-Image-Model": used, ...cors(origin) };
   return new Response(bytes, { headers });
@@ -471,7 +511,7 @@ async function diag(env) {
   const msg = [{ role: "user", content: "Reply with the word ok." }];
   const tryIt = async (name, fn) => {
     const t0 = Date.now();
-    try { const r = await fn(); out[name] = "ok " + (Date.now() - t0) + "ms" + (r ? ": " + r : ""); }
+    try { const r = await timeLimit(fn(), 25000, name); out[name] = "ok " + (Date.now() - t0) + "ms" + (r ? ": " + r : ""); }
     catch (e) { out[name] = "FAILED " + (Date.now() - t0) + "ms: " + String((e && e.message) || e).slice(0, 300); }
   };
   await tryIt("gemma", async () => clip(String(textOf(await rawRun(env, TEXT_MODEL, { messages: msg, max_completion_tokens: 5 }))), 20));
