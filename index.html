@@ -233,7 +233,7 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "0.9.5";
+const APP_VERSION = "0.9.6";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
 const SERVER_EXPECTED = "0.9.4"; // the worker/worker.js version this app was built with
 
@@ -600,8 +600,6 @@ function failIdeas(e, gen){
 }
 // When a request finishes: a heart that came in meanwhile goes first, then top up if running low.
 function afterFetch(){
-  if (S.pendingHunt && S.hunt){ S.pendingHunt = false; refill({hunt:S.hunt}); return; }
-  S.pendingHunt = false;
   if (S.queue.length <= 2) refill();
 }
 
@@ -645,8 +643,8 @@ function burst(){
   S.kindPos = 0;
   S.reqVotes = S.round.votes.length;
   S.aiErr = null;
-  // One idea first (answers in a few seconds), then two, then three batches of six, each with its own kinds.
-  const plan = [{count:1, angle:0}, {count:2, kindStart:nextKinds(2)}, {count:6, kindStart:nextKinds(6)}, {count:6, kindStart:nextKinds(6)}, {count:6, kindStart:nextKinds(6)}];
+  // Three single ideas first (each answers in a few seconds), then 3, 6 and 6, each with its own kinds.
+  const plan = [{count:1, angle:0}, {count:1, kindStart:nextKinds(1)}, {count:1, kindStart:nextKinds(1)}, {count:3, kindStart:nextKinds(3)}, {count:6, kindStart:nextKinds(6)}, {count:6, kindStart:nextKinds(6)}];
   let got = 0, lastErr = null;
   S.fetchAt = Date.now();
   S.fetching = Promise.all(plan.map((o) => aiCall("/ideas", bodyFor(o)).then((res) => { got += acceptIdeas(res, gen, o.angle === 0 ? 3 : 0); }).catch((e) => { lastErr = e; }))).then(() => {
@@ -669,10 +667,23 @@ function takeNext(){
 }
 
 // Heart: ask for variations of this piece in the background. They come right after the two cards on deck.
+// Hearts get their own request slot, so they never wait behind a big batch.
 function converge(i){
   S.hunt = i; S.huntAt = S.round.votes.length;
-  if (S.fetching) S.pendingHunt = true;
-  else refill({hunt:i});
+  if (S.huntFetch) S.pendingHunt = true;
+  else runHunt();
+}
+function runHunt(){
+  if (!aiRound() || !S.hunt) return;
+  const gen = S.gen, h = S.hunt;
+  S.pendingHunt = false;
+  const next = () => { if (S.pendingHunt) runHunt(); };
+  S.huntFetch = aiCall("/ideas", bodyFor({hunt:h, count:3})).then((res) => {
+    if (gen !== S.gen) return;
+    S.huntFetch = null;
+    acceptIdeas(res, gen, 10);
+    next();
+  }).catch(() => { if (gen !== S.gen) return; S.huntFetch = null; next(); });
 }
 
 // After four "not now" in a row, ask the AI for a new direction (in the background; those ideas go first).
@@ -681,7 +692,7 @@ function maybeRedirect(){
   if (last.length < 4 || last.some((v) => v.v !== "later" && v.v !== "hate")) return;
   if (S.round.redirectAt === S.round.votes.length) return;
   S.round.redirectAt = S.round.votes.length;
-  S.hunt = null; S.pendingHunt = false;
+  S.hunt = null; S.pendingHunt = false; S.huntFetch = null;
   for (const i of S.queue) i._boost = 0;
   if (!S.fetching) refill({redirect:true});
 }
@@ -1085,7 +1096,7 @@ function startRound(){
   if (ta) Q.text = ta.value.trim();
   save("query", Q);
   S.round = {votes:[]};
-  S.gen++; S.fetching = null; S.queue = []; S.nextUp = null; S.hunt = null; S.pendingHunt = false; S.roundId = ""; S.kindPos = 0; S.aiErr = null; S.aiInsight = ""; S.anchor = null; S.sampleRound = false; S.sampleWhy = "";
+  S.gen++; S.fetching = null; S.huntFetch = null; S.queue = []; S.nextUp = null; S.hunt = null; S.pendingHunt = false; S.roundId = ""; S.kindPos = 0; S.aiErr = null; S.aiInsight = ""; S.anchor = null; S.sampleRound = false; S.sampleWhy = "";
   S.current = null;
   if (aiRound()) burst();
   else S.current = nextIdea();
@@ -1155,7 +1166,7 @@ function moreLike(){
   if (i){ Q.type = i.type; save("query", Q); }
   if (aiRound()){
     // Ask the AI for close variations of the pick.
-    S.anchor = i; S.hunt = null; S.pendingHunt = false; S.gen++; S.fetching = null; S.queue = []; S.nextUp = null; S.aiErr = null; S.current = null;
+    S.anchor = i; S.hunt = null; S.pendingHunt = false; S.huntFetch = null; S.gen++; S.fetching = null; S.queue = []; S.nextUp = null; S.aiErr = null; S.current = null;
     refill({count:4});
     go("explore");
     return;
@@ -1349,7 +1360,7 @@ function askSnapshot(){
   L.push(`screen: ${S.screen}${S.sheet ? " + pick sheet" : ""}${S.modal ? " + dialog" : ""}`);
   L.push(`ua: ${navigator.userAgent}`);
   L.push(`ai: ${aiOn() ? "on" : "off"}${S.sampleRound ? " (this round uses sample ideas)" : ""}   server: ${AI.url || DEFAULT_WORKER}   health: ${JSON.stringify(AI.health || null)}`);
-  L.push(`ai request: ${S.fetching ? "in flight for " + Math.round((Date.now() - (S.fetchAt || Date.now())) / 1000) + "s" : "idle"}   last error: ${S.aiErr || "none"}   waiting ideas: ${S.queue.length}`);
+  L.push(`ai request: ${S.fetching ? "in flight for " + Math.round((Date.now() - (S.fetchAt || Date.now())) / 1000) + "s" : "idle"}${S.huntFetch ? " + heart variations in flight" : ""}   last error: ${S.aiErr || "none"}   waiting ideas: ${S.queue.length}`);
   L.push(`server version: ${(AI.health && AI.health.version) || "unknown"}   (app expects ${SERVER_EXPECTED} or newer)`);
   L.push(`idea model: ${S.textModel || "-"} (last reply)   server says: ${(AI.health && AI.health.textModel) || "unknown"}`);
   L.push(`photo model: ${(AI.health && AI.health.imageModel) || "unknown"}`);

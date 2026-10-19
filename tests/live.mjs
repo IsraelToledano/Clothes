@@ -111,18 +111,21 @@ try {
   }
 
   // Swipe through cards: left = not now, right = getting closer (keys do the same as swipes).
-  const plan = ["later", "like", "later", "later", "like", "later", "later", "later", "like", "later"];
+  const plan = ["later", "like", "later", "later", "later", "like", "later", "later", "later", "like", "later", "later"];
+  let swipedAt = null;
   for (let n = 0; first && n < plan.length; n++) {
     if (Date.now() - tokAt > 150000) { const t = await token(); await page.evaluate((x) => { AI.code = x; }, t); tokAt = Date.now(); }
-    const shownAt = Date.now();
+    const shownAt = Date.now(), waitedMs = swipedAt ? shownAt - swipedAt : R.app.firstCardMs;
     const card = await page.evaluate(() => S.current && { id: S.current.id, title: S.current.title, why: S.current.why, colour: S.current.colour, fabric: S.current.fabric, desc: S.current.desc, boost: S.current._boost || 0 });
     const photo = await page.waitForSelector(".idea-img img.ok", { timeout: 40000 }).then(() => Date.now() - shownAt).catch(() => null);
     const imgErr = photo == null ? await page.evaluate(() => S.imgErr || (document.querySelector(".idea-img .ph") || {}).innerText || "") : undefined;
     await page.screenshot({ path: path.join(OUT, `card-${String(n + 1).padStart(2, "0")}.png`) });
-    R.app.cards.push({ n: n + 1, ...card, photoMs: photo, photoError: imgErr, swipe: plan[n] });
+    R.app.cards.push({ n: n + 1, ...card, waitedMs, photoMs: photo, photoError: imgErr, swipe: plan[n] });
+    await page.waitForTimeout(1500); // a person looks at the card for a moment
     log("card", n + 1, card && card.title, "| photo", photo == null ? "FAILED " + imgErr : photo + "ms", "| swipe", plan[n]);
     const before = card && card.id;
     await page.keyboard.press(plan[n] === "like" ? "ArrowRight" : "ArrowLeft");
+    swipedAt = Date.now();
     const next = await page.waitForFunction((id) => S.current && S.current.id !== id && document.getElementById("card"), before, { timeout: 90000 }).then(() => true).catch(() => false);
     if (!next) {
       await page.screenshot({ path: path.join(OUT, `stuck-after-${n + 1}.png`) });
@@ -156,7 +159,7 @@ const md = [
   `App first card: ${a.firstCardMs == null ? "NOT SHOWN" : a.firstCardMs + "ms"}`,
   `App /ideas calls: ${ideas.map((r) => (r.status || "fail") + " " + r.ms + "ms " + (r.model || r.failed || r.error || "")).join(" | ")}`,
   `App photos: ${imgs.length} requests; ${imgs.filter((r) => r.status === 200).length} ok; models ${[...new Set(imgs.map((r) => r.model))].join(",")}; median card photo wait ${photoMs.length ? photoMs.sort((x, y) => x - y)[Math.floor(photoMs.length / 2)] + "ms" : "-"}`,
-  `Cards:`, ...(a.cards || []).map((c) => `  ${c.n}. ${c.title} — ${c.colour}, ${c.fabric} — why: ${c.why || ""} — photo ${c.photoMs == null ? "FAILED " + c.photoError : c.photoMs + "ms"} — ${c.swipe}${c.boost === 10 ? " (heart variation)" : ""}`),
+  `Cards (waited = from the previous swipe until the card was there; photo = until its photo was there):`, ...(a.cards || []).map((c) => `  ${c.n}. ${c.title} — ${c.colour}, ${c.fabric} — why: ${c.why || ""} — waited ${c.waitedMs}ms — photo ${c.photoMs == null ? "FAILED " + c.photoError : c.photoMs + "ms"} — ${c.swipe}${c.boost === 10 ? " (heart variation)" : ""}`),
   `Errors: ${(a.errors || []).join(" | ") || "none"}`,
   a.stuck ? `STUCK at start: ${JSON.stringify(a.stuck)}` : "",
   a.stuckAfter ? `STUCK after card ${a.stuckAfter.n}: ${JSON.stringify(a.stuckAfter)}` : "",
