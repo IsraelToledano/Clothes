@@ -83,6 +83,11 @@ textarea::placeholder{color:#686E79}
 .ph{display:flex;flex-direction:column;align-items:center;gap:8px;padding:0 44px;text-align:center;color:#3B404A}
 .ph svg{width:40px;height:40px}
 .tag{position:absolute;z-index:1;top:12px;left:12px;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;background:#fff;color:var(--ink);padding:6px 10px;border-radius:999px}
+.diag{list-style:none;margin:4px 0 0;padding:0;display:flex;flex-direction:column;gap:6px;text-align:left;font-size:12px;font-family:var(--mono)}
+.diag li{display:flex;gap:8px;align-items:baseline}
+.diag b{flex:none;width:48px}
+.diag .ok{color:#1E8E4E}
+.diag .bad{color:var(--danger);overflow-wrap:anywhere}
 .sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 .stamp{position:absolute;z-index:2;top:50%;display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:14px;font-size:20px;font-weight:800;letter-spacing:.02em;background:#fff;pointer-events:none;opacity:0;transform:translateY(-50%) rotate(var(--rot));box-shadow:0 6px 24px rgba(0,0,0,.18)}
 .stamp svg{width:22px;height:22px}
@@ -228,9 +233,9 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "0.9.2";
+const APP_VERSION = "0.9.3";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
-const SERVER_EXPECTED = "0.9.1"; // the worker/worker.js version this app was built with
+const SERVER_EXPECTED = "0.9.2"; // the worker/worker.js version this app was built with
 
 /* ---------------- storage (on this phone only) ---------------- */
 const LS = "clothes:";
@@ -754,7 +759,7 @@ function steps(stage){
 function ideaImage(i){
   const u = i.image || imgUrl(i);
   if (u) return `<div class="ph wait">${ICON.image}<span class="mono-label">Drawing the photo…</span></div><img src="${esc(u)}" alt="${esc("AI photo of " + i.title + ": " + i.desc)}" crossorigin="anonymous" draggable="false" onload="this.classList.add('ok');this.previousElementSibling.classList.remove('wait')" onerror="imgFail(this)">`;
-  return `<div class="ph">${ICON.image}<span class="mono-label">${isAI(i) ? "No photo" : "Sample idea · no photo"}</span>${!isAI(i) && /allowance/i.test(S.sampleWhy || "") ? `<span class="small-note">AI ideas and photos are back after 03:00, when the free daily allowance resets. Start a new search then.</span>` : ""}</div>`;
+  return `<div class="ph">${ICON.image}<span class="mono-label">${isAI(i) ? "No photo" : "Sample idea · no photo"}</span>${!isAI(i) && /allowance/i.test(S.sampleWhy || "") ? `<span class="small-note">AI ideas and photos are back after ${resetIn().at}, when the free daily allowance resets. Start a new search then.</span>` : ""}</div>`;
 }
 
 function metaHtml(){
@@ -770,6 +775,34 @@ function voteBtns(dis){
   const b = (v, ic, label, aria) => `<button type="button" class="vote ${v}"${dis ? " disabled" : ` data-act="vote" data-v="${v}"`} aria-label="${aria}">${ic}<span>${label}</span></button>`;
   // Swiping is the way to answer; these buttons stay for screen readers and keyboards only (← and → work too).
   return `<section class="votes sr-only" aria-label="Answer">${b("later", ICON.close, "Not now", "Not now")}${b("like", ICON.heart, "Getting closer", "Getting closer")}</section>`;
+}
+// The daily allowance resets at 00:00 UTC (03:00 in Israel in summer time, 02:00 in winter time).
+function resetIn(){
+  const now = new Date(), next = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
+  const at = new Date(next).toLocaleTimeString("en-GB", {hour:"2-digit", minute:"2-digit"});
+  const m = Math.max(1, Math.round((next - now) / 60000)), h = Math.floor(m / 60);
+  return {at, left:(h ? h + "h " : "") + (m % 60) + "m"};
+}
+function errHtml(err){
+  const m = /^([\s\S]*?)\s*\((Cloudflare: [\s\S]*)\)\s*$/.exec(String(err || ""));
+  let main = m ? m[1] : String(err || ""), raw = m ? m[2] : "";
+  if (/allowance is used up/i.test(main)){ const r = resetIn(); main = `Today's free AI allowance is used up. It resets at ${r.at} your time (in ${r.left}).`; }
+  return `<p class="idea-desc">${esc(main)}</p>${raw ? `<p class="mono-label" style="text-transform:none;letter-spacing:0;overflow-wrap:anywhere">${esc(raw)}</p>` : ""}`;
+}
+function diagHtml(){
+  if (!S.diag) return "";
+  const rows = ["gemma", "llama", "klein"].map((k) => [k, S.diag[k] || "-"]);
+  return `<ul class="diag">${rows.map(([k, v]) => `<li><b>${k}</b><span class="${/^ok/.test(v) ? "ok" : "bad"}">${esc(v)}</span></li>`).join("")}</ul>`;
+}
+async function runDiag(){
+  if (S.diagBusy) return;
+  S.diagBusy = true; render();
+  try{
+    const r = await fetch(workerBase() + "/diag?code=" + encodeURIComponent(AI.code));
+    let j = null; try{ j = await r.json(); }catch(e){}
+    S.diag = r.ok && j ? j : {gemma:"FAILED: " + ((j && j.error) || ("server error " + r.status))};
+  }catch(e){ S.diag = {gemma:"FAILED: no connection to the AI server"}; }
+  S.diagBusy = false; render();
 }
 function renderExplore(){
   const i = S.current;
@@ -787,10 +820,11 @@ function renderExplore(){
   if (!i && aiRound()){
     return `<main class="screen fixed">${head}<div class="empty" role="alert">
       <h1 class="idea-title">Couldn't get new ideas</h1>
-      <p class="idea-desc">${esc(S.aiErr)}</p>
+      ${errHtml(S.aiErr)}
       <button type="button" class="cta" data-act="ai-retry">Try again ${ICON.refresh}</button>
       <button type="button" class="outline-btn" data-act="use-samples">Use sample ideas this time</button>
-      <button type="button" class="link-btn" data-act="profile">Check the AI connection</button>
+      <button type="button" class="link-btn" data-act="diag"${S.diagBusy ? " disabled" : ""}>${S.diagBusy ? "Checking the AI…" : "Run a quick AI check"}</button>
+      ${diagHtml()}
     </div></main>`;
   }
   if (!i){
@@ -957,9 +991,10 @@ function aiCard(){
     <h2 id="ai-h">AI connection</h2>
     <span class="ai-status"><span class="dot${on ? " on" : ""}" aria-hidden="true"></span>${on ? "On" : "Off"}${on && h.version ? `<span class="mono-label" style="font-weight:400;margin-left:6px">server ${esc(h.version)}</span>` : ""}</span>
     ${on && h.version && serverOutdated(h.version) ? `<p style="color:var(--danger)">The AI server is older than this app. In Cloudflare, redeploy the worker from the latest commit.</p>` : ""}
-    <p>${on ? "Free Cloudflare AI writes your ideas and draws a photo for each one. Up to about 70 votes a day; it resets at 03:00." + (missing.length ? " Not set up yet on the server: " + esc(joinAnd(missing)) + "." : "")
+    <p>${on ? "Free Cloudflare AI writes your ideas and draws a photo for each one. About 150 swipes a day; the allowance resets at " + resetIn().at + " your time." + (missing.length ? " Not set up yet on the server: " + esc(joinAnd(missing)) + "." : "")
             : "Using the built-in sample ideas. Enter the access code you set on your AI server to turn AI on."}</p>
-    ${on ? `<button type="button" class="link-btn" data-act="ai-off" style="align-self:flex-start;padding:0">Turn off</button>` : `
+    ${on ? `<button type="button" class="link-btn" data-act="diag" style="align-self:flex-start;padding:0"${S.diagBusy ? " disabled" : ""}>${S.diagBusy ? "Checking the AI…" : "Run a quick AI check"}</button>${diagHtml()}
+    <button type="button" class="link-btn" data-act="ai-off" style="align-self:flex-start;padding:0">Turn off</button>` : `
     <div><label class="label" for="ai-code">Access code</label><input id="ai-code" class="field" type="password" autocomplete="off" value="${esc(AI.code)}"></div>
     <details><summary>Server address</summary><input id="ai-url" class="field" type="url" inputmode="url" autocapitalize="off" spellcheck="false" value="${esc(AI.url || DEFAULT_WORKER)}"></details>
     <button type="button" class="outline-btn filled" data-act="ai-connect"${S.checking ? " disabled" : ""}>${S.checking ? "Connecting…" : "Connect"}</button>`}
@@ -1158,6 +1193,7 @@ const ACTIONS = {
   "ai-connect"(){ connectAI(); },
   "ai-off"(){ AI.on = false; save("ai", AI); S.queue = []; S.gen++; S.fetching = null; toast("AI turned off — using sample ideas"); render(); },
   "ai-retry"(){ S.aiErr = null; refill(); render(); },
+  diag(){ runDiag(); },
   "use-samples"(){ S.sampleRound = true; S.sampleWhy = S.aiErr; S.aiErr = null; S.current = nextSample(); render(); },
   "modal-cancel"(){ S.modal = null; render(); },
   "modal-ok"(){ const m = S.modal; S.modal = null; if (m && m.run) m.run(); render(); },
@@ -1288,6 +1324,7 @@ function askSnapshot(){
   L.push(`server version: ${(AI.health && AI.health.version) || "unknown"}   (app expects ${SERVER_EXPECTED} or newer)`);
   L.push(`idea model: ${S.textModel || "-"} (last reply)   server says: ${(AI.health && AI.health.textModel) || "unknown"}`);
   L.push(`photo model: ${(AI.health && AI.health.imageModel) || "unknown"}`);
+  if (S.diag) L.push(`AI check: ${JSON.stringify(S.diag)}`);
   L.push(`last photo error: ${S.imgErr || "none"}`);
   L.push(`\nSEARCH: type=${Q.type || "-"}  styles=${(Q.styles || []).join(", ") || "-"}  text="${Q.text || ""}"`);
   L.push(`PREFS: ${JSON.stringify(PREFS)}`);

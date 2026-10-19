@@ -31,6 +31,7 @@ Everything you do is saved on the phone (`localStorage`, keys prefixed `clothes:
 | Route | What it does | Model |
 |---|---|---|
 | `POST /ideas` | Writes new ideas from the brief, today's swipes and long-term taste | Gemma 4 26B (`@cf/google/gemma-4-26b-a4b-it`); Llama 3.3 70B as backup |
+| `GET /diag` | One tiny test call per model with Cloudflare's exact answer ("Run a quick AI check" in the app; the result goes into the Drape report) | all three |
 | `GET /image` | Draws a product photo for one idea (the garment alone on an invisible mannequin, no person) | FLUX.2 klein 4B (`@cf/black-forest-labs/flux-2-klein-4b`), 512×768; FLUX.1 schnell as backup |
 | `GET /health` | Checks the access code | — |
 

@@ -3,6 +3,7 @@
 //
 //   GET  /health  → checks the access code and that the AI binding is there
 //   POST /ideas   → an LLM writes new style ideas from the request and the swipes so far (Gemma 4, Llama 3.3 as backup)
+//   GET  /diag    → a tiny test call to each AI model, with Cloudflare's exact answer (for the Drape report)
 //   GET  /image   → an AI product photo for one idea (FLUX.2 klein 4B, FLUX.1 schnell as backup)
 //
 // One setting in the Cloudflare dashboard (Worker → Settings → Variables and Secrets):
@@ -12,7 +13,7 @@
 // On the free plan Cloudflare blocks requests past that instead of charging.
 
 // Bump with the app version so a report shows whether the server was redeployed.
-const SERVER_VERSION = "0.9.1";
+const SERVER_VERSION = "0.9.2";
 const APP_ORIGIN = "https://israeltoledano.github.io";
 // Gemma 4 26B (4B active) is fast and costs about a sixth of Llama 3.3 70B per idea in the free allowance.
 const TEXT_MODEL = "@cf/google/gemma-4-26b-a4b-it";
@@ -54,6 +55,11 @@ export default {
         return json({ ok: true, ideas: !!env.AI, images: !!env.AI, version: SERVER_VERSION, textModel: textModelNow(), imageModel: imageModelNow() }, 200, origin);
       }
 
+      if (req.method === "GET" && url.pathname === "/diag") {
+        checkCode(env, url.searchParams.get("code"));
+        return json(await diag(env), 200, origin);
+      }
+
       if (req.method === "GET" && url.pathname === "/image") {
         checkCode(env, url.searchParams.get("code"));
         return await image(env, url.searchParams.get("p"), url.searchParams.get("t"), origin);
@@ -85,9 +91,15 @@ async function runAI(env, model, input) {
   try {
     return await env.AI.run(model, input);
   } catch (e) {
-    const msg = String((e && e.message) || e);
-    if (/4006|daily free allocation|neurons|quota|rate limit|429/i.test(msg)) {
-      throw new HttpError(429, "Today's free AI allowance is used up. It resets at 03:00.");
+    const msg = String((e && e.message) || e).replace(/\s+/g, " ").trim();
+    const said = " (Cloudflare: " + msg.slice(0, 160) + ")";
+    // Only the daily free allocation is "used up". Busy / rate-limited is temporary, and the caller
+    // tries the backup model instead.
+    if (/\b(4006|3036)\b|daily free allocation|used up your daily|daily allocation/i.test(msg)) {
+      throw new HttpError(429, "Today's free AI allowance is used up. It resets at 00:00 UTC (03:00 in Israel in summer time)." + said);
+    }
+    if (/\b(3040|3007|429)\b|capacity|rate.?limit|too many requests|overloaded|timed? ?out/i.test(msg)) {
+      throw new HttpError(503, "The AI is busy right now. Try again in a minute." + said);
     }
     throw new HttpError(502, "AI error: " + msg.slice(0, 200));
   }
@@ -282,7 +294,8 @@ async function ideas(env, b) {
     try { out = await mainText(env, messages); }
     catch (e) {
       if (e instanceof HttpError && e.status === 429) throw e;
-      textTrouble = { until: Date.now() + 10 * 60 * 1000, error: String((e && e.message) || e).slice(0, 160) };
+      const busy = e instanceof HttpError && e.status === 503;
+      textTrouble = { until: Date.now() + (busy ? 60 : 600) * 1000, error: String((e && e.message) || e).slice(0, 200) };
     }
     if (out && !Array.isArray(out.ideas)) out = null; // one odd reply: use the backup for this request only
   }
@@ -424,7 +437,8 @@ async function image(env, prompt, type, origin) {
     try { bytes = await imageBytes(await runMainImage(env, full)); }
     catch (e) {
       if (e instanceof HttpError && e.status === 429) throw e;
-      imageTrouble = { until: Date.now() + 10 * 60 * 1000, error: String((e && e.message) || e).slice(0, 160) };
+      const busy = e instanceof HttpError && e.status === 503;
+      imageTrouble = { until: Date.now() + (busy ? 60 : 600) * 1000, error: String((e && e.message) || e).slice(0, 200) };
     }
   }
   if (!bytes) { used = "flux-1-schnell"; bytes = await imageBytes(await runBackupImage(env, full)); }
@@ -447,4 +461,33 @@ async function imageBytes(out) {
   const bytes = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
   return bytes;
+}
+
+/* ---------------- /diag ---------------- */
+// One tiny call per model (a few tokens, one small picture: almost free), each with Cloudflare's exact
+// answer, so a report shows what's really wrong instead of a guess.
+async function diag(env) {
+  const out = { version: SERVER_VERSION, at: new Date().toISOString() };
+  const msg = [{ role: "user", content: "Reply with the word ok." }];
+  const tryIt = async (name, fn) => {
+    const t0 = Date.now();
+    try { const r = await fn(); out[name] = "ok " + (Date.now() - t0) + "ms" + (r ? ": " + r : ""); }
+    catch (e) { out[name] = "FAILED " + (Date.now() - t0) + "ms: " + String((e && e.message) || e).slice(0, 300); }
+  };
+  await tryIt("gemma", async () => clip(String(textOf(await rawRun(env, TEXT_MODEL, { messages: msg, max_completion_tokens: 5 }))), 20));
+  await tryIt("llama", async () => clip(String(textOf(await rawRun(env, TEXT_BACKUP, { messages: msg, max_tokens: 5 }))), 20));
+  await tryIt("klein", async () => {
+    const form = new FormData();
+    form.append("prompt", "a plain white t-shirt on a grey background"); form.append("width", "256"); form.append("height", "256");
+    const r = new Response(form);
+    const bytes = await imageBytes(await rawRun(env, IMAGE_MODEL, { multipart: { body: r.body, contentType: r.headers.get("content-type") } }));
+    return bytes.length + " bytes";
+  });
+  out.textModelNow = textModelNow(); out.imageModelNow = imageModelNow();
+  return out;
+}
+// Like runAI, but keeps Cloudflare's error exactly as it came.
+async function rawRun(env, model, input) {
+  if (!env.AI) throw new Error("The Workers AI binding isn't set up");
+  return env.AI.run(model, input);
 }
