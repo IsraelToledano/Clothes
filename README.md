@@ -32,7 +32,7 @@ Everything you do is saved on the phone (`localStorage`, keys prefixed `clothes:
 |---|---|---|
 | `POST /ideas` | Writes new ideas from the brief, today's swipes and long-term taste | Gemma 4 26B (`@cf/google/gemma-4-26b-a4b-it`); Llama 3.3 70B as backup |
 | `GET /diag` | One tiny test call per model with Cloudflare's exact answer ("Run a quick AI check" in the app; the result goes into the Drape report) | all three |
-| `GET /image` | Draws a product photo for one idea (the garment alone on an invisible mannequin, no person) | FLUX.1 schnell (`@cf/black-forest-labs/flux-1-schnell`, 1–2s); FLUX.2 klein 4B as backup (9–14s when measured) |
+| `GET /image` | Draws a product photo for one idea (the garment alone on an invisible mannequin, no person) | First three cards of a search: FLUX.1 schnell (1–2s, about 150 neurons). The rest: FLUX.2 klein 4B at 512×768 (9–14s, about 50 neurons), drawn ahead while you look at the current card. Each is the other's backup. |
 | `GET /health` | Checks the access code | — |
 
 ### Setup
@@ -43,7 +43,7 @@ Everything you do is saved on the phone (`localStorage`, keys prefixed `clothes:
 
 ### The free limit
 
-Workers AI gives 10,000 free "neurons" a day, shared by ideas and photos. A search costs about 200 to start (around 20 ideas written at once), then about 60 per card (its photo, about 52, plus its share of new ideas): roughly 150 swipes a day. If Gemma fails and the backup (Llama) answers, ideas cost about six times more; the Drape report shows which model answered. It resets at 00:00 UTC (03:00 in Israel). On the free plan Cloudflare blocks requests past the limit instead of charging, so the app shows sample ideas until it resets.
+Workers AI gives 10,000 free "neurons" a day, shared by ideas and photos. Measured: a schnell photo costs about 150 (1024px, billed per tile and step), a klein photo about 50, and ideas about 10 each with Gemma. A search costs about 750 to start (about 20 ideas and the first three photos), then about 60 per card: roughly 140 cards a day. It resets at 00:00 UTC (03:00 in Israel in summer). Going over the limit can keep requests blocked for some hours. On the free plan Cloudflare blocks requests past the limit instead of charging, so the app shows sample ideas until then.
 
 ## Files
 

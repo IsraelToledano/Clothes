@@ -46,13 +46,13 @@ try {
   R.diag = await timed(async () => { const r = await fetch(WORKER + "/diag?code=" + encodeURIComponent(tok)); return { status: r.status, body: await r.json() }; });
   log("diag", R.diag);
   R.ideasApi = await timed(async () => {
-    const r = await fetch(WORKER + "/ideas", { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ code: tok, count: 4, angle: 1, round: "live", month: "October", query: BRIEF, votes: [], taste: {}, seen: [] }) });
+    const r = await fetch(WORKER + "/ideas", { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ code: tok, count: 2, angle: 1, round: "live", month: "October", query: BRIEF, votes: [], taste: {}, seen: [] }) });
     const j = await r.json();
     return { status: r.status, model: j.model, serverMs: j.ms, error: j.error, ideas: (j.ideas || []).map((i) => ({ title: i.title, why: i.why, colour: i.colour, fabric: i.fabric, search: i.search, image_prompt: i.image_prompt })) };
   });
   log("ideas (API)", R.ideasApi);
   R.imagesApi = [];
-  for (const [n, i] of (R.ideasApi.ideas || []).slice(0, 2).entries()) {
+  for (const [n, i] of (R.ideasApi.ideas || []).slice(0, 1).entries()) {
     const res = await timed(async () => {
       const r = await fetch(WORKER + "/image?v=2&s=" + n + "&t=Shirts&code=" + encodeURIComponent(tok) + "&p=" + encodeURIComponent(i.image_prompt));
       const buf = Buffer.from(await r.arrayBuffer());
@@ -111,7 +111,8 @@ try {
   }
 
   // Swipe through cards: left = not now, right = getting closer (keys do the same as swipes).
-  const plan = ["later", "like", "later", "later", "later", "like", "later", "later", "later", "like", "later", "later"];
+  // Eight cards: enough to see speed, variety and a heart, without using much of the daily allowance.
+  const plan = ["later", "like", "later", "later", "later", "like", "later", "later"];
   let swipedAt = null;
   for (let n = 0; first && n < plan.length; n++) {
     if (Date.now() - tokAt > 150000) { const t = await token(); await page.evaluate((x) => { AI.code = x; }, t); tokAt = Date.now(); }

@@ -1,6 +1,6 @@
 // Drape service worker: makes the app installable and usable offline.
 // Bump CACHE whenever index.html changes so phones pick up the new version.
-const CACHE = "drape-v0.9.7";
+const CACHE = "drape-v0.9.8";
 const IMG_CACHE = "drape-img-v1"; // AI photos: kept across app versions
 const IMG_MAX = 300;
 const ASSETS = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png"];
@@ -25,7 +25,7 @@ self.addEventListener("fetch", (e) => {
   if (url.hostname === "fonts.googleapis.com" || url.hostname === "fonts.gstatic.com") {
     e.respondWith(
       caches.open(CACHE).then((c) =>
-        c.match(e.request).then((hit) => hit || fetch(e.request).then((res) => {
+        c.match(e.request, { ignoreVary: true }).then((hit) => hit || fetch(e.request).then((res) => {
           if (res && (res.ok || res.type === "opaque")) c.put(e.request, res.clone());
           return res;
         }))
@@ -37,9 +37,15 @@ self.addEventListener("fetch", (e) => {
   // AI photos from the Drape worker: the same idea always gets the same photo,
   // so keep each one on the phone and never draw it twice.
   if (url.origin !== self.location.origin && url.pathname === "/image" && url.searchParams.has("p")) {
+    // A thumbnail shows the photo only if it's already here; it never asks for a new one.
+    if (url.searchParams.has("thumb")) {
+      const key = e.request.url.replace(/&thumb=1$/, ""); // the app adds it last; the rest is the photo's own URL
+      e.respondWith(caches.open(IMG_CACHE).then((c) => c.match(key, { ignoreVary: true })).then((hit) => hit || new Response(null, { status: 404 })));
+      return;
+    }
     e.respondWith(
       caches.open(IMG_CACHE).then((c) =>
-        c.match(e.request).then((hit) => hit || fetch(e.request).then((res) => {
+        c.match(e.request, { ignoreVary: true }).then((hit) => hit || fetch(e.request).then((res) => {
           if (res && res.ok) {
             c.put(e.request, res.clone()).then(() => trim(c));
           }

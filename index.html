@@ -233,9 +233,9 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "0.9.7";
+const APP_VERSION = "0.9.8";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
-const SERVER_EXPECTED = "0.9.5"; // the worker/worker.js version this app was built with
+const SERVER_EXPECTED = "0.9.7"; // the worker/worker.js version this app was built with
 
 /* ---------------- storage (on this phone only) ---------------- */
 const LS = "clothes:";
@@ -554,7 +554,7 @@ function shownIdeas(){
 
 // The order cards come in. The next two are fixed ("on deck") so their photos can be drawn ahead;
 // everything behind them is re-ranked by your swipes after every swipe.
-const ON_DECK = 2, PRELOAD_N = 3;
+const ON_DECK = 2, PRELOAD_N = 4;
 const PLAIN = new Set("shirt shirts tee the a an with and in of classic cotton blend fit long short sleeve sleeved men mens button down collar".split(" "));
 const words = (i) => new Set(String((i.title || "") + " " + (i.fabric || "")).toLowerCase().replace(/[^a-z\s-]/g, " ").split(/[\s-]+/).filter((w) => w.length > 2 && !PLAIN.has(w)));
 function orderQueue(){
@@ -585,6 +585,7 @@ function acceptIdeas(res, gen, boost){
     if (have.has(k) || keys.has(d)) return;
     have.add(k); keys.add(d);
     i._boost = boost || 0; i._pos = ix;
+    if (S.fastLeft > 0){ i._fast = true; S.fastLeft--; }
     list.push(i);
   });
   if (res.insight) S.aiInsight = res.insight;
@@ -646,6 +647,7 @@ function burst(){
   const gen = S.gen;
   S.roundId = Math.random().toString(36).slice(2, 8);
   S.kindPos = 0;
+  S.fastLeft = 3; // photos of the first three cards: fast model
   S.reqVotes = S.round.votes.length;
   S.aiErr = null;
   // Many small requests in parallel, smallest first: three single ideas (about 2s each, measured live),
@@ -707,7 +709,8 @@ function seedOf(id){ let h = 7; for (const c of String(id)) h = (h * 31 + c.char
 function imgUrl(i){
   if (!i || !isAI(i) || !i.image_prompt || !AI.code) return "";
   // v=2: product-shot photos (a new URL, so older photos of a man wearing it aren't reused from the cache)
-  return workerBase() + "/image?v=2&s=" + seedOf(i.id) + "&t=" + encodeURIComponent(i.type || "") + "&code=" + encodeURIComponent(AI.code) + "&p=" + encodeURIComponent(i.image_prompt);
+  // q=fast: the first cards of a search use the fast (pricier) photo model; the rest are drawn ahead with the cheaper one.
+  return workerBase() + "/image?v=2&s=" + seedOf(i.id) + (i._fast ? "&q=fast" : "") + "&t=" + encodeURIComponent(i.type || "") + "&code=" + encodeURIComponent(AI.code) + "&p=" + encodeURIComponent(i.image_prompt);
 }
 // A photo didn't load. Try it again as a plain fetch: that either recovers it (if the browser
 // refused the image but the server sent it) or tells us the server's real error, which is
@@ -727,7 +730,8 @@ async function imgFail(img){
 }
 const PRELOADED = new Set();
 function preload(i){ const u = imgUrl(i); if (u && !PRELOADED.has(u)){ PRELOADED.add(u); const im = new Image(); im.crossOrigin = "anonymous"; im.src = u; } }
-function thumbImg(id){ const u = imgUrl(byId(id)); return u ? `<img src="${esc(u)}" alt="" crossorigin="anonymous" loading="lazy" onerror="this.remove()">` : ""; }
+// Thumbnails (profile lists) only show photos already on the phone: "thumb=1" never draws a new one.
+function thumbImg(id){ const u = imgUrl(byId(id)) && imgUrl(byId(id)) + "&thumb=1"; return u ? `<img src="${esc(u)}" alt="" crossorigin="anonymous" loading="lazy" onerror="this.remove()">` : ""; }
 
 async function connectAI(){
   const code = (document.getElementById("ai-code") || {}).value;
@@ -1037,7 +1041,7 @@ function aiCard(){
     <h2 id="ai-h">AI connection</h2>
     <span class="ai-status"><span class="dot${on ? " on" : ""}" aria-hidden="true"></span>${on ? "On" : "Off"}${on && h.version ? `<span class="mono-label" style="font-weight:400;margin-left:6px">server ${esc(h.version)}</span>` : ""}</span>
     ${on && h.version && serverOutdated(h.version) ? `<p style="color:var(--danger)">The AI server is older than this app. In Cloudflare, redeploy the worker from the latest commit.</p>` : ""}
-    <p>${on ? "Free Cloudflare AI writes your ideas and draws a photo for each one. About 150 swipes a day; the allowance resets at " + resetIn().at + " your time." + (missing.length ? " Not set up yet on the server: " + esc(joinAnd(missing)) + "." : "")
+    <p>${on ? "Free Cloudflare AI writes your ideas and draws a photo for each one. About 150 cards a day; the allowance resets at " + resetIn().at + " your time." + (missing.length ? " Not set up yet on the server: " + esc(joinAnd(missing)) + "." : "")
             : "Using the built-in sample ideas. Enter the access code you set on your AI server to turn AI on."}</p>
     ${on ? `<button type="button" class="link-btn" data-act="diag" style="align-self:flex-start;padding:0"${S.diagBusy ? " disabled" : ""}>${S.diagBusy ? "Checking the AI…" : "Run a quick AI check"}</button>${diagHtml()}
     <button type="button" class="link-btn" data-act="ai-off" style="align-self:flex-start;padding:0">Turn off</button>` : `

@@ -13,14 +13,17 @@
 // On the free plan Cloudflare blocks requests past that instead of charging.
 
 // Bump with the app version so a report shows whether the server was redeployed.
-const SERVER_VERSION = "0.9.6";
+const SERVER_VERSION = "0.9.7";
 const APP_ORIGIN = "https://israeltoledano.github.io";
 // Gemma 4 26B (4B active) is fast and costs about a sixth of Llama 3.3 70B per idea in the free allowance.
 const TEXT_MODEL = "@cf/google/gemma-4-26b-a4b-it";
 const TEXT_BACKUP = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 let textTrouble = { until: 0, error: "" };
-// Measured live (Oct 2026): schnell draws a product shot in 1-2s, klein takes 9-14s, same quality
-// with the product-shot prompt. So schnell first, klein as backup.
+// Measured live (Oct 2026), same quality with the product-shot prompt:
+//   schnell: 1-2s, but about 150 neurons a photo (1024px, billed per tile and step)
+//   klein:   9-14s, about 50 neurons a photo at 512x768 (billed per output tile)
+// So the first cards of a search use schnell (the app asks with q=fast), everything after uses klein,
+// drawn ahead of time while you look at the current card. Each falls back to the other.
 const IMAGE_MODEL = "@cf/black-forest-labs/flux-1-schnell";
 const IMAGE_BACKUP = "@cf/black-forest-labs/flux-2-klein-4b";
 const IMG_W = 512, IMG_H = 768; // portrait like the card; two 512px tiles, about the cost of one schnell photo
@@ -84,7 +87,9 @@ async function handle(req, env) {
 
       if (req.method === "GET" && url.pathname === "/image") {
         await checkCode(env, url.searchParams.get("code"));
-        return await image(env, url.searchParams.get("p"), url.searchParams.get("t"), origin);
+        // Thumbnails only ever show photos the phone already has; never draw a new one for them.
+        if (url.searchParams.get("thumb")) return json({ error: "not drawn yet" }, 404, origin);
+        return await image(env, url.searchParams.get("p"), url.searchParams.get("t"), origin, url.searchParams.get("q") === "fast");
       }
 
       if (req.method === "POST" && url.pathname === "/ideas") {
@@ -472,7 +477,7 @@ function productPrompt(p, type) {
   const lower = type === "Trousers" || type === "Shorts";
   return `Professional e-commerce product photo of a men's garment: ${g}. Shown alone on an invisible ghost mannequin (hollow inside, no person, no head, no hands), front view, ${lower ? "full length from waistband to hem" : "whole garment in frame, collar to hem"}, centered, on a plain light grey background, soft even studio light, sharp fabric texture, true-to-life colours, realistic real-world garment construction. No text, no logos, no watermark.`;
 }
-const imageModelNow = () => (imageTrouble.until > Date.now() ? "flux-2-klein-4b (flux-1-schnell failed: " + imageTrouble.error + ")" : "flux-1-schnell");
+const imageModelNow = () => "schnell for the first cards, klein after" + (imageTrouble.until > Date.now() ? " (" + imageTrouble.model + " failed: " + imageTrouble.error + ")" : "");
 
 async function runKlein(env, prompt) {
   const form = new FormData();
@@ -492,20 +497,25 @@ async function runSchnell(env, prompt) {
   }
 }
 
-async function image(env, prompt, type, origin) {
+async function image(env, prompt, type, origin, fast) {
   prompt = clip(prompt, 600);
   if (!prompt) throw new HttpError(400, "Missing prompt");
   const full = productPrompt(prompt, pickFrom(TYPES, type));
-  let bytes = null, used = "flux-1-schnell";
-  if (imageTrouble.until <= Date.now()) {
-    try { bytes = await imageBytes(await timeLimit(runSchnell(env, full), +env.IMAGE_LIMIT_MS || 15000, "FLUX.1 schnell")); }
+  const order = fast
+    ? [["flux-1-schnell", () => runSchnell(env, full), +env.IMAGE_LIMIT_MS || 15000], ["flux-2-klein-4b", () => runKlein(env, full), 30000]]
+    : [["flux-2-klein-4b", () => runKlein(env, full), +env.IMAGE_LIMIT_MS || 30000], ["flux-1-schnell", () => runSchnell(env, full), 15000]];
+  if (imageTrouble.until > Date.now() && imageTrouble.model === order[0][0]) order.reverse();
+  let bytes = null, used = "", last = null;
+  for (const [name, run, ms] of order) {
+    try { bytes = await imageBytes(await timeLimit(run(), ms, name)); used = name; break; }
     catch (e) {
       if (e instanceof HttpError && e.status === 429) throw e;
-      const busy = e instanceof HttpError && e.status === 503;
-      if (!busy) imageTrouble = { until: Date.now() + 600 * 1000, error: String((e && e.message) || e).slice(0, 200) };
+      last = e;
+      // Slow once: just use the other model this time. A real failure: skip this model for 10 minutes.
+      if (!(e instanceof HttpError && e.status === 503)) imageTrouble = { until: Date.now() + 600 * 1000, model: name, error: String((e && e.message) || e).slice(0, 200) };
     }
   }
-  if (!bytes) { used = "flux-2-klein-4b"; bytes = await imageBytes(await timeLimit(runKlein(env, full), 30000, "FLUX.2 klein")); }
+  if (!bytes) throw last;
   const png = bytes[0] === 0x89 && bytes[1] === 0x50;
   const headers = { "Content-Type": png ? "image/png" : "image/jpeg", "Cache-Control": "public, max-age=31536000, immutable", "X-Drape-Image-Model": used, ...cors(origin) };
   return new Response(bytes, { headers });
