@@ -1,0 +1,39 @@
+# Checks which online stores Drape can search for real products (free, no keys) and saves the
+# answers and a sample photo from each to the "live-results" branch. Uses no AI allowance.
+name: store probe
+on:
+  workflow_dispatch:
+    inputs:
+      q:
+        description: Search words
+        default: oxford shirt
+permissions:
+  contents: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Probe stores
+        run: node tests/store-probe.mjs
+        env:
+          Q: ${{ inputs.q }}
+        continue-on-error: true
+      - name: Save results to the live-results branch
+        if: always()
+        run: |
+          mkdir -p results && cp -r results /tmp/results
+          git config user.name "drape-live-test"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -q -B live-results origin/main
+          rm -rf live-results && mkdir -p live-results && cp -r /tmp/results/. live-results/
+          git add -f live-results
+          git commit -qm "Store probe $(date -u +%Y-%m-%dT%H:%M:%SZ)" || true
+          git push -qf origin live-results
