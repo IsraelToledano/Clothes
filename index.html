@@ -233,7 +233,7 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "0.9.8";
+const APP_VERSION = "0.9.9";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
 const SERVER_EXPECTED = "0.9.7"; // the worker/worker.js version this app was built with
 
@@ -647,7 +647,9 @@ function burst(){
   const gen = S.gen;
   S.roundId = Math.random().toString(36).slice(2, 8);
   S.kindPos = 0;
-  S.fastLeft = 3; // photos of the first three cards: fast model
+  // Photos of the first five cards: fast model. Measured live, the cheaper model's photos (9-14s) are
+  // ready from about the sixth card on, even for a fast swiper.
+  S.fastLeft = 5;
   S.reqVotes = S.round.votes.length;
   S.aiErr = null;
   // Many small requests in parallel, smallest first: three single ideas (about 2s each, measured live),
