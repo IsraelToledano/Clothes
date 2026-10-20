@@ -13,7 +13,7 @@
 // On the free plan Cloudflare blocks requests past that instead of charging.
 
 // Bump with the app version so a report shows whether the server was redeployed.
-const SERVER_VERSION = "0.9.5";
+const SERVER_VERSION = "0.9.6";
 const APP_ORIGIN = "https://israeltoledano.github.io";
 // Gemma 4 26B (4B active) is fast and costs about a sixth of Llama 3.3 70B per idea in the free allowance.
 const TEXT_MODEL = "@cf/google/gemma-4-26b-a4b-it";
@@ -45,7 +45,27 @@ class HttpError extends Error {
 }
 
 export default {
+  // One log line per request (path, status, time, where from; never the access code), visible in
+  // Cloudflare → Workers → clothes → Observability, to see what uses the free daily allowance.
   async fetch(req, env) {
+    const t0 = Date.now();
+    const res = await handle(req, env);
+    const u = new URL(req.url);
+    if (u.pathname !== "/" && req.method !== "OPTIONS") {
+      console.log(JSON.stringify({
+        path: u.pathname, status: res.status, ms: Date.now() - t0,
+        model: res.headers.get("X-Drape-Image-Model") || undefined,
+        from: req.headers.get("Origin") || "-", country: (req.cf && req.cf.country) || "-",
+        ua: String(req.headers.get("User-Agent") || "").slice(0, 80),
+        who: /^ey[\w-]+\.[\w-]+\./.test(u.searchParams.get("code") || "") ? "github-test" : "app",
+      }));
+    }
+    return res;
+  },
+};
+
+async function handle(req, env) {
+  {
     const origin = req.headers.get("Origin");
     if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: cors(origin) });
     const url = new URL(req.url);
@@ -79,8 +99,8 @@ export default {
       const status = e instanceof HttpError ? e.status : 500;
       return json({ error: String((e && e.message) || e) }, status, origin);
     }
-  },
-};
+  }
+}
 
 async function checkCode(env, code) {
   if (!env.ACCESS_CODE) throw new HttpError(503, "Set ACCESS_CODE in the worker's settings first");

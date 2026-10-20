@@ -6,10 +6,16 @@ main = "worker/worker.js"
 compatibility_date = "2025-09-01"
 workers_dev = true
 preview_urls = false
+# Keep any variables set in the dashboard when deploying from GitHub.
+keep_vars = true
 
-# Ideas (Llama 3.3 70B) and photos (FLUX.1 schnell) run on Workers AI:
+# Ideas (Gemma 4, Llama 3.3 as backup) and photos (FLUX.1 schnell, FLUX.2 klein as backup) run on Workers AI:
 # no API keys, free daily allowance, never charged on the free plan.
 [ai]
 binding = "AI"
 
 # The one secret, ACCESS_CODE, is set in the Cloudflare dashboard, not here.
+
+# Request logs (one line per request, no secrets) in the dashboard: Workers → clothes → Observability.
+[observability]
+enabled = true
