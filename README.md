@@ -1,6 +1,6 @@
 # Drape
 
-A personal style finder for menswear. Tell it what you're looking for, swipe right (heart) when an idea is getting closer and left (X) when it's not right now, and it zeroes in on the one piece you have in mind. Save the ones you like, and when one clicks, pick it and search for it in real stores.
+A personal style finder for menswear. Tell it what you're looking for, then swipe through **real pieces from real stores** (their own photos, prices and links): right when a piece is getting closer, left when it's not right now. Hearts make the AI search for close alternatives; Save keeps pieces; "This is it" opens the piece in its store.
 
 Completely free: no API keys and no credit card.
 
@@ -54,6 +54,17 @@ Workers AI gives 10,000 free "neurons" a day, shared by ideas and photos. Measur
 When you change `index.html`, bump `CACHE` in `sw.js` and `APP_VERSION` in `index.html` so phones load the new version.
 
 On the phone, tap the version badge next to the logo (or **Update app** in the taste profile) to load the latest version. It keeps your search, votes and the round in progress, then says whether it updated.
+
+## Real products (since 1.0)
+
+AI-drawn photos on the free plan were too generic and too slow, so Drape now shows real products. Shopify stores answer a public product search at `/search/suggest.json` (the one their own search box uses): free, no keys. The worker searches the stores that fit the brief (each store has style tags: preppy, classic, workwear, streetwear...; brands and words in your text map to them), filters out women's, kids' and non-clothing items, and mixes stores. `tests/store-probe.mjs` (Actions → store probe) checks which stores still answer.
+
+| Route | What it does | AI |
+|---|---|---|
+| `POST /products` | One or more kinds of garment (oxford, madras, rugby...) searched across up to 10 fitting stores | none |
+| `POST /more` | Gemma writes 3 short searches from a heart (or from the brief), then searches them | Gemma, a few neurons |
+
+Ralph Lauren and J.Crew themselves don't offer this search, so they stay as search links on the shop screen.
 
 ## Live test
 

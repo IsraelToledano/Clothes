@@ -54,6 +54,7 @@ textarea{display:block;width:100%;min-height:92px;resize:none;padding:12px 14px;
 textarea::placeholder{color:#686E79}
 .cta{height:58px;border-radius:29px;border:0;background:var(--accent);color:#fff;font-size:17px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px;width:100%}
 .cta:active{background:var(--accent-press)}
+a.cta{text-decoration:none}
 .cta svg{width:20px;height:20px}
 .bottom{margin-top:auto;display:flex;flex-direction:column;gap:4px;padding-top:4px}
 .sticky{position:sticky;bottom:calc(10px + var(--safe-b))}
@@ -79,6 +80,9 @@ textarea::placeholder{color:#686E79}
 .recent .v.love{color:var(--accent)}
 .idea{flex:1 1 auto;min-height:0;background:var(--card);border-radius:24px;overflow:hidden;display:flex;flex-direction:column;touch-action:none;user-select:none;-webkit-user-select:none;will-change:transform}
 .idea-img{position:relative;flex:1 1 auto;min-height:200px;display:flex;align-items:center;justify-content:center}
+.idea-img img.prod{object-fit:contain;background:#fff}
+.idea-img img.prod ~ .tag,.idea-img .tag{box-shadow:0 0 0 1px rgba(22,24,29,.08)}
+.price{font-weight:700;color:var(--ink)}
 .idea-img img{-webkit-user-drag:none;-webkit-touch-callout:none;pointer-events:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .ph{display:flex;flex-direction:column;align-items:center;gap:8px;padding:0 44px;text-align:center;color:#3B404A}
 .ph svg{width:40px;height:40px}
@@ -233,9 +237,9 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "0.9.9";
+const APP_VERSION = "1.0.0";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
-const SERVER_EXPECTED = "0.9.7"; // the worker/worker.js version this app was built with
+const SERVER_EXPECTED = "1.0.0"; // the worker/worker.js version this app was built with
 
 /* ---------------- storage (on this phone only) ---------------- */
 const LS = "clothes:";
@@ -254,7 +258,7 @@ const SHOE_SIZES = ["40","41","42","43","44","45","46"];
 // like/later are the two swipes. "Not now" is deliberately soft: it moves that kind of piece back a little
 // without ruling out its style. hate/love only exist in older votes and picks.
 const VAL = {hate:-1, later:-0.3, like:1.5, love:3};
-const QUEUE_MAX = 40, LOW_QUEUE = 10; // ideas kept waiting; when fewer are left, a new batch is requested
+const QUEUE_MAX = 60, LOW_QUEUE = 10; // ideas kept waiting; when fewer are left, a new batch is requested
 const BATCH = 4; // ideas per background request (a batch of 4 answers in about 10-14s, measured live)
 const SAVE_VAL = 1.5; // saving a piece counts as a gentle "yes" in your long-term taste
 const VOTE_LABEL = {hate:"Not it", later:"Not now", like:"Closer", love:"Picked"};
@@ -353,7 +357,7 @@ const aiRound = () => aiOn() && !S.sampleRound;
    styles). A vote adds -2 / +1 / +2 to each of its attributes; the next idea
    is the unseen one whose attributes score highest, plus what you asked for
    on the start screen. With AI on, it re-orders the AI's waiting ideas. */
-const attrsOf = (i) => [["type",i.type],["fit",i.fit],["fabric",i.fabric],["colour",i.colour],["vibe",i.vibe]].concat(i.styles.map((s) => ["style",s]));
+const attrsOf = (i) => [["type",i.type],["fit",i.fit],["fabric",i.fabric],["colour",i.colour],["vibe",i.vibe],["brand",i.brand],["kind",i.kind]].filter((a) => a[1]).concat((i.styles || []).map((s) => ["style",s]));
 const akey = (a) => a[0] + ":" + a[1];
 
 function recordVote(idea, v, f, src){
@@ -406,7 +410,7 @@ function textSignals(text){
   }
   return {pos, neg};
 }
-function hay(i){ return (i.title + " " + i.desc + " " + i.type + " " + i.fit + " " + i.fabric + " " + i.colour + " " + i.vibe + " " + i.styles.join(" ")).toLowerCase(); }
+function hay(i){ return [i.title, i.desc, i.type, i.fit, i.fabric, i.colour, i.vibe, i.brand, i.kind].concat(i.styles || []).filter(Boolean).join(" ").toLowerCase(); }
 // What you asked for on the start screen (type, styles) is never held against an idea.
 const asked = (kind, v) => (kind === "style" && Q.styles.includes(v)) || (kind === "type" && v === Q.type);
 function score(i, sig, steady){
@@ -554,7 +558,7 @@ function shownIdeas(){
 
 // The order cards come in. The next two are fixed ("on deck") so their photos can be drawn ahead;
 // everything behind them is re-ranked by your swipes after every swipe.
-const ON_DECK = 2, PRELOAD_N = 4;
+const ON_DECK = 1, PRELOAD_N = 4; // store photos load in well under a second, so one card on deck is enough
 const PLAIN = new Set("shirt shirts tee the a an with and in of classic cotton blend fit long short sleeve sleeved men mens button down collar".split(" "));
 const words = (i) => new Set(String((i.title || "") + " " + (i.fabric || "")).toLowerCase().replace(/[^a-z\s-]/g, " ").split(/[\s-]+/).filter((w) => w.length > 2 && !PLAIN.has(w)));
 function orderQueue(){
@@ -567,34 +571,40 @@ function orderQueue(){
   const seenWords = {};
   for (const v of S.round.votes){ const o = byId(v.id); if (o && v.v !== "like") for (const w of words(o)) seenWords[w] = (seenWords[w] || 0) + 1; }
   const repeats = (i) => Math.max(0, ...[...words(i)].map((w) => seenWords[w] || 0));
-  for (const i of rest) i._r = score(i, sig, true) + (i._boost || 0) - (i._pos || 0) * 0.15 - (i._boost === 10 ? 0 : near(i) * 2.5 + repeats(i) * 1.5);
+  // ...and not three pieces from the same store in a row, even among "more like" ones.
+  const lastStores = S.round.votes.slice(-2).map((v) => (byId(v.id) || {}).store).concat([S.current && S.current.store], deck.map((d) => d.store)).filter(Boolean);
+  const sameStore = (i) => i.store ? lastStores.filter((x) => x === i.store).length : 0;
+  for (const i of rest) i._r = score(i, sig, true) + (i._boost || 0) - (i._pos || 0) * 0.15 - (i._boost === 10 ? near(i) * 1 : near(i) * 2.5 + repeats(i) * 1.5) - sameStore(i) * 3;
   rest.sort((a, b) => b._r - a._r);
   S.queue = deck.concat(rest);
 }
 function preloadAhead(){ S.queue.slice(0, PRELOAD_N).forEach(preload); }
 
-// Add new ideas to the queue. Returns how many were new.
+// Real products: everything you swipe is a real piece in a real store, with its own photo, price and link.
+const isProduct = (i) => !!(i && String(i.id).startsWith("p-"));
+function prepProduct(p){
+  return Object.assign({desc:"", fit:"", vibe:"", styles:[], palette:[], search:p.title}, p, {type:Q.type && Q.type !== "Surprise me" ? Q.type : (p.type || ""), ptype:p.type || "", tint:"#FFFFFF"});
+}
+const money = (n, cur) => { try{ return new Intl.NumberFormat("en", {style:"currency", currency:cur || "USD", minimumFractionDigits:n % 1 ? 2 : 0, maximumFractionDigits:n % 1 ? 2 : 0}).format(n); }catch(e){ return (cur || "") + " " + n; } };
+
+// Add new products to the queue. Returns how many were new.
 function acceptIdeas(res, gen, boost){
   if (res && res.model) S.textModel = res.model;
   if (gen !== S.gen) return 0;
-  const have = new Set(seenTitles().map((t) => t.toLowerCase()));
-  const keys = new Set(shownIdeas().map(dupKey));
+  const ids = new Set(shownIdeas().map((i) => i.id).concat(S.round.votes.map((v) => v.id)));
   const list = [];
-  (res.ideas || []).forEach((raw, ix) => {
-    const i = prepIdea(raw), k = String(i.title).toLowerCase(), d = dupKey(i);
-    if (have.has(k) || keys.has(d)) return;
-    have.add(k); keys.add(d);
+  (res.products || []).forEach((raw, ix) => {
+    if (!raw || !raw.id || !raw.image || ids.has(raw.id)) return;
+    ids.add(raw.id);
+    const i = prepProduct(raw);
     i._boost = boost || 0; i._pos = ix;
-    if (S.fastLeft > 0){ i._fast = true; S.fastLeft--; }
     list.push(i);
   });
-  if (res.insight) S.aiInsight = res.insight;
   if (!list.length) return 0;
   rememberIdeas(list);
   S.queue = S.queue.concat(list);
   orderQueue();
   S.queue = S.queue.slice(0, QUEUE_MAX);
-  S.anchor = null;
   if (!S.current){ S.current = takeNext(); if (S.screen === "explore") render(); }
   else preloadAhead();
   return list.length;
@@ -604,32 +614,26 @@ function failIdeas(e, gen){
   S.aiErr = e.message || "Something went wrong";
   if (!S.current && S.screen === "explore") render();
 }
-// When a request finishes: a heart that came in meanwhile goes first, then top up if running low.
 function afterFetch(){
   if (S.queue.length <= 2) refill();
 }
+const exclude = () => shownIdeas().map((i) => i.id).concat(S.round.votes.map((v) => v.id)).filter((id) => String(id).startsWith("p-")).slice(-200);
+const briefQuery = () => ({type:Q.type || "Surprise me", styles:Q.styles, text:Q.text});
 
-// A batch of ideas, written with your latest swipes. Runs in the background so the next cards are already waiting.
-// A recent heart keeps the batches close to that piece; otherwise each batch covers new kinds of garment.
+// More products in the background: the next kinds of garment, across the stores that fit the brief.
 function refill(opts){
   opts = opts || {};
   if (!aiRound() || S.fetching) return;
   const gen = S.gen;
   if (!S.roundId) S.roundId = Math.random().toString(36).slice(2, 8);
-  const hunt = opts.hunt || (S.hunt && S.round.votes.length - (S.huntAt || 0) <= 6 ? S.hunt : null);
-  const o = hunt ? Object.assign({}, opts, {hunt, count:opts.count || 5})
-    : opts.redirect || S.anchor ? opts
-    : Object.assign({}, opts, {count:opts.count || BATCH, kindStart:nextKinds(opts.count || BATCH)});
-  S.reqVotes = S.round.votes.length;
   S.aiErr = null;
   S.fetchAt = Date.now();
-  S.fetching = aiCall("/ideas", bodyFor(o)).then((res) => {
+  S.fetching = aiCall("/products", {query:briefQuery(), round:S.roundId, kindStart:nextKinds(2), kinds:2, limit:8, exclude:exclude()}).then((res) => {
     if (gen !== S.gen) return;
     S.fetching = null;
-    const n = acceptIdeas(res, gen, hunt ? 10 : opts.redirect ? 6 : 0);
+    const n = acceptIdeas(res, gen, opts.redirect ? 6 : 0);
     if (!n && !S.current && !S.queue.length){
-      // Nothing new came back: stop here instead of asking again in a loop.
-      S.aiErr = "The AI didn't come up with anything new. Try again, or change your search.";
+      S.aiErr = "No new pieces came back from the stores. Try again, or change your search.";
       if (S.screen === "explore") render();
       return;
     }
@@ -637,31 +641,26 @@ function refill(opts){
   }).catch((e) => { if (gen !== S.gen) return; S.fetching = null; failIdeas(e, gen); });
 }
 
-// Which slice of garment kinds the next batch gets (the server shuffles the kinds once per search).
+// Which slice of garment kinds the next search gets (the server shuffles the kinds once per search).
 function nextKinds(n){ const k = S.kindPos || 0; S.kindPos = k + n; return k; }
 
-// The first search: about twenty ideas at once, in parallel. Batch 0 is the AI's two best bets and
-// answers fastest, so the first card shows quickly; batches 1-3 each cover different kinds of garment.
+// A new search: four kinds of garment at once (no AI, about a second each), plus the AI's own reading of
+// your brief (a few seconds). Store photos load instantly, so there's nothing to wait for after the first card.
 function burst(){
   if (!aiRound() || S.fetching) return;
   const gen = S.gen;
   S.roundId = Math.random().toString(36).slice(2, 8);
   S.kindPos = 0;
-  // Photos of the first five cards: fast model. Measured live, the cheaper model's photos (9-14s) are
-  // ready from about the sixth card on, even for a fast swiper.
-  S.fastLeft = 5;
-  S.reqVotes = S.round.votes.length;
   S.aiErr = null;
-  // Many small requests in parallel, smallest first: three single ideas (about 2s each, measured live),
-  // then 2, 2, 3, 3, 4 and 4 (5-14s), so a fast swiper never runs out. Each gets its own kinds.
-  const plan = [{count:1, angle:0}].concat([1, 1, 2, 2, 3, 3, 4, 4].map((n) => ({count:n, kindStart:nextKinds(n)})));
-  let got = 0, lastErr = null;
   S.fetchAt = Date.now();
-  S.fetching = Promise.all(plan.map((o) => aiCall("/ideas", bodyFor(o)).then((res) => { got += acceptIdeas(res, gen, o.angle === 0 ? 3 : 0); }).catch((e) => { lastErr = e; }))).then(() => {
+  let got = 0, lastErr = null;
+  const reqs = [0, 1, 2, 3].map(() => aiCall("/products", {query:briefQuery(), round:S.roundId, kindStart:nextKinds(1), kinds:1, limit:8, exclude:exclude()}))
+    .concat([aiCall("/more", {query:briefQuery(), round:S.roundId, exclude:exclude(), liked:tastePayload().loved, passed:[]}).then((r) => Object.assign(r, {_brief:true}))]);
+  S.fetching = Promise.all(reqs.map((p) => p.then((res) => { got += acceptIdeas(res, gen, res._brief ? 2 : 0); }).catch((e) => { lastErr = e; }))).then(() => {
     if (gen !== S.gen) return;
     S.fetching = null;
     if (!got && lastErr) failIdeas(lastErr, gen);
-    else if (!got && !S.current && !S.queue.length){ S.aiErr = "The AI didn't come up with anything new. Try again, or change your search."; if (S.screen === "explore") render(); }
+    else if (!got && !S.current && !S.queue.length){ S.aiErr = "No pieces came back from the stores. Try again, or change your search."; if (S.screen === "explore") render(); }
     else afterFetch();
   });
 }
@@ -676,8 +675,8 @@ function takeNext(){
   return pick;
 }
 
-// Heart: ask for variations of this piece in the background. They come right after the two cards on deck.
-// Hearts get their own request slot, so they never wait behind a big batch.
+// Heart: the AI writes a few searches for close alternatives to this piece; they come right after the
+// two cards on deck. Hearts get their own request slot, so they never wait behind other searches.
 function converge(i){
   S.hunt = i; S.huntAt = S.round.votes.length;
   if (S.huntFetch) S.pendingHunt = true;
@@ -688,7 +687,9 @@ function runHunt(){
   const gen = S.gen, h = S.hunt;
   S.pendingHunt = false;
   const next = () => { if (S.pendingHunt) runHunt(); };
-  S.huntFetch = aiCall("/ideas", bodyFor({hunt:h, count:3})).then((res) => {
+  const titles = (v) => S.round.votes.filter((x) => x.v === v).map((x) => x.title).slice(-8);
+  const prod = {id:h.id, title:h.title, brand:h.brand, colour:h.colour, fabric:h.fabric, domain:h.domain, query:h.query, price:h.price};
+  S.huntFetch = aiCall("/more", {query:briefQuery(), product:prod, round:S.roundId, exclude:exclude(), liked:titles("like"), passed:titles("later")}).then((res) => {
     if (gen !== S.gen) return;
     S.huntFetch = null;
     acceptIdeas(res, gen, 10);
@@ -696,19 +697,20 @@ function runHunt(){
   }).catch(() => { if (gen !== S.gen) return; S.huntFetch = null; next(); });
 }
 
-// After four "not now" in a row, ask the AI for a new direction (in the background; those ideas go first).
+// After four "not now" in a row, try new kinds of garment first.
 function maybeRedirect(){
   const last = S.round.votes.slice(-4);
   if (last.length < 4 || last.some((v) => v.v !== "later" && v.v !== "hate")) return;
   if (S.round.redirectAt === S.round.votes.length) return;
   S.round.redirectAt = S.round.votes.length;
-  S.hunt = null; S.pendingHunt = false; S.huntFetch = null;
+  S.hunt = null; S.pendingHunt = false;
   for (const i of S.queue) i._boost = 0;
   if (!S.fetching) refill({redirect:true});
 }
 
 function seedOf(id){ let h = 7; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) | 0; return Math.abs(h); }
 function imgUrl(i){
+  if (i && i.image) return i.image; // a real product: the store's own photo
   if (!i || !isAI(i) || !i.image_prompt || !AI.code) return "";
   // v=2: product-shot photos (a new URL, so older photos of a man wearing it aren't reused from the cache)
   // q=fast: the first cards of a search use the fast (pricier) photo model; the rest are drawn ahead with the cheaper one.
@@ -731,9 +733,14 @@ async function imgFail(img){
   img.remove();
 }
 const PRELOADED = new Set();
-function preload(i){ const u = imgUrl(i); if (u && !PRELOADED.has(u)){ PRELOADED.add(u); const im = new Image(); im.crossOrigin = "anonymous"; im.src = u; } }
+function preload(i){ const u = imgUrl(i); if (u && !PRELOADED.has(u)){ PRELOADED.add(u); const im = new Image(); if (!isProduct(i)) im.crossOrigin = "anonymous"; im.src = u; } }
 // Thumbnails (profile lists) only show photos already on the phone: "thumb=1" never draws a new one.
-function thumbImg(id){ const u = imgUrl(byId(id)) && imgUrl(byId(id)) + "&thumb=1"; return u ? `<img src="${esc(u)}" alt="" crossorigin="anonymous" loading="lazy" onerror="this.remove()">` : ""; }
+function thumbImg(id){
+  const i = byId(id);
+  if (isProduct(i)) return `<img src="${esc(String(i.image).replace(/width=\d+/, "width=200"))}" alt="" loading="lazy" onerror="this.remove()">`;
+  const u = imgUrl(i) && imgUrl(i) + "&thumb=1";
+  return u ? `<img src="${esc(u)}" alt="" crossorigin="anonymous" loading="lazy" onerror="this.remove()">` : "";
+}
 
 async function connectAI(){
   const code = (document.getElementById("ai-code") || {}).value;
@@ -797,6 +804,7 @@ function steps(stage){
 }
 
 function ideaImage(i){
+  if (isProduct(i)) return `<div class="ph wait">${ICON.image}<span class="mono-label">Loading the photo…</span></div><img class="prod" src="${esc(i.image)}" alt="${esc(i.title + " by " + i.brand)}" draggable="false" onload="this.classList.add('ok');this.previousElementSibling.classList.remove('wait')" onerror="this.previousElementSibling.classList.remove('wait');this.previousElementSibling.lastChild.textContent='Photo unavailable';this.remove()">`;
   const u = i.image || imgUrl(i);
   if (u) return `<div class="ph wait">${ICON.image}<span class="mono-label">Drawing the photo…</span></div><img src="${esc(u)}" alt="${esc("AI photo of " + i.title + ": " + i.desc)}" crossorigin="anonymous" draggable="false" onload="this.classList.add('ok');this.previousElementSibling.classList.remove('wait')" onerror="imgFail(this)">`;
   return `<div class="ph">${ICON.image}<span class="mono-label">${isAI(i) ? "No photo" : "Sample idea · no photo"}</span>${!isAI(i) && /allowance/i.test(S.sampleWhy || "") ? `<span class="small-note">AI ideas and photos are back after ${resetIn().at}, when the free daily allowance resets. Start a new search then.</span>` : ""}</div>`;
@@ -846,9 +854,9 @@ async function runDiag(){
 }
 function waitText(){
   const sec = S.waitSince ? (Date.now() - S.waitSince) / 1000 : 0;
-  if (sec > 40) return "Still waiting for the AI… trying its backup";
-  if (sec > 12) return "The AI is slow right now… still working";
-  return S.round.votes.length ? "Adjusting to your votes…" : "Picking ideas for you…";
+  if (sec > 40) return "Still waiting… some stores are slow";
+  if (sec > 12) return "Still searching…";
+  return S.round.votes.length ? "Finding more like what you like…" : "Searching the stores for you…";
 }
 // While the loading card is up, refresh its text every few seconds.
 setInterval(() => {
@@ -892,24 +900,36 @@ function renderExplore(){
   return `<main class="screen fixed">${head}
     <article class="idea" id="card" aria-labelledby="idea-t">
       <div class="idea-img" style="background:${esc(i.tint)}">
-        <span class="tag">${isAI(i) ? "AI idea" : "Sample idea"} · not a real product</span>
+        <span class="tag">${isProduct(i) ? esc(i.brand && i.brand !== i.store ? i.brand + " · " + i.store : i.store) : (isAI(i) ? "AI idea" : "Sample idea") + " · not a real product"}</span>
         ${ideaImage(i)}
         ${insight ? `<div class="insight" role="status">${ICON.sliders}<span>${esc(insight)}</span></div>` : ""}
         <span class="stamp no" aria-hidden="true">${ICON.close}Not now</span><span class="stamp yes" aria-hidden="true">${ICON.heart}Closer</span>
         ${S.round.votes.length < 3 ? `<span class="swipe-hint" aria-hidden="true">← Not now · Getting closer →</span>` : ""}
       </div>
       <div class="idea-body">
-        <div class="idea-head">${b ? `<span class="because">${esc(b)}</span>` : ""}<h1 id="idea-t" class="idea-title">${esc(i.title)}</h1><p class="idea-desc">${esc(i.desc)}</p></div>
-        <p class="specline">${[i.colour, i.fabric, i.fit, i.vibe].filter(Boolean).map(esc).join(" · ")}</p>
+        <div class="idea-head">${b ? `<span class="because">${esc(b)}</span>` : ""}<h1 id="idea-t" class="idea-title">${esc(i.title)}</h1>${isProduct(i) ? `<p class="idea-desc"><b class="price">${esc(money(i.price, i.currency))}</b> · ${esc(i.store)}</p>` : `<p class="idea-desc">${esc(i.desc)}</p>`}</div>
+        ${isProduct(i) ? "" : `<p class="specline">${[i.colour, i.fabric, i.fit, i.vibe].filter(Boolean).map(esc).join(" · ")}</p>`}
       </div>
     </article>
     ${voteBtns(false)}
-    <div class="acts"><button type="button" class="outline-btn save-btn${isSaved(i.id) ? " on" : ""}" data-act="save" aria-pressed="${isSaved(i.id)}">${isSaved(i.id) ? ICON.marked + "Saved" : ICON.mark + "Save"}</button><button type="button" class="outline-btn" data-act="pick">${ICON.bag}This is it — where to buy</button></div>
+    <div class="acts"><button type="button" class="outline-btn save-btn${isSaved(i.id) ? " on" : ""}" data-act="save" aria-pressed="${isSaved(i.id)}">${isSaved(i.id) ? ICON.marked + "Saved" : ICON.mark + "Save"}</button><button type="button" class="outline-btn" data-act="pick">${ICON.bag}${isProduct(i) ? "This is it — view in store" : "This is it — where to buy"}</button></div>
   </main>`;
 }
 
+function renderProductSheet(i){
+  return `<div class="scrim" data-act="scrim"><section class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-t">
+    <span class="grab" aria-hidden="true"></span>
+    <div class="picked"><span class="thumb" style="background:#fff">${thumbImg(i.id)}</span><div style="display:flex;flex-direction:column;gap:3px;min-width:0"><span class="mono-label" style="color:var(--accent)">You picked</span><h2 id="sheet-t">${esc(i.title)}</h2><span class="sub">${esc(money(i.price, i.currency) + " · " + i.store)}</span></div></div>
+    <div class="bottom">
+      <a class="cta" href="${esc(i.url)}" target="_blank" rel="noopener" data-act="open-product">Open at ${esc(i.store)} ${ICON.ext}</a>
+      <button type="button" class="outline-btn" data-act="shop">Find similar in other stores</button>
+      <button type="button" class="link-btn" data-act="sheet-close">Not yet — keep exploring</button>
+    </div>
+  </section></div>`;
+}
 function renderSheet(){
   const i = S.current, shoes = i.type === "Shoes";
+  if (isProduct(i)) return renderProductSheet(i);
   const sizes = shoes ? SHOE_SIZES : SIZES, cur = shoes ? PREFS.shoe : PREFS.size;
   return `<div class="scrim" data-act="scrim"><section class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-t">
     <span class="grab" aria-hidden="true"></span>
@@ -1175,7 +1195,14 @@ function toShop(){
 }
 function moreLike(){
   const i = S.picked;
-  if (i){ Q.type = i.type; save("query", Q); }
+  if (i && !isProduct(i)){ Q.type = i.type; save("query", Q); }
+  if (aiRound() && isProduct(i)){
+    // More real pieces like the pick, right after the next card.
+    if (S.current && S.current.id === i.id) S.current = takeNext();
+    converge(i);
+    go("explore");
+    return;
+  }
   if (aiRound()){
     // Ask the AI for close variations of the pick.
     S.anchor = i; S.hunt = null; S.pendingHunt = false; S.huntFetch = null; S.gen++; S.fetching = null; S.queue = []; S.nextUp = null; S.aiErr = null; S.current = null;
@@ -1227,7 +1254,8 @@ const ACTIONS = {
   pick(){ pickCurrent(); },
   save(){ toggleSave(S.current); render(); },
   "unsave"(el){ const i = SAVED.find((x) => x.id === el.dataset.v); if (i) toggleSave(i); render(); },
-  "open-saved"(el){ const i = SAVED.find((x) => x.id === el.dataset.v); if (!i) return; S.picked = i; S.current = i; S.sheet = false; go("shop"); },
+  "open-saved"(el){ const i = SAVED.find((x) => x.id === el.dataset.v); if (!i) return; if (isProduct(i)){ window.open(i.url, "_blank", "noopener"); return; } S.picked = i; S.current = i; S.sheet = false; go("shop"); },
+  "open-product"(){ const i = S.current; if (!i) return; if (!S.round.votes.some((v) => v.id === i.id && v.v === "love")){ const rec = recordVote(i, "love", 1, "pick"); S.round.votes.push(rec); } const last = PICKS[PICKS.length - 1]; if (!last || last.id !== i.id){ PICKS.push({id:i.id, title:i.title, tint:i.tint, at:Date.now()}); save("picks", PICKS); } setTimeout(() => { S.sheet = false; render(); }, 300); },
   broaden(){ Q.type = "Surprise me"; save("query", Q); S.current = nextIdea(); render(); },
   scrim(el, e){ if (e.target !== el) return; if (S.modal){ S.modal = null; } else S.sheet = false; render(); },
   "sheet-close"(){ S.sheet = false; render(); },
@@ -1367,7 +1395,7 @@ async function askCapture(){
 // The readable half of the report: what the app is doing and why, which a screenshot can't show.
 function askSnapshot(){
   const L = [];
-  const row = (i) => i ? `${i.title} [${i.type}; ${i.colour}, ${i.fabric}, ${i.fit}, ${i.vibe}; ${(i.styles || []).join("/")}]${isAI(i) ? " (AI)" : " (sample)"}` : "none";
+  const row = (i) => !i ? "none" : isProduct(i) ? `${i.title} — ${i.brand} at ${i.store}, ${money(i.price, i.currency)} [${[i.colour, i.fabric, i.kind].filter(Boolean).join(", ")}] ${i.url}` : `${i.title} [${i.type}; ${i.colour}, ${i.fabric}, ${i.fit}, ${i.vibe}; ${(i.styles || []).join("/")}]${isAI(i) ? " (AI)" : " (sample)"}`;
   L.push(`app: ${APP_VERSION}   when: ${new Date().toISOString()}`);
   L.push(`screen: ${S.screen}${S.sheet ? " + pick sheet" : ""}${S.modal ? " + dialog" : ""}`);
   L.push(`ua: ${navigator.userAgent}`);

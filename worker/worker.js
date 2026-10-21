@@ -2,6 +2,8 @@
 // Cloudflare's built-in AI, inside its free daily allowance. No API keys.
 //
 //   GET  /health  → checks the access code and that the AI binding is there
+//   POST /products → real products from real stores for one kind of garment (no AI, free)
+//   POST /more    → Gemma writes 2-3 searches from a heart (or the brief), then searches the stores
 //   POST /ideas   → an LLM writes new style ideas from the request and the swipes so far (Gemma 4, Llama 3.3 as backup)
 //   GET  /diag    → a tiny test call to each AI model, with Cloudflare's exact answer (for the Drape report)
 //   GET  /image   → an AI product photo for one idea (FLUX.1 schnell, FLUX.2 klein 4B as backup)
@@ -13,7 +15,7 @@
 // On the free plan Cloudflare blocks requests past that instead of charging.
 
 // Bump with the app version so a report shows whether the server was redeployed.
-const SERVER_VERSION = "0.9.7";
+const SERVER_VERSION = "1.0.0";
 const APP_ORIGIN = "https://israeltoledano.github.io";
 // Gemma 4 26B (4B active) is fast and costs about a sixth of Llama 3.3 70B per idea in the free allowance.
 const TEXT_MODEL = "@cf/google/gemma-4-26b-a4b-it";
@@ -90,6 +92,13 @@ async function handle(req, env) {
         // Thumbnails only ever show photos the phone already has; never draw a new one for them.
         if (url.searchParams.get("thumb")) return json({ error: "not drawn yet" }, 404, origin);
         return await image(env, url.searchParams.get("p"), url.searchParams.get("t"), origin, url.searchParams.get("q") === "fast");
+      }
+
+      if (req.method === "POST" && (url.pathname === "/products" || url.pathname === "/more")) {
+        let body;
+        try { body = JSON.parse(await req.text()); } catch (e) { throw new HttpError(400, "Request isn't valid JSON"); }
+        await checkCode(env, body && body.code);
+        return json(url.pathname === "/products" ? await products(env, body) : await more(env, body), 200, origin);
       }
 
       if (req.method === "POST" && url.pathname === "/ideas") {
@@ -455,6 +464,179 @@ function fixPalette(p) {
   const ok = (Array.isArray(p) ? p : []).map((c) => String(c).trim()).map((c) => (/^[0-9a-f]{6}$/i.test(c) ? "#" + c : c)).filter((c) => /^#[0-9a-f]{6}$/i.test(c)).slice(0, 3);
   while (ok.length < 3) ok.push(["#C9CDD5", "#E3E6EB", "#16181D"][ok.length]);
   return ok;
+}
+
+/* ---------------- /products and /more: real products from real stores ----------------
+   Shopify stores answer a public product search at /search/suggest.json (the one their own search box
+   uses): free, no keys, real photos, prices and links. Checked live on 20 Oct 2026 (tests/store-probe.mjs).
+   /products: one search (a kind of garment) across the stores that best fit the brief. No AI.
+   /more:     Gemma turns a heart (or the brief) into 2-3 short searches, then searches them. */
+
+// Stores that answered with real products in the live check, with what they're like.
+const STORES = [
+  { d: "rowingblazers.com", name: "Rowing Blazers", cur: "USD", tags: ["preppy", "vintage", "youthful", "classic"] },
+  { d: "alexmill.com", name: "Alex Mill", cur: "USD", tags: ["classic", "relaxed", "minimal", "preppy"] },
+  { d: "toddsnyder.com", name: "Todd Snyder", cur: "USD", tags: ["classic", "tailored", "preppy", "smart"] },
+  { d: "drakes.com", name: "Drake's", cur: "USD", tags: ["preppy", "classic", "tailored", "luxe"] },
+  { d: "aimeleondore.com", name: "Aimé Leon Dore", cur: "USD", tags: ["preppy", "streetwear", "youthful", "luxe"] },
+  { d: "taylorstitch.com", name: "Taylor Stitch", cur: "USD", tags: ["workwear", "classic", "relaxed", "vintage"] },
+  { d: "noahny.com", name: "Noah", cur: "USD", tags: ["preppy", "streetwear", "youthful"] },
+  { d: "percivalclo.com", name: "Percival", cur: "GBP", tags: ["smart", "minimal", "youthful", "relaxed"] },
+  { d: "portugueseflannel.com", name: "Portuguese Flannel", cur: "EUR", tags: ["relaxed", "classic", "minimal"] },
+  { d: "bonobos.com", name: "Bonobos", cur: "USD", tags: ["smart", "classic", "tailored"] },
+  { d: "ledbury.com", name: "Ledbury", cur: "USD", tags: ["smart", "tailored", "classic"] },
+  { d: "oliverspencer.co.uk", name: "Oliver Spencer", cur: "GBP", tags: ["smart", "minimal", "relaxed"] },
+  { d: "universalworks.co.uk", name: "Universal Works", cur: "GBP", tags: ["workwear", "relaxed", "vintage"] },
+  { d: "kith.com", name: "Kith", cur: "USD", tags: ["streetwear", "youthful", "preppy"] },
+  { d: "corridornyc.com", name: "Corridor", cur: "USD", tags: ["relaxed", "smart", "vintage"] },
+  { d: "knickerbocker.nyc", name: "Knickerbocker", cur: "USD", tags: ["vintage", "workwear", "classic"] },
+  { d: "outerknown.com", name: "Outerknown", cur: "USD", tags: ["relaxed", "surf", "minimal"] },
+  { d: "ironandresin.com", name: "Iron & Resin", cur: "USD", tags: ["workwear", "vintage", "rugged"] },
+  { d: "howlerbros.com", name: "Howler Brothers", cur: "USD", tags: ["surf", "relaxed", "sporty"] },
+];
+const STORE_BY_DOMAIN = Object.fromEntries(STORES.map((s) => [s.d, s]));
+
+// What the brief asks for, as store tags: chips, and brands or words in his own text.
+const STYLE_TAGS = { "Relaxed": ["relaxed"], "Minimal": ["minimal"], "Smart-casual": ["smart", "classic", "tailored"], "Streetwear": ["streetwear", "youthful"], "Vintage": ["vintage", "workwear"], "Sporty": ["sporty", "surf"] };
+const TEXT_TAGS = [
+  [/ralph\s*lauren|\bpolo\s+ralph|\brl\b|preppy|ivy|old money/i, ["preppy", "classic"]],
+  [/j\.?\s*crew|jcrew/i, ["classic", "relaxed", "preppy"]],
+  [/aim[eé]\s*leon\s*dore|\bald\b/i, ["preppy", "youthful", "streetwear"]],
+  [/younger|young|youthful|modern|fresh/i, ["youthful"]],
+  [/workwear|rugged|carhartt/i, ["workwear", "rugged"]],
+  [/minimal|clean|cos\b|uniqlo/i, ["minimal"]],
+  [/street|kith|st[uü]ssy|supreme/i, ["streetwear"]],
+  [/beach|surf|summer/i, ["surf", "relaxed"]],
+  [/tailor|smart|office|work\b/i, ["smart", "tailored"]],
+  [/luxur|quiet luxury|loro|brunello/i, ["luxe"]],
+];
+function briefTags(q) {
+  const t = {};
+  for (const s of (Array.isArray(q.styles) ? q.styles : [])) for (const x of STYLE_TAGS[s] || []) t[x] = (t[x] || 0) + 1;
+  for (const [re, xs] of TEXT_TAGS) if (re.test(String(q.text || ""))) for (const x of xs) t[x] = (t[x] || 0) + 2;
+  return t;
+}
+// The stores that fit the brief best, each with a little randomness so searches don't always look the same.
+function storesFor(q, n, seed) {
+  const t = briefTags(q);
+  const scored = STORES.map((s, ix) => [s, s.tags.reduce((a, x) => a + (t[x] || 0), 0) + ((hash(String(seed) + s.d) % 100) / 100) * 1.5 - ix * 0.01]);
+  return scored.sort((a, b) => b[1] - a[1]).slice(0, n).map((x) => x[0]);
+}
+function hash(s) { let h = 2166136261; for (const c of s) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return h >>> 0; }
+
+// A short search per kind of garment (what a store's search box understands).
+const KIND_QUERY = {
+  "Oxford button-down shirt": "oxford shirt", "Poplin shirt with a spread collar": "poplin shirt", "Linen shirt": "linen shirt",
+  "Camp-collar (Cuban) shirt": "camp collar shirt", "Chambray or denim shirt": "chambray shirt", "Seersucker shirt": "seersucker shirt",
+  "Flannel or brushed-cotton shirt": "flannel shirt", "Gingham or madras check shirt": "madras shirt", "Band-collar (grandad) shirt": "band collar shirt",
+  "Knitted polo shirt": "knit polo", "Rugby shirt": "rugby shirt", "Western or workwear shirt": "western shirt", "Bengal or candy-stripe shirt": "striped shirt",
+  "Corduroy shirt": "corduroy shirt", "Short-sleeve resort shirt": "short sleeve shirt", "Popover (half-placket) shirt": "popover shirt",
+};
+const kindQuery = (k) => KIND_QUERY[k] || String(k).replace(/\(.*?\)/g, "").split(/\s+or\s+/)[0].replace(/\s+/g, " ").trim().toLowerCase();
+
+const NOT_HIS = /\b(women|womens|women's|woman|ladies|girls?|kids?|boys?|baby|toddler|unisex kids)\b/i;
+const NOT_CLOTHES = /\b(gift card|candle|mug|poster|sticker|book|magazine|keychain|key ring|umbrella|towel|blanket|fragrance|perfume|cologne|incense|print|pin|patch|sample|e-gift|giftcard|bundle)\b/i;
+const FABRICS = ["oxford", "poplin", "linen", "seersucker", "chambray", "denim", "flannel", "madras", "gingham", "corduroy", "twill", "jersey", "pique", "piqué", "terry", "cashmere", "merino", "wool", "silk", "suede", "leather", "canvas", "cotton", "knit", "fleece", "nylon", "seersucker", "herringbone", "stripe", "striped", "plaid", "check"];
+const COLOURS = ["navy", "blue", "light blue", "sky", "white", "ecru", "cream", "ivory", "bone", "oat", "oatmeal", "sand", "stone", "khaki", "tan", "camel", "brown", "chocolate", "olive", "green", "forest", "sage", "mint", "teal", "grey", "gray", "charcoal", "black", "red", "burgundy", "wine", "pink", "rose", "coral", "orange", "rust", "yellow", "mustard", "gold", "purple", "lavender", "indigo"];
+const findWord = (list, s) => { const t = String(s).toLowerCase(); let best = ""; for (const w of list) if (new RegExp("\\b" + w + "\\b").test(t) && w.length > best.length) best = w; return best; };
+const title1 = (s) => String(s || "").replace(/\s+/g, " ").trim();
+const cap = (s) => s ? s.replace(/\b\w/g, (c) => c.toUpperCase()) : "";
+function imgSized(u, w) {
+  if (!u) return "";
+  u = String(u).startsWith("//") ? "https:" + u : String(u);
+  return u + (u.includes("?") ? "&" : "?") + "width=" + w;
+}
+
+// One store's answer to one search, normalized. Cached at Cloudflare's edge for 6 hours.
+async function storeSearch(store, q, limit) {
+  const u = `https://${store.d}/search/suggest.json?q=${encodeURIComponent(q)}&resources[type]=product&resources[limit]=${limit || 10}&resources[options][unavailable_products]=hide`;
+  const res = await fetch(u, { headers: { Accept: "application/json", "User-Agent": "Mozilla/5.0 (compatible; Drape/1.0; personal shopping app)" }, cf: { cacheTtl: 21600, cacheEverything: true } });
+  if (!res.ok) throw new Error(store.d + " " + res.status);
+  const j = await res.json();
+  const list = (j && j.resources && j.resources.results && j.resources.results.products) || [];
+  return list.map((p, ix) => {
+    const t = title1(p.title), img = p.image || (p.featured_image && p.featured_image.url) || "";
+    const path = String(p.url || "").split("?")[0];
+    return {
+      id: "p-" + store.d.split(".")[0] + "-" + (p.id || p.handle || path.split("/").pop()),
+      store: store.name, domain: store.d, brand: title1(p.vendor) && !/^(ok mens|drakes - uk\/row)$/i.test(p.vendor) ? title1(p.vendor) : store.name,
+      title: t, price: Number(p.price) || 0, currency: store.cur, url: path ? "https://" + store.d + path : "https://" + store.d,
+      image: imgSized(img, 900), type: title1(p.type), tags: Array.isArray(p.tags) ? p.tags.slice(0, 12) : [],
+      available: p.available !== false, rank: ix,
+      fabric: cap(findWord(FABRICS, t)), colour: cap(findWord(COLOURS, t)),
+    };
+  }).filter((p) => p.image && p.available && !NOT_HIS.test(p.title + " " + p.type + " " + p.tags.join(" ")) && !NOT_CLOTHES.test(p.title + " " + p.type));
+}
+
+// Search several stores for one query; return a varied pick (best of each store first).
+async function searchStores(stores, q, opts) {
+  opts = opts || {};
+  const t0 = Date.now(), timing = {};
+  const results = await Promise.all(stores.map((s) => timeLimit(storeSearch(s, q, 10), 6000, s.d)
+    .then((r) => { timing[s.d] = Date.now() - t0; return r; })
+    .catch((e) => { timing[s.d] = "failed: " + String(e.message || e).slice(0, 60); return []; })));
+  const exclude = new Set(opts.exclude || []);
+  const words = q.toLowerCase().split(/\s+/).filter((w) => w.length > 2 && !/^(shirt|shirts|men|mens)$/.test(w));
+  const lists = results.map((list) => list.filter((p) => !exclude.has(p.id))
+    // the store's own order, nudged towards titles that contain the search words
+    .map((p) => [p, -p.rank + words.filter((w) => p.title.toLowerCase().includes(w)).length * 3])
+    .sort((a, b) => b[1] - a[1]).map((x) => x[0]));
+  const out = [], per = opts.perStore || 2, limit = opts.limit || 10;
+  for (let round = 0; round < per && out.length < limit; round++)
+    for (const l of lists) if (l[round] && out.length < limit) out.push(l[round]);
+  return { products: out, timing };
+}
+
+async function products(env, b) {
+  const q = b.query || {};
+  const type = pickFrom(TYPES, q.type) || "Surprise me";
+  const n = Math.max(1, Math.min(4, parseInt(b.kinds, 10) || 1));
+  const kinds = kindsFor(type, 0, b.round || "drape", n, Math.max(0, parseInt(b.kindStart, 10) || 0));
+  const per = Math.min(10, Math.max(3, Math.floor(40 / kinds.length))); // stay under the free plan's 50 subrequests per request
+  const stores = storesFor(q, Math.min(per, STORES.length), (b.round || "") + ":" + (b.kindStart || 0));
+  const out = [], timing = {};
+  for (const r of await Promise.all(kinds.map((k) => searchStores(stores, kindQuery(k), { exclude: b.exclude, limit: b.limit || 10 }).then((x) => ({ k, ...x }))))) {
+    for (const p of r.products) out.push({ ...p, why: kindLabel(r.k), kind: r.k, query: kindQuery(r.k) });
+    Object.assign(timing, r.timing);
+  }
+  return { products: out, stores: stores.map((s) => s.name), timing };
+}
+const kindLabel = (k) => String(k).replace(/\s*\(.*?\)/g, "");
+
+// A heart (or just the brief): Gemma writes 2-3 short searches, then those are searched.
+const MORE_SYSTEM = `You help one man in Tel Aviv find a specific piece of menswear in real online stores (Rowing Blazers, Alex Mill, Todd Snyder, Drake's, Aimé Leon Dore, Taylor Stitch, Noah, Percival, Portuguese Flannel and similar). Write short searches for a store's search box: 2 to 4 plain words each, no brand names, e.g. "striped oxford shirt", "madras camp shirt", "garment dyed rugby". Reply with JSON only: {"queries": ["...", "..."], "why": "up to 40 characters"}.`;
+async function more(env, b) {
+  const q = b.query || {};
+  const p = b.product || null;
+  const lines = [];
+  lines.push("His brief: " + [q.type, (q.styles || []).join(", "), q.text ? '"' + String(q.text).slice(0, 300) + '"' : ""].filter(Boolean).join(" · "));
+  if (p) lines.push("He just hearted: " + [p.title, p.brand, p.colour, p.fabric].filter(Boolean).join(", ") + ". Write 3 searches for close alternatives: the same kind of piece with one thing changed (colour, fabric, pattern, collar), and one search for the exact same kind.");
+  else lines.push("Write 3 searches that capture his brief, each a different kind of " + String(q.type || "garment").toLowerCase() + ".");
+  const liked = (b.liked || []).slice(-6), passed = (b.passed || []).slice(-8);
+  if (liked.length) lines.push("He also hearted: " + liked.join("; "));
+  if (passed.length) lines.push("He passed on: " + passed.join("; "));
+  let queries = [], why = "", model = "";
+  try {
+    const out = await mainText(env, [{ role: "system", content: MORE_SYSTEM }, { role: "user", content: lines.join("\n") + "\nJSON only." }]);
+    queries = (out && Array.isArray(out.queries) ? out.queries : []).map((x) => clip(String(x).toLowerCase().replace(/[^a-z0-9 '-]/g, " ").replace(/\s+/g, " "), 40)).filter(Boolean).slice(0, 3);
+    why = clip(out && out.why, 50); model = "gemma";
+  } catch (e) {
+    if (e instanceof HttpError && e.status === 429) throw e;
+  }
+  // No AI (or it failed): search for the hearted piece's own kind and fabric.
+  if (!queries.length) {
+    queries = p ? [[p.fabric, p.query || "shirt"].filter(Boolean).join(" ").toLowerCase(), p.query || ""].filter(Boolean) : [kindQuery((KINDS[pickFrom(TYPES, q.type) || "Surprise me"] || ["shirt"])[0])];
+    model = "none";
+  }
+  // Stay under 50 subrequests: up to 3 searches x up to 7 stores (+1 for the AI).
+  const stores = storesFor(q, 7, b.round || "more");
+  if (p && p.domain && STORE_BY_DOMAIN[p.domain] && !stores.includes(STORE_BY_DOMAIN[p.domain])) stores[stores.length - 1] = STORE_BY_DOMAIN[p.domain];
+  const out = [], seen = new Set(b.exclude || []);
+  if (p && p.id) seen.add(p.id);
+  for (const r of await Promise.all(queries.map((x) => searchStores(stores, x, { exclude: [...seen], limit: 4, perStore: 1 }).then((y) => ({ x, ...y }))))) {
+    for (const prod of r.products) if (!seen.has(prod.id)) { seen.add(prod.id); out.push({ ...prod, why: p ? "More like: " + clip(p.title, 34) : clip(why || r.x, 40), query: r.x }); }
+  }
+  return { products: out, queries, model };
 }
 
 /* ---------------- /image ---------------- */

@@ -43,26 +43,30 @@ try {
   let tok = await token();
   R.health = await timed(async () => { const r = await fetch(WORKER + "/health?code=" + encodeURIComponent(tok)); return { status: r.status, body: await r.json() }; });
   log("health", R.health);
-  R.diag = await timed(async () => { const r = await fetch(WORKER + "/diag?code=" + encodeURIComponent(tok)); return { status: r.status, body: await r.json() }; });
-  log("diag", R.diag);
-  R.ideasApi = await timed(async () => {
-    const r = await fetch(WORKER + "/ideas", { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ code: tok, count: 2, angle: 1, round: "live", month: "October", query: BRIEF, votes: [], taste: {}, seen: [] }) });
+  // Real products: one search across the stores that fit the brief, then "more like" the first one.
+  R.productsApi = await timed(async () => {
+    const r = await fetch(WORKER + "/products", { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ code: tok, query: BRIEF, round: "live", kindStart: 0, kinds: 2, limit: 8 }) });
     const j = await r.json();
-    return { status: r.status, model: j.model, serverMs: j.ms, error: j.error, ideas: (j.ideas || []).map((i) => ({ title: i.title, why: i.why, colour: i.colour, fabric: i.fabric, search: i.search, image_prompt: i.image_prompt })) };
+    return { status: r.status, error: j.error, stores: j.stores, timing: j.timing, products: (j.products || []).map((p) => ({ title: p.title, brand: p.brand, store: p.store, price: p.price, currency: p.currency, why: p.why, url: p.url, image: p.image, id: p.id, domain: p.domain, query: p.query, fabric: p.fabric, colour: p.colour })) };
   });
-  log("ideas (API)", R.ideasApi);
-  R.imagesApi = [];
-  for (const [n, i] of (R.ideasApi.ideas || []).slice(0, 1).entries()) {
+  log("products (API)", R.productsApi.ok ? R.productsApi.status + " " + R.productsApi.ms + "ms, " + (R.productsApi.products || []).length + " products" : R.productsApi.error);
+  R.photosApi = [];
+  for (const [n, p] of (R.productsApi.products || []).slice(0, 6).entries()) {
     const res = await timed(async () => {
-      const r = await fetch(WORKER + "/image?v=2&s=" + n + "&t=Shirts&code=" + encodeURIComponent(tok) + "&p=" + encodeURIComponent(i.image_prompt));
+      const r = await fetch(p.image);
       const buf = Buffer.from(await r.arrayBuffer());
-      const ext = (r.headers.get("content-type") || "").includes("png") ? "png" : "jpg";
-      if (r.ok) fs.writeFileSync(path.join(OUT, `api-photo-${n + 1}.${ext}`), buf);
-      return { status: r.status, model: r.headers.get("x-drape-image-model"), bytes: buf.length, error: r.ok ? undefined : buf.toString().slice(0, 300) };
+      if (r.ok) fs.writeFileSync(path.join(OUT, `api-photo-${n + 1}.jpg`), buf);
+      return { status: r.status, bytes: buf.length };
     });
-    R.imagesApi.push({ title: i.title, ...res });
-    log("image (API)", i.title, res);
+    R.photosApi.push({ title: p.title, store: p.store, ...res });
   }
+  const firstP = (R.productsApi.products || [])[0];
+  if (firstP) R.moreApi = await timed(async () => {
+    const r = await fetch(WORKER + "/more", { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ code: tok, query: BRIEF, product: firstP, round: "live", liked: [firstP.title] }) });
+    const j = await r.json();
+    return { status: r.status, error: j.error, model: j.model, queries: j.queries, products: (j.products || []).map((p) => p.title + " — " + p.store + " " + p.price) };
+  });
+  log("more (API)", R.moreApi);
   save();
 
   /* ---------- 2. the real app, as on the phone ---------- */
@@ -87,7 +91,7 @@ try {
     if (!r.url().startsWith(WORKER)) return;
     const kind = new URL(r.url()).pathname, ms = Date.now() - (started.get(r.request()) || Date.now());
     const e = { kind, status: r.status(), ms, at: Date.now() };
-    if (kind === "/ideas") { try { const j = await r.json(); e.model = j.model; e.serverMs = j.ms; e.count = (j.ideas || []).length; e.error = j.error; } catch (x) {} }
+    if ((kind === "/ideas" || kind === "/products" || kind === "/more")) { try { const j = await r.json(); e.model = j.model; e.serverMs = j.ms; e.count = (j.ideas || j.products || []).length; e.error = j.error; } catch (x) {} }
     if (kind === "/image") e.model = r.headers()["x-drape-image-model"];
     R.app.requests.push(e);
   });
@@ -117,7 +121,7 @@ try {
   for (let n = 0; first && n < plan.length; n++) {
     if (Date.now() - tokAt > 150000) { const t = await token(); await page.evaluate((x) => { AI.code = x; }, t); tokAt = Date.now(); }
     const shownAt = Date.now(), waitedMs = swipedAt ? shownAt - swipedAt : R.app.firstCardMs;
-    const card = await page.evaluate(() => S.current && { id: S.current.id, title: S.current.title, why: S.current.why, colour: S.current.colour, fabric: S.current.fabric, desc: S.current.desc, boost: S.current._boost || 0 });
+    const card = await page.evaluate(() => S.current && { id: S.current.id, title: S.current.title, why: S.current.why, colour: S.current.colour, fabric: S.current.fabric, store: S.current.store, brand: S.current.brand, price: S.current.price, currency: S.current.currency, url: S.current.url, boost: S.current._boost || 0 });
     const photo = await page.waitForSelector(".idea-img img.ok", { timeout: 40000 }).then(() => Date.now() - shownAt).catch(() => null);
     const imgErr = photo == null ? await page.evaluate(() => S.imgErr || (document.querySelector(".idea-img .ph") || {}).innerText || "") : undefined;
     await page.screenshot({ path: path.join(OUT, `card-${String(n + 1).padStart(2, "0")}.png`) });
@@ -148,19 +152,20 @@ try {
 
 /* ---------- summary ---------- */
 const a = R.app || {}, reqs = a.requests || [];
-const ideas = reqs.filter((r) => r.kind === "/ideas"), imgs = reqs.filter((r) => r.kind === "/image");
+const ideas = reqs.filter((r) => ["/ideas", "/products", "/more"].includes(r.kind)), imgs = reqs.filter((r) => r.kind === "/image");
 const photoMs = (a.cards || []).map((c) => c.photoMs).filter((x) => x != null);
 const md = [
   `# Drape live test — ${R.started}`,
   `Server: ${R.deployed} (expected ${R.expectedServer})`,
-  `Diag: ${JSON.stringify(R.diag && R.diag.body)}`,
-  `API ideas: ${R.ideasApi && (R.ideasApi.ok ? R.ideasApi.status + " in " + R.ideasApi.ms + "ms, model " + R.ideasApi.model : R.ideasApi.error)}`,
-  ...(R.ideasApi && R.ideasApi.ideas || []).map((i) => `  - ${i.title} — why: ${i.why} — search: ${i.search}`),
-  `API photos: ${(R.imagesApi || []).map((i) => i.status + " " + i.ms + "ms " + i.model + " " + i.bytes + "B" + (i.error ? " " + i.error : "")).join(" | ")}`,
+  `API products: ${R.productsApi && (R.productsApi.ok ? R.productsApi.status + " in " + R.productsApi.ms + "ms from " + (R.productsApi.stores || []).join(", ") : R.productsApi.error)}`,
+  `Store times: ${JSON.stringify(R.productsApi && R.productsApi.timing)}`,
+  ...(R.productsApi && R.productsApi.products || []).map((p) => `  - ${p.title} — ${p.brand} at ${p.store} — ${p.price} ${p.currency} — ${p.why} — ${p.url}`),
+  `API photos: ${(R.photosApi || []).map((i) => i.status + " " + i.ms + "ms " + i.bytes + "B").join(" | ")}`,
+  `API more: ${JSON.stringify(R.moreApi)}`,
   `App first card: ${a.firstCardMs == null ? "NOT SHOWN" : a.firstCardMs + "ms"}`,
-  `App /ideas calls: ${ideas.map((r) => (r.status || "fail") + " " + r.ms + "ms " + (r.model || r.failed || r.error || "")).join(" | ")}`,
+  `App searches: ${ideas.map((r) => r.kind + " " + (r.status || "fail") + " " + r.ms + "ms " + (r.count != null ? r.count + " items " : "") + (r.model || r.failed || r.error || "")).join(" | ")}`,
   `App photos: ${imgs.length} requests; ${imgs.filter((r) => r.status === 200).length} ok; models ${[...new Set(imgs.map((r) => r.model))].join(",")}; median card photo wait ${photoMs.length ? photoMs.sort((x, y) => x - y)[Math.floor(photoMs.length / 2)] + "ms" : "-"}`,
-  `Cards (waited = from the previous swipe until the card was there; photo = until its photo was there):`, ...(a.cards || []).map((c) => `  ${c.n}. ${c.title} — ${c.colour}, ${c.fabric} — why: ${c.why || ""} — waited ${c.waitedMs}ms — photo ${c.photoMs == null ? "FAILED " + c.photoError : c.photoMs + "ms"} — ${c.swipe}${c.boost === 10 ? " (heart variation)" : ""}`),
+  `Cards (waited = from the previous swipe until the card was there; photo = until its photo was there):`, ...(a.cards || []).map((c) => `  ${c.n}. ${c.title} — ${c.brand || ""} at ${c.store || ""} ${c.price || ""} ${c.currency || ""} — why: ${c.why || ""} — waited ${c.waitedMs}ms — photo ${c.photoMs == null ? "FAILED " + c.photoError : c.photoMs + "ms"} — ${c.swipe}${c.boost === 10 ? " (heart variation)" : ""}`),
   `Errors: ${(a.errors || []).join(" | ") || "none"}`,
   a.stuck ? `STUCK at start: ${JSON.stringify(a.stuck)}` : "",
   a.stuckAfter ? `STUCK after card ${a.stuckAfter.n}: ${JSON.stringify(a.stuckAfter)}` : "",
