@@ -2,6 +2,7 @@
 // Cloudflare's built-in AI, inside its free daily allowance. No API keys.
 //
 //   GET  /health  → checks the access code and that the AI binding is there
+//   POST /keywords → Gemma turns the brief (or a heart) into words to look for in the product catalog
 //   POST /products → real products from real stores for one kind of garment (no AI, free)
 //   POST /more    → Gemma writes 2-3 searches from a heart (or the brief), then searches the stores
 //   POST /ideas   → an LLM writes new style ideas from the request and the swipes so far (Gemma 4, Llama 3.3 as backup)
@@ -15,7 +16,7 @@
 // On the free plan Cloudflare blocks requests past that instead of charging.
 
 // Bump with the app version so a report shows whether the server was redeployed.
-const SERVER_VERSION = "1.0.2";
+const SERVER_VERSION = "1.1.0";
 const APP_ORIGIN = "https://israeltoledano.github.io";
 // Gemma 4 26B (4B active) is fast and costs about a sixth of Llama 3.3 70B per idea in the free allowance.
 const TEXT_MODEL = "@cf/google/gemma-4-26b-a4b-it";
@@ -92,6 +93,13 @@ async function handle(req, env) {
         // Thumbnails only ever show photos the phone already has; never draw a new one for them.
         if (url.searchParams.get("thumb")) return json({ error: "not drawn yet" }, 404, origin);
         return await image(env, url.searchParams.get("p"), url.searchParams.get("t"), origin, url.searchParams.get("q") === "fast");
+      }
+
+      if (req.method === "POST" && url.pathname === "/keywords") {
+        let body;
+        try { body = JSON.parse(await req.text()); } catch (e) { throw new HttpError(400, "Request isn't valid JSON"); }
+        await checkCode(env, body && body.code);
+        return json(await keywords(env, body), 200, origin);
       }
 
       if (req.method === "POST" && (url.pathname === "/products" || url.pathname === "/more")) {
@@ -647,6 +655,29 @@ async function more(env, b) {
     for (const prod of r.products) if (!seen.has(prod.id)) { seen.add(prod.id); out.push({ ...prod, why: p ? "More like: " + clip(p.title, 34) : clip(why || r.x, 40), query: r.x }); }
   }
   return { products: out, queries, found, model, stores: stores.map((s) => s.name), failed: timing };
+}
+
+/* ---------------- /keywords ---------------- */
+// The app searches a catalog of real products on the phone (catalog/, rebuilt daily from the stores).
+// The AI's only job is to read the brief, or a heart, as words that appear in product titles and tags.
+const KEY_SYSTEM = `You help one man in Tel Aviv find a specific piece of menswear among real products from stores like Rowing Blazers, Alex Mill, Todd Snyder, Drake's, Aimé Leon Dore, Taylor Stitch, Noah, Percival, Portuguese Flannel, Universal Works, Oliver Spencer, Kith, Corridor and Outerknown. Turn what he says (and what he hearted or passed on) into single lowercase words or two-word phrases that appear in those stores' product titles and tags: kinds, fabrics, patterns, collars, colours (e.g. "oxford", "madras", "rugby", "seersucker", "button down", "camp collar", "stripe", "navy"). Reply with JSON only: {"keywords": [up to 10], "avoid": [up to 6], "stores": [up to 5 store names from the list that fit best], "why": "up to 40 characters, what you're going for"}.`;
+async function keywords(env, b) {
+  const q = b.query || {}, p = b.product || null;
+  const lines = ["His brief: " + [q.type, (q.styles || []).join(", "), q.text ? '"' + String(q.text).slice(0, 300) + '"' : ""].filter(Boolean).join(" · ")];
+  const notes = brandNotes(q.text);
+  if (notes.length) lines.push("What the brands he named stand for: " + notes.join(" "));
+  if (p) lines.push("He just hearted: " + [p.title, p.store, p.kind, p.colour, p.fabric, p.price && "$" + p.price].filter(Boolean).join(", ") + ". Give words for close alternatives to it.");
+  const liked = (b.liked || []).slice(-8), passed = (b.passed || []).slice(-10);
+  if (liked.length) lines.push("He hearted: " + liked.join("; "));
+  if (passed.length) lines.push("He passed on: " + passed.join("; "));
+  const words = (a, n) => (Array.isArray(a) ? a : []).map((x) => clip(String(x).toLowerCase().replace(/[^a-z0-9 '&-]/g, " ").replace(/\s+/g, " ").trim(), 30)).filter((x) => x.length > 2).slice(0, n);
+  try {
+    const out = await mainText(env, [{ role: "system", content: KEY_SYSTEM }, { role: "user", content: lines.join("\n") + "\nJSON only." }]);
+    return { keywords: words(out && out.keywords, 10), avoid: words(out && out.avoid, 6), stores: (Array.isArray(out && out.stores) ? out.stores : []).map((x) => clip(x, 40)).slice(0, 5), why: clip(out && out.why, 50), model: "gemma" };
+  } catch (e) {
+    if (e instanceof HttpError && e.status === 429) throw e;
+    return { keywords: [], avoid: [], stores: [], why: "", model: "none", error: clip(e.message, 120) };
+  }
 }
 
 /* ---------------- /image ---------------- */

@@ -33,16 +33,16 @@ const STORES = [
   { d: "bonobos.com", name: "Bonobos", tags: ["smart", "classic", "tailored"] },
 ];
 
-const NOT_HIS = /\b(women|womens|women's|woman|ladies|girls?|kids?|boys?|baby|toddler|skirt|blouse|bralette|bikini|leggings?|camisole|bodysuit|jumpsuit|romper|maternity)\b|\bdress\b(?!\s*shirts?)/i;
-const NOT_CLOTHES = /\b(gift ?card|e-?gift|candle|mug|poster|sticker|book|magazine|keychain|key ring|umbrella|towel|blanket|fragrance|perfume|cologne|incense|print|pin|patch|sample|bundle|insurance|shipping|donation|cushion|pillow|rug|ornament|playing cards|dog|leash|collar for)\b/i;
+const NOT_HIS = /\b(women|womens|women's|women’s|woman|ladies|girls?|kids?|boys?|baby|toddler|skirts?|blouses?|bralettes?|bikinis?|leggings?|camisoles?|bodysuits?|jumpsuits?|rompers?|maternity|corsets?|bras?|halter|crop tops?|scarf tank|wrap top)\b|\bdress(es)?\b(?!\s*shirts?)/i;
+const NOT_CLOTHES = /\b(ties?|bow ?ties?|neckties?|socks?|hats?|caps?|beanies?|scarf|scarves|belts?|bags?|totes?|backpacks?|wallets?|card holders?|gloves?|sunglasses|glasses|jewel(le)?ry|bracelets?|necklaces?|rings?|cufflinks?|pocket squares?|bandanas?|keyrings?|watch(es)?|watch straps?|laces|shoe care|cream|polish|brush|hangers?|mask|face covering|gift ?card|e-?gift|candle|mug|poster|sticker|book|magazine|keychain|key ring|umbrella|towel|blanket|fragrance|perfume|cologne|incense|print|pin|patch|sample|bundle|insurance|shipping|donation|cushion|pillow|rug|ornament|playing cards|dog|leash|collar for)\b/i;
 
 // The app's types. First match wins, so the more specific ones come first.
 const TYPE_RULES = [
-  ["Shoes", /\b(sneakers?|trainers?|shoes?|boots?|loafers?|sandals?|derbys?|derbies|moccasins?|mules?|slides|espadrilles?|clogs?|slippers?)\b/i],
+  ["Shoes", /\b(footwear|sneakers?|trainers?|shoes?|boots?|loafers?|sandals?|derbys?|derbies|moccasins?|mules?|slides|espadrilles?|clogs?|slippers?|oxfords? (shoes?|sneakers?)|tennis oxfords?)\b/i],
   ["Shorts", /\b(shorts|short)\b(?!\s*-?\s*sleeve)|\bswim ?trunks?\b|\bboardshorts?\b/i],
   ["Trousers", /\b(pants?|trousers?|chinos?|jeans|denim pant|slacks|joggers?|sweatpants)\b/i],
-  ["Overshirts", /\b(overshirt|over-shirt|shirt jacket|shirt-jacket|shacket|chore (coat|jacket))\b/i],
-  ["Jackets", /\b(jackets?|blazers?|coats?|parkas?|bombers?|anoraks?|gilets?|vests?|waistcoats?|cagoules?|windbreakers?|sport ?coats?|overcoats?|peacoats?)\b/i],
+  ["Overshirts", /\b(overshirts?|over-shirts?|shirt jackets?|shirt-jackets?|shackets?|chore (coats?|jackets?))\b/i],
+  ["Jackets", /\b(jackets?|blazers?|coats?|parkas?|bombers?|anoraks?|gilets?|vests?|waistcoats?|cagoules?|windbreakers?|sport ?coats?|overcoats?|peacoats?|suits?|suit outfit|tuxedos?(?! shirt))\b/i],
   ["T-shirts", /\b(t-?shirts?|tees?|henleys?|ringer|tank tops?)\b/i],
   ["Knitwear", /\b(sweaters?|cardigans?|jumpers?|knits?|knitted|crewnecks?|quarter[- ]zip|half[- ]zip|turtlenecks?|mock ?necks?|pullovers?|cashmere|merino|fair isle|cable)\b/i],
   ["Shirts", /\b(shirts?|oxfords?|popovers?|button[- ]downs?|polos?|rugbys?|camp collar|flannels?|chambray|overshirts?)\b/i],

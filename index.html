@@ -237,9 +237,9 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "1.0.2";
+const APP_VERSION = "1.1.0";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
-const SERVER_EXPECTED = "1.0.2"; // the worker/worker.js version this app was built with
+const SERVER_EXPECTED = "1.1.0"; // the worker/worker.js version this app was built with
 
 /* ---------------- storage (on this phone only) ---------------- */
 const LS = "clothes:";
@@ -426,7 +426,7 @@ function score(i, sig, steady){
   for (const w of sig.neg) if (h.includes(w)) s -= 4;
   return s + (steady ? 0 : Math.random() * 0.8);
 }
-function nextIdea(){ return aiRound() ? takeNext() : nextSample(); }
+function nextIdea(){ return S.sampleRound ? nextSample() : takeNext(); }
 function nextSample(){
   const seen = new Set(S.round.votes.map((v) => v.id));
   let pool = SAMPLE_IDEAS.filter((i) => !seen.has(i.id));
@@ -581,131 +581,204 @@ function orderQueue(){
 function preloadAhead(){ S.queue.slice(0, PRELOAD_N).forEach(preload); }
 
 // Real products: everything you swipe is a real piece in a real store, with its own photo, price and link.
+// They come from a catalog of the stores' current menswear, rebuilt every day by GitHub Actions and served
+// with the app (catalog/). Searching it happens here on the phone: instant, and the stores never see a
+// burst of requests. The AI (when it's on) only turns your brief and your hearts into words to look for.
 const isProduct = (i) => !!(i && String(i.id).startsWith("p-"));
 function prepProduct(p){
-  return Object.assign({desc:"", fit:"", vibe:"", styles:[], palette:[], search:p.title}, p, {type:Q.type && Q.type !== "Surprise me" ? Q.type : (p.type || ""), ptype:p.type || "", tint:"#FFFFFF"});
+  return Object.assign({desc:"", fit:"", vibe:"", styles:[], palette:[], search:p.title}, p, {type:p.type || (Q.type && Q.type !== "Surprise me" ? Q.type : ""), tint:"#FFFFFF"});
 }
 const money = (n, cur) => { try{ return new Intl.NumberFormat("en", {style:"currency", currency:cur || "USD", minimumFractionDigits:n % 1 ? 2 : 0, maximumFractionDigits:n % 1 ? 2 : 0}).format(n); }catch(e){ return (cur || "") + " " + n; } };
+// Rough shekel prices for the budget filter.
+const TO_ILS = {USD:3.7, GBP:4.8, EUR:4.0};
+const ils = (p) => p.price * (TO_ILS[p.currency] || 3.7);
 
-// Add new products to the queue. Returns how many were new.
-function acceptIdeas(res, gen, boost){
-  if (res && res.model) S.textModel = res.model;
-  if (gen !== S.gen) return 0;
-  const ids = new Set(shownIdeas().map((i) => i.id).concat(S.round.votes.map((v) => v.id)));
-  const list = [];
-  (res.products || []).forEach((raw, ix) => {
-    if (!raw || !raw.id || !raw.image || ids.has(raw.id)) return;
-    ids.add(raw.id);
-    const i = prepProduct(raw);
-    i._boost = boost || 0; i._pos = ix;
-    list.push(i);
-  });
-  if (!list.length) return 0;
-  rememberIdeas(list);
-  S.queue = S.queue.concat(list);
-  orderQueue();
-  S.queue = S.queue.slice(0, QUEUE_MAX);
-  if (!S.current){ S.current = takeNext(); if (S.screen === "explore") render(); }
-  else preloadAhead();
-  return list.length;
+// Kinds of each type, from words in the title: they keep a search varied and tell the AI what you hearted.
+const KIND_RULES = {
+  "Shirts": [["Oxford", /oxford/], ["Rugby", /rugby/], ["Polo", /polo/], ["Madras & check", /madras|gingham|check|plaid|tartan/], ["Seersucker", /seersucker/], ["Chambray & denim", /chambray|denim|indigo/], ["Flannel", /flannel|brushed/], ["Linen", /linen/], ["Corduroy", /corduroy|\bcord\b/], ["Camp collar", /camp|cuban|resort|bowling|vacation/], ["Band collar", /band collar|grandad|mandarin|collarless/], ["Popover", /popover|pullover/], ["Western & work", /western|work shirt|workwear|utility|mechanic|military|cpo/], ["Stripes", /stripe/], ["Poplin", /poplin|dress shirt|spread collar/], ["Short sleeve", /short sleeve|s\/s|\bss\b/]],
+  "T-shirts": [["Henley", /henley/], ["Pocket tee", /pocket/], ["Stripes", /stripe|breton/], ["Ringer", /ringer/], ["Long sleeve", /long sleeve|l\/s/], ["Graphic", /graphic|logo|print/], ["Heavyweight", /heavyweight|heavy/]],
+  "Knitwear": [["Cardigan", /cardigan/], ["Cable knit", /cable/], ["Quarter zip", /zip/], ["Knit polo", /polo/], ["Turtleneck", /turtle|mock/], ["Fair Isle", /fair isle|jacquard|intarsia/], ["Cashmere", /cashmere/], ["Mohair", /mohair|brushed/], ["Sweatshirt", /sweatshirt|fleece|hoodie/], ["Crewneck", /crew/]],
+  "Jackets": [["Blazer", /blazer|sport ?coat|suit/], ["Bomber", /bomber|varsity/], ["Harrington", /harrington/], ["Field jacket", /field|m-?65|military/], ["Chore & work", /chore|work|cpo/], ["Denim & trucker", /denim|trucker/], ["Overcoat", /overcoat|topcoat|peacoat|coat/], ["Vest", /vest|gilet/], ["Suede & leather", /suede|leather/], ["Quilted & down", /quilt|down|puffer|parka/], ["Rain & shell", /rain|shell|anorak|windbreaker|cagoule/]],
+  "Trousers": [["Chinos", /chino/], ["Pleated", /pleat/], ["Jeans", /jean|denim/], ["Corduroy", /cord/], ["Linen", /linen/], ["Cargo & fatigue", /cargo|fatigue|utility|carpenter/], ["Wool", /wool|flannel|tweed/], ["Drawstring", /drawstring|easy|camp/]],
+  "Shorts": [["Chino shorts", /chino/], ["Swim", /swim|trunk|board/], ["Linen", /linen/], ["Cargo", /cargo|utility/], ["Denim", /denim|jean/], ["Terry & sweat", /terry|sweat|fleece/], ["Pleated", /pleat/]],
+  "Shoes": [["Sneakers", /sneaker|trainer|runner|tennis/], ["Loafers", /loafer|penny/], ["Boots", /boot/], ["Sandals", /sandal|slide/], ["Derbies & oxfords", /derby|oxford|brogue|blucher/], ["Boat shoes", /boat|deck/], ["Moccasins", /moccasin|camp/]],
+  "Overshirts": [["Chore", /chore/], ["Quilted", /quilt/], ["Wool", /wool|flannel|melton/], ["Corduroy", /cord/], ["Denim", /denim|chambray/], ["Suede", /suede/]],
+};
+function kindOf(p){
+  const t = (p.title + " " + (p.ptype || "")).toLowerCase();
+  for (const [k, re] of KIND_RULES[p.type] || []) if (re.test(t)) return k;
+  return p.fabric || p.type || "";
+}
+
+const CAT = {stores:null, lists:{}};
+const CAT_TYPES = TYPES.filter((t) => t !== "Surprise me");
+const typeFile = (t) => "catalog/" + t.toLowerCase().replace(/[^a-z]+/g, "-") + ".json";
+function fromCat(x, type){
+  const st = CAT.stores.stores[x.s] || {};
+  const p = {id:x.id, store:st.name, domain:st.d, brand:st.name, title:x.t, price:x.p, currency:st.cur, url:"https://" + st.d + "/products/" + x.h, image:x.im[0], images:x.im, type, ptype:x.pt || "", fabric:x.f || "", colour:x.c || "", tags:x.tg || [], sizes:x.sz || [], ships:st.il, storeTags:st.tags || [], date:x.d || ""};
+  p.kind = kindOf(p);
+  return prepProduct(p);
+}
+async function loadCatalog(){
+  const want = Q.type && Q.type !== "Surprise me" ? [Q.type] : CAT_TYPES;
+  if (!CAT.stores) CAT.stores = await fetch("catalog/stores.json", {cache:"no-cache"}).then((r) => { if (!r.ok) throw new Error("The product catalog didn't load (" + r.status + ")"); return r.json(); });
+  await Promise.all(want.filter((t) => !CAT.lists[t]).map((t) => fetch(typeFile(t), {cache:"no-cache"}).then((r) => (r.ok ? r.json() : [])).then((l) => { CAT.lists[t] = l.map((x) => fromCat(x, t)); }).catch(() => { CAT.lists[t] = []; })));
+  return want.flatMap((t) => CAT.lists[t] || []);
+}
+
+// What the brief asks for, as store styles: the chips, and brands or words in your own text.
+const STYLE_TAGS = {"Relaxed":["relaxed"], "Minimal":["minimal"], "Smart-casual":["smart","classic","tailored"], "Streetwear":["streetwear","youthful"], "Vintage":["vintage","workwear"], "Sporty":["sporty","surf"]};
+const TEXT_TAGS = [
+  [/ralph\s*lauren|\bpolo\s+ralph|\brl\b|preppy|ivy|old money/i, ["preppy","classic"]],
+  [/j\.?\s*crew|jcrew/i, ["classic","relaxed","preppy"]],
+  [/aim[eé]\s*leon\s*dore|\bald\b/i, ["preppy","youthful","streetwear"]],
+  [/younger|young|youthful|modern|fresh/i, ["youthful"]],
+  [/workwear|rugged|carhartt/i, ["workwear","rugged"]],
+  [/minimal|clean|\bcos\b|uniqlo/i, ["minimal"]],
+  [/street|kith|st[uü]ssy|supreme/i, ["streetwear"]],
+  [/beach|surf|summer/i, ["surf","relaxed"]],
+  [/tailor|smart|office/i, ["smart","tailored"]],
+  [/luxur|quiet luxury|loro|brunello/i, ["luxe"]],
+];
+function briefTags(){
+  const t = {};
+  for (const s of Q.styles || []) for (const x of STYLE_TAGS[s] || []) t[x] = (t[x] || 0) + 1;
+  for (const [re, xs] of TEXT_TAGS) if (re.test(Q.text || "")) for (const x of xs) t[x] = (t[x] || 0) + 2;
+  return t;
+}
+const hashStr = (s) => { let h = 2166136261; for (const c of String(s)) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return h >>> 0; };
+const PLAIN_P = new Set("shirt shirts tee the and with for men mens men's in of a an".split(" "));
+const titleWords = (p) => new Set(String(p.title).toLowerCase().replace(/[^a-z\s-]/g, " ").split(/[\s-]+/).filter((w) => w.length > 2 && !PLAIN_P.has(w)));
+
+// How well a piece fits: the stores that match the brief, words from your text and from the AI, your swipes
+// so far, a bit of freshness, and a little per-search randomness so two searches don't look the same.
+function fitScore(p, ctx){
+  if (PREFS.shipIL && p.ships === false) return -Infinity;
+  const b = BUDGETS_ILS[PREFS.budget];
+  if (b && (ils(p) < b[0] || ils(p) > b[1])) return -Infinity;
+  const hay = (p.title + " " + p.ptype + " " + p.tags.join(" ") + " " + p.kind).toLowerCase();
+  let s = p.storeTags.reduce((a, t) => a + (ctx.tags[t] || 0), 0) * 1.2;
+  for (const w of ctx.sig.pos) if (hay.includes(w)) s += 2;
+  for (const w of ctx.sig.neg) if (hay.includes(w)) s -= 4;
+  for (const w of S.aiKeys || []) if (hay.includes(w)) s += 2.5;
+  for (const w of S.aiAvoid || []) if (hay.includes(w)) s -= 3;
+  if ((S.aiStores || []).includes(p.store)) s += 2;
+  s += score(p, ctx.sig, true);
+  if (p.date && p.date >= ctx.recent) s += 0.6;
+  return s + (hashStr(S.roundId + p.id) % 1000) / 1000 * 2.5;
+}
+const BUDGETS_ILS = {"u200":[0,200], "200-400":[200,400], "400+":[400,1e9]};
+
+// Fill the queue from the catalog: best fits first, but never the same store or kind of piece twice in a row.
+function refill(){
+  if (!S.pool) return;
+  // Keep the card on deck and any "more like" pieces from a heart; re-rank everything else.
+  const keep = S.queue.slice(0, ON_DECK).concat(S.queue.slice(ON_DECK).filter((i) => i._boost === 10));
+  const ids = new Set(S.round.votes.map((v) => v.id).concat(keep.map((i) => i.id), S.current ? [S.current.id] : []));
+  const ctx = {tags:briefTags(), sig:textSignals(Q.text), recent:new Date(Date.now() - 120 * 864e5).toISOString().slice(0, 10)};
+  const cands = [];
+  for (const p of S.pool) if (!ids.has(p.id)){ const sc = fitScore(p, ctx); if (sc > -Infinity) cands.push([p, sc]); }
+  cands.sort((a, b) => b[1] - a[1]);
+  const top = cands.slice(0, 400), out = [];
+  const recent = [S.current].concat(keep).filter(Boolean);
+  const perStore = {};
+  while (out.length < 36 && top.length){
+    const last = recent.concat(out).slice(-3), prev = last[last.length - 1];
+    let best = -1, bestScore = -Infinity;
+    // Never the same store or the same kind of piece as the card before; spread the rest out too.
+    for (const strict of [true, false]){
+      for (let k = 0; k < top.length; k++){
+        const [p, sc] = top[k];
+        if (strict && prev && (prev.store === p.store || prev.kind === p.kind)) continue;
+        const pen = last.reduce((a, q) => a + (q.store === p.store ? 4 : 0) + (q.kind === p.kind ? 2 : 0) + (q.colour && q.colour === p.colour ? 0.5 : 0), 0)
+          + Math.max(0, (perStore[p.store] || 0) - 3) * 2.5; // no store takes over a whole search
+        if (sc - pen > bestScore){ bestScore = sc - pen; best = k; }
+      }
+      if (best >= 0) break;
+    }
+    const chosen = top.splice(best, 1)[0][0];
+    perStore[chosen.store] = (perStore[chosen.store] || 0) + 1;
+    out.push(chosen);
+  }
+  S.queue = keep.concat(out.map((p) => Object.assign(p, {_boost:0, why:p.kind})));
+  preloadAhead();
+}
+
+// A new search: load the catalog for this type (cached after the first time), then fill the queue at once.
+// With AI on, it also reads your brief for words to look for, and re-ranks when that comes back.
+function burst(){
+  const gen = S.gen;
+  S.roundId = Math.random().toString(36).slice(2, 8);
+  S.aiKeys = []; S.aiAvoid = []; S.aiStores = [];
+  S.aiErr = null; S.fetchAt = Date.now();
+  S.fetching = loadCatalog().then((pool) => {
+    if (gen !== S.gen) return;
+    S.fetching = null;
+    S.pool = pool;
+    if (!pool.length){ S.aiErr = "The product catalog is empty right now. Try again in a minute."; if (S.screen === "explore") render(); return; }
+    refill();
+    if (!S.current){ S.current = takeNext(); if (S.screen === "explore") render(); }
+    if (aiRound()) aiKeywords(null, gen);
+  }).catch((e) => { if (gen !== S.gen) return; S.fetching = null; failIdeas(e, gen); });
 }
 function failIdeas(e, gen){
   if (gen !== S.gen) return;
   S.aiErr = e.message || "Something went wrong";
   if (!S.current && S.screen === "explore") render();
 }
-function afterFetch(){
-  if (S.queue.length <= 2) refill();
-}
-const exclude = () => shownIdeas().map((i) => i.id).concat(S.round.votes.map((v) => v.id)).filter((id) => String(id).startsWith("p-")).slice(-200);
-const briefQuery = () => ({type:Q.type || "Surprise me", styles:Q.styles, text:Q.text});
-
-// More products in the background: the next kinds of garment, across the stores that fit the brief.
-function refill(opts){
-  opts = opts || {};
-  if (!aiRound() || S.fetching) return;
-  const gen = S.gen;
-  if (!S.roundId) S.roundId = Math.random().toString(36).slice(2, 8);
-  S.aiErr = null;
-  S.fetchAt = Date.now();
-  S.fetching = aiCall("/products", {query:briefQuery(), round:S.roundId, kindStart:nextKinds(2), kinds:2, limit:8, exclude:exclude()}).then((res) => {
-    if (gen !== S.gen) return;
-    S.fetching = null;
-    const n = acceptIdeas(res, gen, opts.redirect ? 6 : 0);
-    if (!n && !S.current && !S.queue.length){
-      S.aiErr = "No new pieces came back from the stores. Try again, or change your search.";
-      if (S.screen === "explore") render();
-      return;
-    }
-    if (n) afterFetch();
-  }).catch((e) => { if (gen !== S.gen) return; S.fetching = null; failIdeas(e, gen); });
-}
-
-// Which slice of garment kinds the next search gets (the server shuffles the kinds once per search).
-function nextKinds(n){ const k = S.kindPos || 0; S.kindPos = k + n; return k; }
-
-// A new search: four kinds of garment at once (no AI, about a second each), plus the AI's own reading of
-// your brief (a few seconds). Store photos load instantly, so there's nothing to wait for after the first card.
-function burst(){
-  if (!aiRound() || S.fetching) return;
-  const gen = S.gen;
-  S.roundId = Math.random().toString(36).slice(2, 8);
-  S.kindPos = 0;
-  S.aiErr = null;
-  S.fetchAt = Date.now();
-  let got = 0, lastErr = null;
-  const reqs = [0, 1, 2, 3].map(() => aiCall("/products", {query:briefQuery(), round:S.roundId, kindStart:nextKinds(1), kinds:1, limit:8, exclude:exclude()}))
-    .concat([aiCall("/more", {query:briefQuery(), round:S.roundId, exclude:exclude(), liked:tastePayload().loved, passed:[]}).then((r) => Object.assign(r, {_brief:true}))]);
-  S.fetching = Promise.all(reqs.map((p) => p.then((res) => { got += acceptIdeas(res, gen, res._brief ? 2 : 0); }).catch((e) => { lastErr = e; }))).then(() => {
-    if (gen !== S.gen) return;
-    S.fetching = null;
-    if (!got && lastErr) failIdeas(lastErr, gen);
-    else if (!got && !S.current && !S.queue.length){ S.aiErr = "No pieces came back from the stores. Try again, or change your search."; if (S.screen === "explore") render(); }
-    else afterFetch();
-  });
+// The AI's reading of your brief (or of a heart): words to look for and to avoid, and the stores that fit.
+function aiKeywords(prod, gen){
+  const titles = (v) => S.round.votes.filter((x) => x.v === v).map((x) => x.title).slice(-8);
+  return aiCall("/keywords", {query:{type:Q.type || "Surprise me", styles:Q.styles, text:Q.text}, product:prod && {title:prod.title, store:prod.store, kind:prod.kind, colour:prod.colour, fabric:prod.fabric, price:prod.price}, liked:titles("like"), passed:titles("later")}).then((r) => {
+    if (gen !== S.gen || !r) return;
+    if (r.model) S.textModel = r.model;
+    const clean = (a) => (Array.isArray(a) ? a : []).map((w) => String(w).toLowerCase().trim()).filter((w) => w.length > 2).slice(0, 12);
+    S.aiKeys = uniq(clean(r.keywords).concat(prod ? S.aiKeys || [] : [])).slice(0, 16);
+    S.aiAvoid = clean(r.avoid);
+    S.aiStores = (Array.isArray(r.stores) ? r.stores : []).slice(0, 6);
+    if (r.why) S.aiInsight = r.why;
+    refill();
+  }).catch(() => {});
 }
 
 function takeNext(){
   if (S.nextUp){ const n = S.nextUp; S.nextUp = null; return n; }
-  if (!S.queue.length){ refill(); return null; }
-  orderQueue();
-  const pick = S.queue.shift();
   if (S.queue.length <= LOW_QUEUE) refill();
+  if (!S.queue.length) return null;
+  const pick = S.queue.shift();
+  rememberIdeas([pick]);
   preloadAhead();
   return pick;
 }
 
-// Heart: the AI writes a few searches for close alternatives to this piece; they come right after the
-// two cards on deck. Hearts get their own request slot, so they never wait behind other searches.
+// Heart: the closest pieces in the catalog come right after the next card (same kind, fabric, colour,
+// store or words), and the AI adds words for "closer" to everything after that.
 function converge(i){
+  if (!S.pool) return;
   S.hunt = i; S.huntAt = S.round.votes.length;
-  if (S.huntFetch) S.pendingHunt = true;
-  else runHunt();
+  const ids = new Set(shownIdeas().map((x) => x.id).concat(S.round.votes.map((v) => v.id)));
+  const tw = titleWords(i);
+  const sim = (p) => (p.kind === i.kind ? 3 : 0) + (p.fabric && p.fabric === i.fabric ? 2 : 0) + (p.colour && p.colour === i.colour ? 1 : 0) + (p.store === i.store ? 1 : 0)
+    + Math.min(3, [...titleWords(p)].filter((w) => tw.has(w)).length) + (Math.abs(p.price - i.price) < i.price * 0.35 ? 0.5 : 0);
+  const close = S.pool.filter((p) => !ids.has(p.id) && p.id !== i.id && (!PREFS.shipIL || p.ships !== false)).map((p) => [p, sim(p) + (hashStr(S.roundId + p.id) % 100) / 200]).sort((a, b) => b[1] - a[1]);
+  const pick = [], stores = {};
+  const titles = new Set([i.title.toLowerCase()]);
+  for (const [p] of close){ if ((stores[p.store] || 0) >= 2 || titles.has(p.title.toLowerCase())) continue; stores[p.store] = (stores[p.store] || 0) + 1; titles.add(p.title.toLowerCase()); pick.push(Object.assign(p, {_boost:10, why:"More like: " + i.title.slice(0, 34)})); if (pick.length >= 3) break; }
+  const pickIds = new Set(pick.map((p) => p.id));
+  S.queue = S.queue.slice(0, ON_DECK).concat(pick, S.queue.slice(ON_DECK).filter((p) => !pickIds.has(p.id)));
+  preloadAhead();
+  if (aiRound()) aiKeywords(i, S.gen);
 }
-function runHunt(){
-  if (!aiRound() || !S.hunt) return;
-  const gen = S.gen, h = S.hunt;
-  S.pendingHunt = false;
-  const next = () => { if (S.pendingHunt) runHunt(); };
-  const titles = (v) => S.round.votes.filter((x) => x.v === v).map((x) => x.title).slice(-8);
-  const prod = {id:h.id, title:h.title, brand:h.brand, colour:h.colour, fabric:h.fabric, domain:h.domain, query:h.query, price:h.price};
-  S.huntFetch = aiCall("/more", {query:briefQuery(), product:prod, round:S.roundId, exclude:exclude(), liked:titles("like"), passed:titles("later")}).then((res) => {
-    if (gen !== S.gen) return;
-    S.huntFetch = null;
-    acceptIdeas(res, gen, 10);
-    next();
-  }).catch(() => { if (gen !== S.gen) return; S.huntFetch = null; next(); });
-}
+function runHunt(){}
 
-// After four "not now" in a row, try new kinds of garment first.
+// After four "not now" in a row, start over from different kinds and stores.
 function maybeRedirect(){
   const last = S.round.votes.slice(-4);
   if (last.length < 4 || last.some((v) => v.v !== "later" && v.v !== "hate")) return;
   if (S.round.redirectAt === S.round.votes.length) return;
   S.round.redirectAt = S.round.votes.length;
-  S.hunt = null; S.pendingHunt = false;
-  for (const i of S.queue) i._boost = 0;
-  if (!S.fetching) refill({redirect:true});
+  S.hunt = null; S.roundId = Math.random().toString(36).slice(2, 8);
+  refill();
 }
 
 function seedOf(id){ let h = 7; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) | 0; return Math.abs(h); }
@@ -867,7 +940,7 @@ setInterval(() => {
 function renderExplore(){
   const i = S.current;
   const head = `<header class="top"><button type="button" class="icon-btn" data-act="home" aria-label="End round">${ICON.close}</button>${headCenter()}${hbtns(true)}</header>`;
-  if (!i && aiRound() && (S.fetching || !S.aiErr)){
+  if (!i && !S.sampleRound && (S.fetching || !S.aiErr)){
     return `<main class="screen fixed">${head}
       <article class="idea" aria-busy="true" aria-labelledby="wait-t">
         <div class="idea-img shimmer"><div class="ph wait">${ICON.sliders}<span class="mono-label" id="wait-t">${waitText()}</span></div></div>
@@ -877,7 +950,7 @@ function renderExplore(){
       <div class="acts"><button type="button" class="outline-btn save-btn" disabled>${ICON.mark}Save</button><button type="button" class="outline-btn" disabled>${ICON.bag}This is it — where to buy</button></div>
     </main>`;
   }
-  if (!i && aiRound()){
+  if (!i && !S.sampleRound){
     return `<main class="screen fixed">${head}<div class="empty" role="alert">
       <h1 class="idea-title">Couldn't get new ideas</h1>
       ${errHtml(S.aiErr)}
@@ -1130,8 +1203,8 @@ function startRound(){
   S.round = {votes:[]};
   S.gen++; S.fetching = null; S.huntFetch = null; S.queue = []; S.nextUp = null; S.hunt = null; S.pendingHunt = false; S.roundId = ""; S.kindPos = 0; S.aiErr = null; S.aiInsight = ""; S.anchor = null; S.sampleRound = false; S.sampleWhy = "";
   S.current = null;
-  if (aiRound()) burst();
-  else S.current = nextIdea();
+  S.pool = null;
+  burst();
   go("explore");
 }
 function vote(v){
@@ -1143,7 +1216,7 @@ function vote(v){
   const card = document.getElementById("card");
   const done = () => {
     S.busy = false;
-    if (aiRound()){ if (v === "like") converge(i); else maybeRedirect(); }
+    if (!S.sampleRound && isProduct(i)){ if (v === "like") converge(i); else maybeRedirect(); }
     S.current = nextIdea();
     toast(VOTE_LABEL[v] + " “" + i.title + "”", {rec, idea:i});
     render();
@@ -1196,7 +1269,7 @@ function toShop(){
 function moreLike(){
   const i = S.picked;
   if (i && !isProduct(i)){ Q.type = i.type; save("query", Q); }
-  if (aiRound() && isProduct(i)){
+  if (isProduct(i)){
     // More real pieces like the pick, right after the next card.
     if (S.current && S.current.id === i.id) S.current = takeNext();
     converge(i);
@@ -1272,7 +1345,7 @@ const ACTIONS = {
   reset(){ S.modal = {title:"Reset your taste?", body:"This clears every vote and pick on this phone. Your saved pieces stay, and still count toward your taste.", ok:"Reset", run(){ TASTE = {w:{}, votes:[]}; PICKS = []; SAVED.forEach((x) => { for (const a of attrsOf(x)){ const k = akey(a); TASTE.w[k] = (TASTE.w[k] || 0) + SAVE_VAL; } }); save("taste", TASTE); save("picks", PICKS); S.round = {votes:[]}; toast("Taste reset"); }}; S.focus = ".modal .btn"; render(); },
   "ai-connect"(){ connectAI(); },
   "ai-off"(){ AI.on = false; save("ai", AI); S.queue = []; S.gen++; S.fetching = null; toast("AI turned off — using sample ideas"); render(); },
-  "ai-retry"(){ S.aiErr = null; refill(); render(); },
+  "ai-retry"(){ S.aiErr = null; if (!S.pool) burst(); else { refill(); if (!S.current) S.current = takeNext(); } render(); },
   diag(){ runDiag(); },
   "use-samples"(){ S.sampleRound = true; S.sampleWhy = S.aiErr; S.aiErr = null; S.current = nextSample(); render(); },
   "modal-cancel"(){ S.modal = null; render(); },
@@ -1531,7 +1604,8 @@ restoreSession();
 render();
 afterUpdate();
 checkServer();
-if (S.screen === "explore" && aiRound()){ if (S.queue.length <= LOW_QUEUE) refill(); preloadAhead(); }
+// Back to a search in progress: reload the catalog (cached), then carry on where you were.
+if (S.screen === "explore" && !S.sampleRound && (S.current || S.round.votes.length)) loadCatalog().then((pool) => { S.pool = pool; if (S.queue.length <= LOW_QUEUE) refill(); if (!S.current){ S.current = takeNext(); render(); } else preloadAhead(); }).catch(() => {});
 if ("serviceWorker" in navigator && location.protocol === "https:"){
   navigator.serviceWorker.register("sw.js").catch(() => {});
 }

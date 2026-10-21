@@ -43,30 +43,20 @@ try {
   let tok = await token();
   R.health = await timed(async () => { const r = await fetch(WORKER + "/health?code=" + encodeURIComponent(tok)); return { status: r.status, body: await r.json() }; });
   log("health", R.health);
-  // Real products: one search across the stores that fit the brief, then "more like" the first one.
-  R.productsApi = await timed(async () => {
-    const r = await fetch(WORKER + "/products", { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ code: tok, query: BRIEF, round: "live", kindStart: 0, kinds: 2, limit: 8 }) });
-    const j = await r.json();
-    return { status: r.status, error: j.error, stores: j.stores, timing: j.timing, products: (j.products || []).map((p) => ({ title: p.title, brand: p.brand, store: p.store, price: p.price, currency: p.currency, why: p.why, url: p.url, image: p.image, id: p.id, domain: p.domain, query: p.query, fabric: p.fabric, colour: p.colour })) };
-  });
-  log("products (API)", R.productsApi.ok ? R.productsApi.status + " " + R.productsApi.ms + "ms, " + (R.productsApi.products || []).length + " products" : R.productsApi.error);
+  // The catalog (built daily from the stores) and the AI's reading of the brief.
+  const cat = JSON.parse(fs.readFileSync("catalog/stores.json", "utf8"));
+  R.catalog = { updated: cat.updated, counts: cat.counts, failedStores: cat.report.filter((r) => r.error).map((r) => r.store + ": " + r.error) };
+  const shirts = JSON.parse(fs.readFileSync("catalog/shirts.json", "utf8"));
   R.photosApi = [];
-  for (const [n, p] of (R.productsApi.products || []).slice(0, 6).entries()) {
-    const res = await timed(async () => {
-      const r = await fetch(p.image);
-      const buf = Buffer.from(await r.arrayBuffer());
-      if (r.ok) fs.writeFileSync(path.join(OUT, `api-photo-${n + 1}.jpg`), buf);
-      return { status: r.status, bytes: buf.length };
-    });
-    R.photosApi.push({ title: p.title, store: p.store, ...res });
+  for (const [n, x] of shirts.filter((_, k) => k % Math.floor(shirts.length / 6) === 0).slice(0, 6).entries()) {
+    const res = await timed(async () => { const r = await fetch(x.im[0]); const buf = Buffer.from(await r.arrayBuffer()); if (r.ok) fs.writeFileSync(path.join(OUT, `catalog-photo-${n + 1}.jpg`), buf); return { status: r.status, bytes: buf.length }; });
+    R.photosApi.push({ title: x.t, store: cat.stores[x.s].name, ...res });
   }
-  const firstP = (R.productsApi.products || [])[0];
-  if (firstP) R.moreApi = await timed(async () => {
-    const r = await fetch(WORKER + "/more", { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ code: tok, query: BRIEF, product: firstP, round: "live", liked: [firstP.title] }) });
-    const j = await r.json();
-    return { status: r.status, error: j.error, model: j.model, queries: j.queries, found: j.found, stores: j.stores, failed: j.failed, products: (j.products || []).map((p) => p.title + " — " + p.store + " " + p.price) };
+  R.keywordsApi = await timed(async () => {
+    const r = await fetch(WORKER + "/keywords", { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ code: tok, query: BRIEF }) });
+    return { status: r.status, body: await r.json() };
   });
-  log("more (API)", R.moreApi);
+  log("keywords (API)", R.keywordsApi);
   save();
 
   /* ---------- 2. the real app, as on the phone ---------- */
@@ -157,11 +147,9 @@ const photoMs = (a.cards || []).map((c) => c.photoMs).filter((x) => x != null);
 const md = [
   `# Drape live test — ${R.started}`,
   `Server: ${R.deployed} (expected ${R.expectedServer})`,
-  `API products: ${R.productsApi && (R.productsApi.ok ? R.productsApi.status + " in " + R.productsApi.ms + "ms from " + (R.productsApi.stores || []).join(", ") : R.productsApi.error)}`,
-  `Store times: ${JSON.stringify(R.productsApi && R.productsApi.timing)}`,
-  ...(R.productsApi && R.productsApi.products || []).map((p) => `  - ${p.title} — ${p.brand} at ${p.store} — ${p.price} ${p.currency} — ${p.why} — ${p.url}`),
-  `API photos: ${(R.photosApi || []).map((i) => i.status + " " + i.ms + "ms " + i.bytes + "B").join(" | ")}`,
-  `API more: ${JSON.stringify(R.moreApi)}`,
+  `Catalog: ${JSON.stringify(R.catalog)}`,
+  `Catalog photos: ${(R.photosApi || []).map((i) => i.store + " " + i.status + " " + i.ms + "ms " + i.bytes + "B").join(" | ")}`,
+  `API keywords: ${JSON.stringify(R.keywordsApi)}`,
   `App first card: ${a.firstCardMs == null ? "NOT SHOWN" : a.firstCardMs + "ms"}`,
   `App searches: ${ideas.map((r) => r.kind + " " + (r.status || "fail") + " " + r.ms + "ms " + (r.count != null ? r.count + " items " : "") + (r.model || r.failed || r.error || "")).join(" | ")}`,
   `App photos: ${imgs.length} requests; ${imgs.filter((r) => r.status === 200).length} ok; models ${[...new Set(imgs.map((r) => r.model))].join(",")}; median card photo wait ${photoMs.length ? photoMs.sort((x, y) => x - y)[Math.floor(photoMs.length / 2)] + "ms" : "-"}`,
