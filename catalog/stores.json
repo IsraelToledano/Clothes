@@ -1,0 +1,367 @@
+{
+ "updated": "2026-10-21T05:46:31.366Z",
+ "stores": [
+  {
+   "d": "rowingblazers.com",
+   "name": "Rowing Blazers",
+   "tags": [
+    "preppy",
+    "vintage",
+    "youthful",
+    "classic"
+   ],
+   "cur": "USD",
+   "il": true
+  },
+  {
+   "d": "alexmill.com",
+   "name": "Alex Mill",
+   "tags": [
+    "classic",
+    "relaxed",
+    "minimal",
+    "preppy"
+   ],
+   "cur": "USD",
+   "il": true
+  },
+  {
+   "d": "toddsnyder.com",
+   "name": "Todd Snyder",
+   "tags": [
+    "classic",
+    "tailored",
+    "preppy",
+    "smart"
+   ],
+   "cur": "USD",
+   "il": true
+  },
+  {
+   "d": "drakes.com",
+   "name": "Drake's",
+   "tags": [
+    "preppy",
+    "classic",
+    "tailored",
+    "luxe"
+   ],
+   "cur": "GBP",
+   "il": true
+  },
+  {
+   "d": "aimeleondore.com",
+   "name": "Aimé Leon Dore",
+   "tags": [
+    "preppy",
+    "streetwear",
+    "youthful",
+    "luxe"
+   ],
+   "cur": "USD",
+   "il": true
+  },
+  {
+   "d": "taylorstitch.com",
+   "name": "Taylor Stitch",
+   "tags": [
+    "workwear",
+    "classic",
+    "relaxed",
+    "vintage"
+   ],
+   "cur": "USD",
+   "il": true
+  },
+  {
+   "d": "noahny.com",
+   "name": "Noah",
+   "tags": [
+    "preppy",
+    "streetwear",
+    "youthful"
+   ],
+   "cur": "USD",
+   "il": true
+  },
+  {
+   "d": "percivalclo.com",
+   "name": "Percival",
+   "tags": [
+    "smart",
+    "minimal",
+    "youthful",
+    "relaxed"
+   ],
+   "cur": "GBP",
+   "il": true
+  },
+  {
+   "d": "portugueseflannel.com",
+   "name": "Portuguese Flannel",
+   "tags": [
+    "relaxed",
+    "classic",
+    "minimal"
+   ],
+   "cur": "EUR",
+   "il": true
+  },
+  {
+   "d": "oliverspencer.co.uk",
+   "name": "Oliver Spencer",
+   "tags": [
+    "smart",
+    "minimal",
+    "relaxed"
+   ],
+   "cur": "GBP",
+   "il": true
+  },
+  {
+   "d": "universalworks.co.uk",
+   "name": "Universal Works",
+   "tags": [
+    "workwear",
+    "relaxed",
+    "vintage"
+   ],
+   "cur": "GBP",
+   "il": true
+  },
+  {
+   "d": "kith.com",
+   "name": "Kith",
+   "tags": [
+    "streetwear",
+    "youthful",
+    "preppy"
+   ],
+   "cur": "USD",
+   "il": true
+  },
+  {
+   "d": "corridornyc.com",
+   "name": "Corridor",
+   "tags": [
+    "relaxed",
+    "smart",
+    "vintage"
+   ],
+   "cur": "USD",
+   "il": true
+  },
+  {
+   "d": "outerknown.com",
+   "name": "Outerknown",
+   "tags": [
+    "relaxed",
+    "surf",
+    "minimal"
+   ],
+   "cur": "USD",
+   "il": true
+  },
+  {
+   "d": "howlerbros.com",
+   "name": "Howler Brothers",
+   "tags": [
+    "surf",
+    "relaxed",
+    "sporty"
+   ],
+   "cur": "USD",
+   "il": true
+  },
+  {
+   "d": "ledbury.com",
+   "name": "Ledbury",
+   "tags": [
+    "smart",
+    "tailored",
+    "classic"
+   ],
+   "cur": "USD",
+   "il": false
+  },
+  {
+   "d": "knickerbocker.nyc",
+   "name": "Knickerbocker",
+   "tags": [
+    "vintage",
+    "workwear",
+    "classic"
+   ],
+   "cur": "USD",
+   "il": false
+  },
+  {
+   "d": "ironandresin.com",
+   "name": "Iron & Resin",
+   "tags": [
+    "workwear",
+    "vintage",
+    "rugged"
+   ],
+   "cur": "USD",
+   "il": false
+  },
+  {
+   "d": "bonobos.com",
+   "name": "Bonobos",
+   "tags": [
+    "smart",
+    "classic",
+    "tailored"
+   ],
+   "cur": "USD",
+   "il": false
+  }
+ ],
+ "counts": {
+  "Trousers": 1242,
+  "Shirts": 1978,
+  "Jackets": 1596,
+  "Knitwear": 1725,
+  "Shorts": 500,
+  "T-shirts": 907,
+  "Overshirts": 65,
+  "Shoes": 811
+ },
+ "report": [
+  {
+   "store": "rowingblazers.com",
+   "pages": 4,
+   "raw": 798,
+   "kept": 448,
+   "ms": 4972
+  },
+  {
+   "store": "alexmill.com",
+   "pages": 4,
+   "raw": 880,
+   "kept": 190,
+   "ms": 5504
+  },
+  {
+   "store": "toddsnyder.com",
+   "pages": 12,
+   "raw": 3000,
+   "kept": 1446,
+   "ms": 16939
+  },
+  {
+   "store": "drakes.com",
+   "pages": 8,
+   "raw": 1973,
+   "kept": 916,
+   "ms": 12722
+  },
+  {
+   "store": "aimeleondore.com",
+   "pages": 4,
+   "raw": 882,
+   "kept": 408,
+   "ms": 4522
+  },
+  {
+   "store": "taylorstitch.com",
+   "pages": 12,
+   "raw": 3000,
+   "kept": 415,
+   "ms": 17057
+  },
+  {
+   "store": "noahny.com",
+   "pages": 3,
+   "raw": 598,
+   "kept": 241,
+   "ms": 4973
+  },
+  {
+   "store": "percivalclo.com",
+   "pages": 4,
+   "raw": 910,
+   "kept": 516,
+   "ms": 8166
+  },
+  {
+   "store": "portugueseflannel.com",
+   "pages": 2,
+   "raw": 432,
+   "kept": 84,
+   "ms": 1699
+  },
+  {
+   "store": "oliverspencer.co.uk",
+   "pages": 2,
+   "raw": 461,
+   "kept": 275,
+   "ms": 3539
+  },
+  {
+   "store": "universalworks.co.uk",
+   "pages": 6,
+   "raw": 1370,
+   "kept": 1016,
+   "ms": 7407
+  },
+  {
+   "store": "kith.com",
+   "pages": 12,
+   "raw": 3000,
+   "kept": 1473,
+   "ms": 16233
+  },
+  {
+   "store": "corridornyc.com",
+   "pages": 2,
+   "raw": 486,
+   "kept": 183,
+   "ms": 2637
+  },
+  {
+   "store": "outerknown.com",
+   "pages": 5,
+   "raw": 1024,
+   "kept": 224,
+   "ms": 5284
+  },
+  {
+   "store": "howlerbros.com",
+   "pages": 4,
+   "raw": 855,
+   "kept": 436,
+   "ms": 5253
+  },
+  {
+   "store": "ledbury.com",
+   "pages": 3,
+   "raw": 710,
+   "kept": 187,
+   "ms": 4022
+  },
+  {
+   "store": "knickerbocker.nyc",
+   "pages": 1,
+   "raw": 116,
+   "kept": 85,
+   "ms": 722
+  },
+  {
+   "store": "ironandresin.com",
+   "pages": 3,
+   "raw": 704,
+   "kept": 281,
+   "ms": 4235
+  },
+  {
+   "store": "bonobos.com",
+   "pages": 0,
+   "raw": 0,
+   "kept": 0,
+   "error": "gave up after retries",
+   "ms": 27606
+  }
+ ]
+}
