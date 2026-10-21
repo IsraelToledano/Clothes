@@ -15,7 +15,7 @@
 // On the free plan Cloudflare blocks requests past that instead of charging.
 
 // Bump with the app version so a report shows whether the server was redeployed.
-const SERVER_VERSION = "1.0.0";
+const SERVER_VERSION = "1.0.1";
 const APP_ORIGIN = "https://israeltoledano.github.io";
 // Gemma 4 26B (4B active) is fast and costs about a sixth of Llama 3.3 70B per idea in the free allowance.
 const TEXT_MODEL = "@cf/google/gemma-4-26b-a4b-it";
@@ -596,7 +596,7 @@ async function products(env, b) {
   const stores = storesFor(q, Math.min(per, STORES.length), (b.round || "") + ":" + (b.kindStart || 0));
   const out = [], timing = {};
   for (const r of await Promise.all(kinds.map((k) => searchStores(stores, kindQuery(k), { exclude: b.exclude, limit: b.limit || 10 }).then((x) => ({ k, ...x }))))) {
-    for (const p of r.products) out.push({ ...p, why: kindLabel(r.k), kind: r.k, query: kindQuery(r.k) });
+    for (const p of r.products) out.push({ ...p, why: cap(kindQuery(r.k)).replace(/^(\w)(.*)$/, (m, a, b) => a + b.toLowerCase()), kind: r.k, query: kindQuery(r.k) });
     Object.assign(timing, r.timing);
   }
   return { products: out, stores: stores.map((s) => s.name), timing };
@@ -604,7 +604,7 @@ async function products(env, b) {
 const kindLabel = (k) => String(k).replace(/\s*\(.*?\)/g, "");
 
 // A heart (or just the brief): Gemma writes 2-3 short searches, then those are searched.
-const MORE_SYSTEM = `You help one man in Tel Aviv find a specific piece of menswear in real online stores (Rowing Blazers, Alex Mill, Todd Snyder, Drake's, Aimé Leon Dore, Taylor Stitch, Noah, Percival, Portuguese Flannel and similar). Write short searches for a store's search box: 2 to 4 plain words each, no brand names, e.g. "striped oxford shirt", "madras camp shirt", "garment dyed rugby". Reply with JSON only: {"queries": ["...", "..."], "why": "up to 40 characters"}.`;
+const MORE_SYSTEM = `You help one man in Tel Aviv find a specific piece of menswear in real online stores (Rowing Blazers, Alex Mill, Todd Snyder, Drake's, Aimé Leon Dore, Taylor Stitch, Noah, Percival, Portuguese Flannel and similar). Write short searches for a store's search box. A store only finds products whose titles contain every word, so use 2 words each (3 at most), the plain words a product title would use, no brand names, e.g. "striped oxford", "madras shirt", "rugby shirt", "linen camp". Reply with JSON only: {"queries": ["...", "..."], "why": "up to 40 characters"}.`;
 async function more(env, b) {
   const q = b.query || {};
   const p = b.product || null;
@@ -628,15 +628,24 @@ async function more(env, b) {
     queries = p ? [[p.fabric, p.query || "shirt"].filter(Boolean).join(" ").toLowerCase(), p.query || ""].filter(Boolean) : [kindQuery((KINDS[pickFrom(TYPES, q.type) || "Surprise me"] || ["shirt"])[0])];
     model = "none";
   }
-  // Stay under 50 subrequests: up to 3 searches x up to 7 stores (+1 for the AI).
-  const stores = storesFor(q, 7, b.round || "more");
+  // Stay under 50 subrequests: up to 3 searches x 2 tries x 6 stores (+1 for the AI).
+  const stores = storesFor(q, 6, b.round || "more");
   if (p && p.domain && STORE_BY_DOMAIN[p.domain] && !stores.includes(STORE_BY_DOMAIN[p.domain])) stores[stores.length - 1] = STORE_BY_DOMAIN[p.domain];
   const out = [], seen = new Set(b.exclude || []);
   if (p && p.id) seen.add(p.id);
-  for (const r of await Promise.all(queries.map((x) => searchStores(stores, x, { exclude: [...seen], limit: 4, perStore: 1 }).then((y) => ({ x, ...y }))))) {
+  // A store finds only titles with every word, so a search that finds little is tried again with fewer words.
+  const shorter = (x) => { const w = x.split(" "); return w.length > 2 ? w.slice(-2).join(" ") : w.length === 2 ? w[0] : ""; };
+  const one = async (x) => {
+    let r = await searchStores(stores, x, { exclude: [...seen], limit: 4, perStore: 1 });
+    if (r.products.length < 2 && shorter(x)) { const y = shorter(x); const r2 = await searchStores(stores, y, { exclude: [...seen], limit: 4, perStore: 1 }); r = { products: r.products.concat(r2.products), timing: r2.timing, retried: y }; }
+    return { x, ...r };
+  };
+  const found = {};
+  for (const r of await Promise.all(queries.map(one))) {
+    found[r.x] = r.products.length + (r.retried ? " (also tried: " + r.retried + ")" : "");
     for (const prod of r.products) if (!seen.has(prod.id)) { seen.add(prod.id); out.push({ ...prod, why: p ? "More like: " + clip(p.title, 34) : clip(why || r.x, 40), query: r.x }); }
   }
-  return { products: out, queries, model };
+  return { products: out, queries, found, model };
 }
 
 /* ---------------- /image ---------------- */

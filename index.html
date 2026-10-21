@@ -80,7 +80,7 @@ a.cta{text-decoration:none}
 .recent .v.love{color:var(--accent)}
 .idea{flex:1 1 auto;min-height:0;background:var(--card);border-radius:24px;overflow:hidden;display:flex;flex-direction:column;touch-action:none;user-select:none;-webkit-user-select:none;will-change:transform}
 .idea-img{position:relative;flex:1 1 auto;min-height:200px;display:flex;align-items:center;justify-content:center}
-.idea-img img.prod{object-fit:contain;background:#fff}
+.idea-img img.prod{object-fit:cover;object-position:center;background:#fff}
 .idea-img img.prod ~ .tag,.idea-img .tag{box-shadow:0 0 0 1px rgba(22,24,29,.08)}
 .price{font-weight:700;color:var(--ink)}
 .idea-img img{-webkit-user-drag:none;-webkit-touch-callout:none;pointer-events:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
@@ -237,9 +237,9 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "1.0.0";
+const APP_VERSION = "1.0.1";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
-const SERVER_EXPECTED = "1.0.0"; // the worker/worker.js version this app was built with
+const SERVER_EXPECTED = "1.0.1"; // the worker/worker.js version this app was built with
 
 /* ---------------- storage (on this phone only) ---------------- */
 const LS = "clothes:";
