@@ -237,7 +237,7 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "1.1.1";
+const APP_VERSION = "1.1.2";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
 const SERVER_EXPECTED = "1.1.0"; // the worker/worker.js version this app was built with
 
@@ -1137,7 +1137,7 @@ function aiCard(){
     <h2 id="ai-h">AI connection</h2>
     <span class="ai-status"><span class="dot${on ? " on" : ""}" aria-hidden="true"></span>${on ? "On" : "Off"}${on && h.version ? `<span class="mono-label" style="font-weight:400;margin-left:6px">server ${esc(h.version)}</span>` : ""}</span>
     ${on && h.version && serverOutdated(h.version) ? `<p style="color:var(--danger)">The AI server is older than this app. In Cloudflare, redeploy the worker from the latest commit.</p>` : ""}
-    <p>${on ? "Free Cloudflare AI writes your ideas and draws a photo for each one. About 150 cards a day; the allowance resets at " + resetIn().at + " your time." + (missing.length ? " Not set up yet on the server: " + esc(joinAnd(missing)) + "." : "")
+    <p>${on ? "The pieces are real, from a catalog of the stores' menswear that's refreshed every day" + (CAT.stores ? " (" + CAT.stores.stores.length + " stores, updated " + ago(Date.parse(CAT.stores.updated)) + " ago)" : "") + ". Free Cloudflare AI reads your brief and your hearts as words to look for; that uses very little of its daily allowance (it resets at " + resetIn().at + " your time)." + (missing.length ? " Not set up yet on the server: " + esc(joinAnd(missing)) + "." : "")
             : "Using the built-in sample ideas. Enter the access code you set on your AI server to turn AI on."}</p>
     ${on ? `<button type="button" class="link-btn" data-act="diag" style="align-self:flex-start;padding:0"${S.diagBusy ? " disabled" : ""}>${S.diagBusy ? "Checking the AI…" : "Run a quick AI check"}</button>${diagHtml()}
     <button type="button" class="link-btn" data-act="ai-off" style="align-self:flex-start;padding:0">Turn off</button>` : `
@@ -1477,7 +1477,7 @@ function askSnapshot(){
   L.push(`ai request: ${S.fetching ? "in flight for " + Math.round((Date.now() - (S.fetchAt || Date.now())) / 1000) + "s" : "idle"}${S.huntFetch ? " + heart variations in flight" : ""}   last error: ${S.aiErr || "none"}   waiting ideas: ${S.queue.length}`);
   L.push(`server version: ${(AI.health && AI.health.version) || "unknown"}   (app expects ${SERVER_EXPECTED} or newer)`);
   L.push(`idea model: ${S.textModel || "-"} (last reply)   server says: ${(AI.health && AI.health.textModel) || "unknown"}`);
-  L.push(`photo model: ${(AI.health && AI.health.imageModel) || "unknown"}`);
+  L.push(`catalog: ${CAT.stores ? CAT.stores.stores.length + " stores, updated " + CAT.stores.updated + ", " + JSON.stringify(CAT.stores.counts) : "not loaded"}   pool for this search: ${S.pool ? S.pool.length : 0}   AI words: ${(S.aiKeys || []).join(", ") || "-"}${S.aiAvoid && S.aiAvoid.length ? "   avoid: " + S.aiAvoid.join(", ") : ""}`);
   if (S.diag) L.push(`AI check: ${JSON.stringify(S.diag)}`);
   L.push(`last photo error: ${S.imgErr || "none"}`);
   L.push(`\nSEARCH: type=${Q.type || "-"}  styles=${(Q.styles || []).join(", ") || "-"}  text="${Q.text || ""}"`);
