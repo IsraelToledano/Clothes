@@ -21,8 +21,9 @@ async function probe(store) {
   const t0 = Date.now(), r = { store };
   try {
     const u = `https://${store}/search/suggest.json?q=${encodeURIComponent(Q)}&resources[type]=product&resources[limit]=10`;
-    const res = await fetch(u, { headers: { "User-Agent": UA, Accept: "application/json" }, redirect: "follow", signal: AbortSignal.timeout(15000) });
+    const res = await fetch(u, { headers: { "User-Agent": UA, Accept: "application/json", Origin: "https://israeltoledano.github.io" }, redirect: "follow", signal: AbortSignal.timeout(15000) });
     r.status = res.status; r.ms = Date.now() - t0; r.finalUrl = res.url;
+    r.cors = res.headers.get("access-control-allow-origin");
     const text = await res.text();
     let j = null; try { j = JSON.parse(text); } catch (e) { r.notJson = text.slice(0, 120).replace(/\s+/g, " "); }
     const prods = (j && j.resources && j.resources.results && j.resources.results.products) || [];
@@ -45,7 +46,7 @@ async function probe(store) {
 const results = await Promise.all(STORES.map(probe));
 fs.writeFileSync(path.join(OUT, "store-probe.json"), JSON.stringify({ at: new Date().toISOString(), q: Q, results }, null, 2));
 const md = [`# Store probe — ${new Date().toISOString()} — "${Q}"`, ""].concat(results.map((r) =>
-  `- ${r.store}: ${r.error ? "ERROR " + r.error : r.status + " in " + r.ms + "ms, " + (r.count || 0) + " products"}${r.notJson ? " (not JSON: " + r.notJson + ")" : ""}${r.image ? ", image " + r.image.status + " " + r.image.bytes + "B" : ""}${r.meta ? ", " + r.meta.currency + (r.meta.ships_to_countries === true ? ", ships to IL" : r.meta.ships_to_countries === false ? ", NOT to IL" : "") : ""}${r.sample && r.sample[0] ? " — e.g. " + r.sample[0].title + " (" + r.sample[0].price + ")" : ""}`
+  `- ${r.store}: ${r.error ? "ERROR " + r.error : r.status + " in " + r.ms + "ms, " + (r.count || 0) + " products"}${r.notJson ? " (not JSON: " + r.notJson + ")" : ""}${r.image ? ", image " + r.image.status + " " + r.image.bytes + "B" : ""}${", CORS " + (r.cors || "none")}${r.meta ? ", " + r.meta.currency + (r.meta.ships_to_countries === true ? ", ships to IL" : r.meta.ships_to_countries === false ? ", NOT to IL" : "") : ""}${r.sample && r.sample[0] ? " — e.g. " + r.sample[0].title + " (" + r.sample[0].price + ")" : ""}`
 ));
 fs.writeFileSync(path.join(OUT, "store-probe.md"), md.join("\n"));
 console.log(md.join("\n"));
