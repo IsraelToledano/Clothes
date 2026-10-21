@@ -57,14 +57,14 @@ On the phone, tap the version badge next to the logo (or **Update app** in the t
 
 ## Real products (since 1.0)
 
-AI-drawn photos on the free plan were too generic and too slow, so Drape now shows real products. Shopify stores answer a public product search at `/search/suggest.json` (the one their own search box uses): free, no keys. The worker searches the stores that fit the brief (each store has style tags: preppy, classic, workwear, streetwear...; brands and words in your text map to them), filters out women's, kids' and non-clothing items, and mixes stores. `tests/store-probe.mjs` (Actions → store probe) checks which stores still answer.
+AI-drawn photos on the free plan were too generic and too slow, so Drape shows real products: real photos, prices and links.
 
-| Route | What it does | AI |
-|---|---|---|
-| `POST /products` | One or more kinds of garment (oxford, madras, rugby...) searched across up to 10 fitting stores | none |
-| `POST /more` | Gemma writes 3 short searches from a heart (or from the brief), then searches them | Gemma, a few neurons |
+- **Catalog** (`catalog/`, rebuilt daily by `.github/workflows/catalog.yml` → `scripts/build-catalog.mjs`): the current menswear of about 18 Shopify stores (Rowing Blazers, Alex Mill, Todd Snyder, Drake's, Aimé Leon Dore, Taylor Stitch, Noah, Percival, Portuguese Flannel, Oliver Spencer, Universal Works, Kith, Corridor, Outerknown and more), from each store's public `/products.json`. Women's and kids' pieces, accessories and sold-out items are left out; each piece gets a type (Shirts, Knitwear...), colour and fabric. About 8,000 pieces, one JSON file per type, served by GitHub Pages with the app.
+- **Searching** happens on the phone: the stores that fit the brief (each store has style tags; chips, brands and words in your text map to them), words from your text, your swipes, and a little per-search randomness. Never the same store or kind of piece twice in a row, and never the same piece twice in a search. Instant, and the stores never see a burst of requests (live searches from the worker got rate-limited by Shopify).
+- **AI** (Gemma, `POST /keywords`): reads the brief, and each heart, as words to look for (e.g. "oxford", "madras", "rugby stripe") and the stores that fit. A heart also puts the closest pieces right after the next card.
+- Settings in the pick sheet still apply: "Only stores that ship to Israel" (from each store's settings) and the budget.
 
-Ralph Lauren and J.Crew themselves don't offer this search, so they stay as search links on the shop screen.
+Ralph Lauren and J.Crew themselves don't publish their products this way, so they stay as search links on "Find similar in other stores".
 
 ## Live test
 

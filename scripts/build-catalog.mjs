@@ -30,7 +30,6 @@ const STORES = [
   { d: "ledbury.com", name: "Ledbury", tags: ["smart", "tailored", "classic"] },
   { d: "knickerbocker.nyc", name: "Knickerbocker", tags: ["vintage", "workwear", "classic"] },
   { d: "ironandresin.com", name: "Iron & Resin", tags: ["workwear", "vintage", "rugged"] },
-  { d: "bonobos.com", name: "Bonobos", tags: ["smart", "classic", "tailored"] },
 ];
 
 const NOT_HIS = /\b(women|womens|women's|women’s|woman|ladies|girls?|kids?|boys?|baby|toddler|skirts?|blouses?|bralettes?|bikinis?|leggings?|camisoles?|bodysuits?|jumpsuits?|rompers?|maternity|corsets?|bras?|halter|crop tops?|scarf tank|wrap top)\b|\bdress(es)?\b(?!\s*shirts?)/i;
