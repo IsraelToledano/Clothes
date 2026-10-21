@@ -64,7 +64,7 @@ try {
   if (firstP) R.moreApi = await timed(async () => {
     const r = await fetch(WORKER + "/more", { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ code: tok, query: BRIEF, product: firstP, round: "live", liked: [firstP.title] }) });
     const j = await r.json();
-    return { status: r.status, error: j.error, model: j.model, queries: j.queries, found: j.found, products: (j.products || []).map((p) => p.title + " — " + p.store + " " + p.price) };
+    return { status: r.status, error: j.error, model: j.model, queries: j.queries, found: j.found, stores: j.stores, failed: j.failed, products: (j.products || []).map((p) => p.title + " — " + p.store + " " + p.price) };
   });
   log("more (API)", R.moreApi);
   save();

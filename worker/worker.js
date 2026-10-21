@@ -15,7 +15,7 @@
 // On the free plan Cloudflare blocks requests past that instead of charging.
 
 // Bump with the app version so a report shows whether the server was redeployed.
-const SERVER_VERSION = "1.0.1";
+const SERVER_VERSION = "1.0.2";
 const APP_ORIGIN = "https://israeltoledano.github.io";
 // Gemma 4 26B (4B active) is fast and costs about a sixth of Llama 3.3 70B per idea in the free allowance.
 const TEXT_MODEL = "@cf/google/gemma-4-26b-a4b-it";
@@ -534,7 +534,7 @@ const KIND_QUERY = {
 };
 const kindQuery = (k) => KIND_QUERY[k] || String(k).replace(/\(.*?\)/g, "").split(/\s+or\s+/)[0].replace(/\s+/g, " ").trim().toLowerCase();
 
-const NOT_HIS = /\b(women|womens|women's|woman|ladies|girls?|kids?|boys?|baby|toddler|unisex kids)\b/i;
+const NOT_HIS = /\b(women|womens|women's|woman|ladies|girls?|kids?|boys?|baby|toddler|unisex kids|skirt|blouse|bralette|bikini|leggings?|camisole|bodysuit|jumpsuit|romper)\b|\bdress\b(?!\s*shirt)/i;
 const NOT_CLOTHES = /\b(gift card|candle|mug|poster|sticker|book|magazine|keychain|key ring|umbrella|towel|blanket|fragrance|perfume|cologne|incense|print|pin|patch|sample|e-gift|giftcard|bundle)\b/i;
 const FABRICS = ["oxford", "poplin", "linen", "seersucker", "chambray", "denim", "flannel", "madras", "gingham", "corduroy", "twill", "jersey", "pique", "piqué", "terry", "cashmere", "merino", "wool", "silk", "suede", "leather", "canvas", "cotton", "knit", "fleece", "nylon", "seersucker", "herringbone", "stripe", "striped", "plaid", "check"];
 const COLOURS = ["navy", "blue", "light blue", "sky", "white", "ecru", "cream", "ivory", "bone", "oat", "oatmeal", "sand", "stone", "khaki", "tan", "camel", "brown", "chocolate", "olive", "green", "forest", "sage", "mint", "teal", "grey", "gray", "charcoal", "black", "red", "burgundy", "wine", "pink", "rose", "coral", "orange", "rust", "yellow", "mustard", "gold", "purple", "lavender", "indigo"];
@@ -637,15 +637,16 @@ async function more(env, b) {
   const shorter = (x) => { const w = x.split(" "); return w.length > 2 ? w.slice(-2).join(" ") : w.length === 2 ? w[0] : ""; };
   const one = async (x) => {
     let r = await searchStores(stores, x, { exclude: [...seen], limit: 4, perStore: 1 });
-    if (r.products.length < 2 && shorter(x)) { const y = shorter(x); const r2 = await searchStores(stores, y, { exclude: [...seen], limit: 4, perStore: 1 }); r = { products: r.products.concat(r2.products), timing: r2.timing, retried: y }; }
+    if (r.products.length < 2 && shorter(x)) { const y = shorter(x); const r2 = await searchStores(stores, y, { exclude: [...seen], limit: 4, perStore: 1 }); r = { products: r.products.concat(r2.products), timing: Object.assign({}, r.timing, Object.fromEntries(Object.entries(r2.timing).map(([k, v]) => [k + " (retry)", v]))), retried: y }; }
     return { x, ...r };
   };
-  const found = {};
+  const found = {}, timing = {};
   for (const r of await Promise.all(queries.map(one))) {
     found[r.x] = r.products.length + (r.retried ? " (also tried: " + r.retried + ")" : "");
+    for (const [k, v] of Object.entries(r.timing || {})) if (typeof v === "string") timing[k] = v;
     for (const prod of r.products) if (!seen.has(prod.id)) { seen.add(prod.id); out.push({ ...prod, why: p ? "More like: " + clip(p.title, 34) : clip(why || r.x, 40), query: r.x }); }
   }
-  return { products: out, queries, found, model };
+  return { products: out, queries, found, model, stores: stores.map((s) => s.name), failed: timing };
 }
 
 /* ---------------- /image ---------------- */
