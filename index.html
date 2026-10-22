@@ -231,7 +231,7 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
 .icon-btn{position:relative}
 .badge{position:absolute;top:-3px;right:-3px;min-width:19px;height:19px;border-radius:10px;background:var(--accent);color:#fff;font-family:var(--mono);font-size:11px;font-weight:500;display:grid;place-items:center;padding:0 5px;border:2px solid var(--bg)}
 /* the details view: all the photos, the store's description, sizes, colours */
-.detail{position:fixed;inset:0;z-index:45;background:var(--card);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.detail{position:fixed;inset:0;z-index:45;background:var(--card);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:manipulation}
 .dt{max-width:520px;margin:0 auto;padding-bottom:calc(112px + var(--safe-b));position:relative}
 .dt.nobar{padding-bottom:calc(28px + var(--safe-b))}
 .dt-top{position:sticky;top:0;z-index:3;height:0;display:flex;justify-content:space-between;align-items:flex-start;padding:0 12px}
@@ -316,7 +316,7 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "1.2.0";
+const APP_VERSION = "1.2.1";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
 const SERVER_EXPECTED = "1.1.0"; // the worker/worker.js version this app was built with
 
@@ -632,6 +632,16 @@ function dupKey(i){
   for (const w of own) t = t.split(w).join(" ");
   return t.replace(/[^a-z]+/g, " ").trim() + "|" + String(i.fabric || "").toLowerCase().trim();
 }
+// The same piece in another colour: same store, same title once colours (and a " - Colour" ending) are taken out.
+// "Kith Striped Poplin Georgie Shirt - Hydrangea" and "... - Excellence" are one piece; so are Drake's
+// "Green Narrow Stripe ... Shirt" and "Red Narrow Stripe ... Shirt".
+function pieceKey(p){
+  if (p._key) return p._key;
+  let t = String(p.title || "").toLowerCase().replace(/\s[-–:|]\s[^-–:|]+$/, "").replace(COLOUR_WORDS, " ");
+  for (const w of String(p.colour || "").toLowerCase().split(/[^a-z]+/).filter((x) => x.length > 2)) t = t.split(w).join(" ");
+  return (p._key = (p.store || "") + "|" + t.replace(/[^a-z0-9]+/g, " ").trim());
+}
+const seenKey = (v) => { const i = byId(v.id); return i ? pieceKey(i) : "|" + String(v.title).toLowerCase(); };
 function shownIdeas(){
   const l = S.round.votes.map((v) => byId(v.id)).filter(Boolean).concat(S.queue);
   if (S.current) l.push(S.current);
@@ -795,9 +805,10 @@ function refill(){
   const keep = S.queue.slice(0, ON_DECK).concat(S.queue.slice(ON_DECK).filter((i) => i._boost === 10));
   const ids = new Set(S.round.votes.map((v) => v.id).concat(keep.map((i) => i.id), S.current ? [S.current.id] : []));
   const ctx = {tags:briefTags(), sig:textSignals(Q.text), recent:new Date(Date.now() - 120 * 864e5).toISOString().slice(0, 10)};
-  const seenT = new Set(S.round.votes.map((v) => String(v.title).toLowerCase()).concat(keep.map((i) => i.title.toLowerCase()), S.current ? [S.current.title.toLowerCase()] : []));
+  // Never the same piece twice in a search, in any colour.
+  const seenK = new Set(S.round.votes.map(seenKey).concat(keep.map(pieceKey), S.current ? [pieceKey(S.current)] : []));
   const cands = [];
-  for (const p of S.pool) if (!ids.has(p.id) && !seenT.has(p.title.toLowerCase())){ const sc = fitScore(p, ctx); if (sc > -Infinity) cands.push([p, sc]); }
+  for (const p of S.pool) if (!ids.has(p.id) && !seenK.has(pieceKey(p))){ const sc = fitScore(p, ctx); if (sc > -Infinity) cands.push([p, sc]); }
   cands.sort((a, b) => b[1] - a[1]);
   const top = cands.slice(0, 400), out = [];
   const recent = [S.current].concat(keep).filter(Boolean);
@@ -809,6 +820,7 @@ function refill(){
     for (const strict of [true, false]){
       for (let k = 0; k < top.length; k++){
         const [p, sc] = top[k];
+        if (seenK.has(pieceKey(p))) continue;
         if (strict && prev && (prev.store === p.store || prev.kind === p.kind)) continue;
         const pen = last.reduce((a, q) => a + (q.store === p.store ? 4 : 0) + (q.kind === p.kind ? 2 : 0) + (q.colour && q.colour === p.colour ? 0.5 : 0), 0)
           + Math.max(0, (perStore[p.store] || 0) - 3) * 2.5; // no store takes over a whole search
@@ -816,7 +828,9 @@ function refill(){
       }
       if (best >= 0) break;
     }
+    if (best < 0) break;
     const chosen = top.splice(best, 1)[0][0];
+    seenK.add(pieceKey(chosen));
     perStore[chosen.store] = (perStore[chosen.store] || 0) + 1;
     out.push(chosen);
   }
@@ -882,8 +896,8 @@ function converge(i){
     + Math.min(3, [...titleWords(p)].filter((w) => tw.has(w)).length) + (Math.abs(p.price - i.price) < i.price * 0.35 ? 0.5 : 0);
   const close = S.pool.filter((p) => !ids.has(p.id) && p.id !== i.id && (!PREFS.shipIL || p.ships !== false)).map((p) => [p, sim(p) + (hashStr(S.roundId + p.id) % 100) / 200]).sort((a, b) => b[1] - a[1]);
   const pick = [], stores = {};
-  const titles = new Set([i.title.toLowerCase()].concat(S.round.votes.map((v) => String(v.title).toLowerCase()), S.queue.slice(0, ON_DECK).map((x) => x.title.toLowerCase())));
-  for (const [p] of close){ if ((stores[p.store] || 0) >= 2 || titles.has(p.title.toLowerCase())) continue; stores[p.store] = (stores[p.store] || 0) + 1; titles.add(p.title.toLowerCase()); pick.push(Object.assign(p, {_boost:10, why:"More like: " + i.title.slice(0, 34)})); if (pick.length >= 3) break; }
+  const titles = new Set([pieceKey(i)].concat(S.round.votes.map(seenKey), S.queue.slice(0, ON_DECK).map(pieceKey)));
+  for (const [p] of close){ if ((stores[p.store] || 0) >= 2 || titles.has(pieceKey(p))) continue; stores[p.store] = (stores[p.store] || 0) + 1; titles.add(pieceKey(p)); pick.push(Object.assign(p, {_boost:10, why:"More like: " + i.title.slice(0, 34)})); if (pick.length >= 3) break; }
   const pickIds = new Set(pick.map((p) => p.id));
   S.queue = S.queue.slice(0, ON_DECK).concat(pick, S.queue.slice(ON_DECK).filter((p) => !pickIds.has(p.id)));
   preloadAhead();
@@ -1351,6 +1365,8 @@ function bindZoom(el){
   };
   st.addEventListener("pointerup", up);
   st.addEventListener("pointercancel", up);
+  // iPhone: keep Safari's own page zoom out of the way, the viewer handles the pinch.
+  for (const ev of ["gesturestart", "gesturechange", "gestureend"]) el.addEventListener(ev, (e) => e.preventDefault());
   st.addEventListener("wheel", (e) => { e.preventDefault(); zoomAt(e.clientX, e.clientY, Z.sc * (e.deltaY < 0 ? 1.2 : 1 / 1.2), false); }, {passive:false});
   img.addEventListener("load", () => { zoomClamp(); zoomApply(false); });
   el.querySelector("#zClose").addEventListener("click", () => zoomClose());

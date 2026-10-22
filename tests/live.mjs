@@ -144,6 +144,8 @@ try {
     }
     await page.waitForTimeout(300);
   }
+  // The same piece (in any colour) never comes back in a search.
+  R.app.samePiece = await page.evaluate(() => { const k = S.round.votes.map(seenKey), d = k.filter((x, j) => k.indexOf(x) !== j); return d; }).catch((e) => ["check failed: " + e.message]);
   /* ---------- 3. more photos, the details view, the full-screen photo, saved ---------- */
   if (first && !R.app.stuckAfter) {
     const g = (R.app.gallery = {});
@@ -217,6 +219,7 @@ const md = [
   `App searches: ${ideas.map((r) => r.kind + " " + (r.status || "fail") + " " + r.ms + "ms " + (r.count != null ? r.count + " items " : "") + (r.model || r.failed || r.error || "")).join(" | ")}`,
   `App photos: ${imgs.length} requests; ${imgs.filter((r) => r.status === 200).length} ok; models ${[...new Set(imgs.map((r) => r.model))].join(",")}; median card photo wait ${photoMs.length ? photoMs.sort((x, y) => x - y)[Math.floor(photoMs.length / 2)] + "ms" : "-"}`,
   `Cards (waited = from the previous swipe until the card was there; photo = until its photo was there):`, ...(a.cards || []).map((c) => `  ${c.n}. ${c.title} — ${c.brand || ""} at ${c.store || ""} ${c.price || ""} ${c.currency || ""} — why: ${c.why || ""} — waited ${c.waitedMs}ms — photo ${c.photoMs == null ? "FAILED " + c.photoError : c.photoMs + "ms"} — ${c.swipe}${c.boost === 10 ? " (heart variation)" : ""}`),
+  `Same piece twice (any colour): ${a.samePiece && a.samePiece.length ? a.samePiece.join("; ") : "never"}`,
   `Gallery, details, zoom, saved: ${JSON.stringify(a.gallery || null)}`,
   `Errors: ${(a.errors || []).join(" | ") || "none"}`,
   a.stuck ? `STUCK at start: ${JSON.stringify(a.stuck)}` : "",
