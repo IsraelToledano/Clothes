@@ -61,6 +61,8 @@ const TYPE_RULES = [
 ];
 function typeOf(p) {
   const hay = [p.title, p.product_type].join(" ");
+  // A broad store type ("Men-Shirts & Tops") says less than the title ("Ribbed Slub Tee").
+  if (/&|\/|\btops?\b/i.test(p.product_type || "")) for (const [t, re] of TYPE_RULES) if (re.test(p.title || "")) return t;
   for (const [t, re] of TYPE_RULES) if (re.test(p.product_type || "") ) return t;
   for (const [t, re] of TYPE_RULES) if (re.test(hay)) return t;
   if (/outerwear/i.test(p.product_type || "")) return "Jackets"; // only when the title didn't say (an "Outerwear" overshirt is an overshirt)
