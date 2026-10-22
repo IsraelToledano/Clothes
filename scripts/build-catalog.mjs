@@ -80,6 +80,8 @@ function textOf(html){
   if (!out && lines.length) out = lines[0].slice(0, 1200);
   return out;
 }
+// The same hash as the app's hashStr: which details file a piece's details are in.
+const hashStr = (x) => { let h = 2166136261; for (const c of String(x)) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return h >>> 0; };
 const tagValue = (tags, re) => { for (const t of tags){ const m = re.exec(t); if (m) return clean(m[1]); } return ""; };
 
 async function getJSON(url) {
@@ -128,7 +130,9 @@ for (const [si, s] of STORES.entries()) {
           sizes = order.filter((x) => inStock.has(x));
           soldOut = order.filter((x) => !inStock.has(x));
         } else sizes = [...new Set(variants.map((v) => clean(v.option1 || v.title)).filter((x) => x && x.length <= 6 && !/default/i.test(x)))];
-        const colour = (colourOpt && colourOpt.values.length === 1 && colourOpt.values[0]) || tagValue(tags, /^colou?r\s*[:_-]\s*(.+)$/) || findWord(COLOURS, title + " " + (variants[0].title || ""));
+        // The colour: a single colour option, a "color: x" tag, the end of the title ("... - Military Green"), or a colour word in it.
+        const tail = /\s[-–:|]\s([^-–:|]+)$/.exec(title);
+        const colour = (colourOpt && colourOpt.values.length === 1 && colourOpt.values[0]) || tagValue(tags, /^colou?r\s*[:_-]\s*(.+)$/) || findWord(COLOURS, tail ? tail[1] : "") || findWord(COLOURS, title + " " + (variants[0].title || ""));
         const fit = tagValue(tags, /^fit\s*[:_-]\s*(.+)$/);
         const id = "p-" + s.d.split(".")[0] + "-" + p.id;
         const item = {
@@ -149,7 +153,7 @@ for (const [si, s] of STORES.entries()) {
         if (other.length) more.o = other;
         if (soldOut.length) more.so = soldOut.slice(0, 16);
         if (p.vendor && clean(p.vendor).toLowerCase() !== s.name.toLowerCase() && !/\.(com|co|nyc)/i.test(p.vendor)) more.v = clean(p.vendor);
-        details[Number(p.id) % DETAIL_CHUNKS][id] = more;
+        details[hashStr(id) % DETAIL_CHUNKS][id] = more;
         rep.kept++;
       }
       if (list.length < 250) break;
@@ -174,6 +178,6 @@ for (const [t, list] of Object.entries(byType)) {
 }
 fs.mkdirSync(path.join(OUT, "details"), { recursive: true });
 details.forEach((d, n) => fs.writeFileSync(path.join(OUT, "details", String(n).padStart(3, "0") + ".json"), JSON.stringify(d)));
-// format 2: photos relative to each store's "ip", up to 8 of them; details in details/NNN.json (product id mod 128)
+// format 2: photos relative to each store's "ip", up to 8 of them; details in details/NNN.json (hashStr(id) mod 128)
 fs.writeFileSync(path.join(OUT, "stores.json"), JSON.stringify({ updated: new Date().toISOString(), format: 2, chunks: DETAIL_CHUNKS, stores, counts, report }, null, 1));
 console.log("counts", counts);
