@@ -221,6 +221,19 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
 .bars i.on{background:var(--ink);box-shadow:0 0 0 1px rgba(255,255,255,.75)}
 .bars ~ .tag{top:22px}
 .photo-hint{bottom:56px;white-space:normal;width:max-content;max-width:calc(100% - 24px);text-align:center}
+/* the photo takes the whole card; name and price sit on it, like Tinder */
+.screen.fixed{padding-left:10px;padding-right:10px}
+.idea.over .idea-img{flex:1 1 auto}
+.idea-low{position:absolute;z-index:2;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none}
+.idea-low .swipe-hint{position:static;transform:none}
+.idea-low .insight{position:static;align-self:stretch;margin:0 12px}
+.idea.over .idea-body{align-self:stretch;pointer-events:auto;background:linear-gradient(to top,rgba(10,11,14,.86) 0%,rgba(10,11,14,.66) 62%,rgba(10,11,14,0) 100%);padding:30px 14px 14px 16px;color:#fff}
+.idea.over .idea-title{color:#fff;font-size:21px;text-shadow:0 1px 8px rgba(0,0,0,.25)}
+.idea.over .idea-desc{color:rgba(255,255,255,.9)}
+.idea.over .price{color:#fff}
+.idea.over .was{color:rgba(255,255,255,.66)}
+.idea.over .because{color:#C3CEFF}
+.idea.over .info-btn{background:#fff;border-color:#fff}
 .card-zoom{position:absolute;z-index:3;top:20px;right:12px;width:44px;height:44px;border-radius:22px;border:0;background:#fff;color:var(--ink);display:grid;place-items:center;padding:0;box-shadow:0 0 0 1px rgba(22,24,29,.08),0 2px 10px rgba(0,0,0,.12)}
 .card-zoom svg{width:22px;height:22px}
 .idea-body.row{flex-direction:row;align-items:center;gap:10px;cursor:pointer}
@@ -240,7 +253,7 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
 .dt-top{position:sticky;top:0;z-index:3;height:0;display:flex;justify-content:space-between;align-items:flex-start;padding:0 12px}
 .dt-top > *{margin-top:calc(10px + var(--safe-t));box-shadow:0 2px 12px rgba(0,0,0,.14)}
 .dt-gal{position:relative;background:#fff}
-.dt-photos{display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;width:100%;height:min(125vw,54dvh,650px);scrollbar-width:none;overscroll-behavior-x:contain}
+.dt-photos{display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;width:100%;height:min(125vw,70dvh,700px);scrollbar-width:none;overscroll-behavior-x:contain}
 .dt-photos::-webkit-scrollbar{display:none}
 .dt-ph{flex:0 0 100%;scroll-snap-align:center;scroll-snap-stop:always;border:0;padding:0;margin:0;background:#fff;position:relative;cursor:zoom-in}
 .dt-ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;-webkit-user-drag:none;-webkit-touch-callout:none}
@@ -325,7 +338,7 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "1.3.2";
+const APP_VERSION = "1.4.0";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
 const SERVER_EXPECTED = "1.1.0"; // the worker/worker.js version this app was built with
 
@@ -1218,20 +1231,22 @@ function renderExplore(){
   const b = i.why || because(i);
   const np = photosOf(i).length, k = curPh();
   return `<main class="screen fixed">${head}
-    <article class="idea" id="card" aria-labelledby="idea-t">
+    <article class="idea over" id="card" aria-labelledby="idea-t">
       <div class="idea-img" style="background:${esc(i.tint)}">
         ${np > 1 ? `<div class="bars" aria-hidden="true">${Array.from({length:np}, (_, j) => `<i${j === k ? ' class="on"' : ""}></i>`).join("")}</div>` : ""}
         <span class="tag">${isProduct(i) ? esc(i.brand && i.brand !== i.store ? i.brand + " · " + i.store : i.store) : (isAI(i) ? "AI idea" : "Sample idea") + " · not a real product"}</span>
         ${ideaImage(i)}
-        ${insight ? `<div class="insight" role="status">${ICON.sliders}<span>${esc(insight)}</span></div>` : ""}
         ${isProduct(i) || photosOf(i).length ? `<button type="button" class="card-zoom" data-act="card-zoom" aria-label="See this photo full screen and zoom in">${ICON.zoom}</button>` : ""}
         <span class="stamp no" aria-hidden="true">${ICON.close}Not now</span><span class="stamp yes" aria-hidden="true">${ICON.heart}Closer</span>
-        ${S.round.votes.length < 3 ? `<span class="swipe-hint" aria-hidden="true">← Not now · Getting closer →</span>` : ""}
-        ${S.round.votes.length < 2 ? `<span class="swipe-hint photo-hint" aria-hidden="true">${np > 1 ? "Tap a side: more photos · the middle: zoom" : "Tap the photo to zoom in"}</span>` : ""}
-      </div>
-      <div class="idea-body row">
-        <div class="idea-head">${b ? `<span class="because">${esc(b)}</span>` : ""}<h1 id="idea-t" class="idea-title">${esc(i.title)}</h1>${isProduct(i) ? `<p class="idea-desc">${priceHtml(i)} · ${esc(i.store)}</p>` : `<p class="idea-desc">${esc(i.desc)}</p>`}</div>
-        <button type="button" class="info-btn" data-act="details" aria-label="Details${np > 1 ? " and all " + np + " photos" : ""}">${ICON.info}</button>
+        <div class="idea-low">
+          ${S.round.votes.length < 2 ? `<span class="swipe-hint photo-hint" aria-hidden="true">${np > 1 ? "Tap a side: more photos · the middle: zoom" : "Tap the photo to zoom in"}</span>` : ""}
+          ${S.round.votes.length < 3 ? `<span class="swipe-hint" aria-hidden="true">← Not now · Getting closer →</span>` : ""}
+          ${insight ? `<div class="insight" role="status">${ICON.sliders}<span>${esc(insight)}</span></div>` : ""}
+          <div class="idea-body row">
+            <div class="idea-head">${b ? `<span class="because">${esc(b)}</span>` : ""}<h1 id="idea-t" class="idea-title">${esc(i.title)}</h1>${isProduct(i) ? `<p class="idea-desc">${priceHtml(i)} · ${esc(i.store)}</p>` : `<p class="idea-desc">${esc(i.desc)}</p>`}</div>
+            <button type="button" class="info-btn" data-act="details" aria-label="Details${np > 1 ? " and all " + np + " photos" : ""}">${ICON.info}</button>
+          </div>
+        </div>
       </div>
     </article>
     ${voteBtns(false)}
@@ -1365,10 +1380,14 @@ function zoomOpen(i, k){
 function zoomShow(k){
   if (!Z.open) return;
   Z.k = Math.max(0, Math.min(Z.list.length - 1, k));
-  Z.sc = 1; Z.tx = Z.ty = 0;
+  Z.sc = 1; Z.tx = Z.ty = 0; Z.def = 0; Z.touched = false;
   const img = document.getElementById("zImg"), u = Z.list[Z.k];
+  img.style.opacity = "0"; // shown once it's sized to fill the screen (see the load handler)
   // The sharp copy (2000px wide) replaces the one already on the phone as soon as it arrives.
   img.src = Z.pr ? sized(u, 900) : u;
+  const kk = Z.k;
+  setTimeout(() => { if (Z.open && Z.k === kk && img.style.opacity === "0" && img.complete && img.naturalWidth) img.dispatchEvent(new Event("load")); }, 60);
+  setTimeout(() => { if (Z.open && Z.k === kk) img.style.opacity = "1"; }, 2500); // never left blank
   if (Z.pr){ const hi = sized(u, 2000), im = new Image(); im.onload = () => { if (Z.open && Z.list[Z.k] === u) img.src = hi; }; im.src = hi; }
   zoomApply(false);
   const el = document.getElementById("zoom");
@@ -1376,6 +1395,12 @@ function zoomShow(k){
   document.getElementById("zCount").textContent = (Z.k + 1) + " / " + Z.list.length;
   document.getElementById("zPrev").disabled = Z.k === 0;
   document.getElementById("zNext").disabled = Z.k === Z.list.length - 1;
+}
+// The photo opens filling the screen (up to twice its fitted size), not small in the middle. Pinch out to
+// see all of it; double-tap to go closer, and again to come back.
+function zoomFill(){
+  const z = zoomBox();
+  return Math.min(2, Math.max(1, z.w / z.fw, z.h / z.fh));
 }
 function zoomClose(fromHistory){
   if (!Z.open) return;
@@ -1408,34 +1433,36 @@ function zoomBox(){
   return {cx:b.left + b.width / 2, cy:b.top + b.height / 2, w:b.width, h:b.height, fw, fh};
 }
 function zoomClamp(){
-  if (Z.sc <= 1.01){ Z.sc = Math.max(1, Z.sc); if (Z.sc === 1){ Z.tx = 0; Z.ty = 0; } }
+  Z.sc = Math.max(1, Math.min(5, Z.sc));
   const z = zoomBox(), mx = Math.max(0, (z.fw * Z.sc - z.w) / 2), my = Math.max(0, (z.fh * Z.sc - z.h) / 2);
   Z.tx = Math.max(-mx, Math.min(mx, Z.tx)); Z.ty = Math.max(-my, Math.min(my, Z.ty));
 }
-function zoomApply(anim){
+const zoomNear = () => Z.sc <= (Z.def || 1) * 1.05; // at the opening size (or smaller): swipes move between photos
+function zoomApply(anim, ox, oy){
   const img = document.getElementById("zImg");
   if (!img) return;
   img.style.transition = anim ? "transform .22s ease" : "none";
-  img.style.transform = `translate(${Z.tx}px, ${Z.ty}px) scale(${Z.sc})`;
+  img.style.transform = `translate(${Z.tx + (ox || 0)}px, ${Z.ty + (oy || 0)}px) scale(${Z.sc})`;
   const el = document.getElementById("zoom");
-  if (el) el.classList.toggle("zoomed", Z.sc > 1.01);
+  if (el) el.classList.toggle("zoomed", Z.sc > (Z.def || 1) * 1.05);
 }
 // Zoom to scale s, keeping the point under (x, y) where it is.
 function zoomAt(x, y, s, anim){
   s = Math.max(1, Math.min(5, s));
   const z = zoomBox(), px = (x - z.cx - Z.tx) / Z.sc, py = (y - z.cy - Z.ty) / Z.sc;
   Z.sc = s; Z.tx = x - z.cx - px * s; Z.ty = y - z.cy - py * s;
+  Z.touched = true;
   zoomClamp(); zoomApply(anim);
 }
 function zoomStep(f){ const z = zoomBox(); zoomAt(z.cx, z.cy, Z.sc * f, true); }
 function bindZoom(el){
   const st = el.querySelector("#zStage"), img = el.querySelector("#zImg"), pts = Z.pts;
   const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y) || 1, mid = (a, b) => ({x:(a.x + b.x) / 2, y:(a.y + b.y) / 2});
-  let start = null, pinch = null, moved = false, downAt = 0, lastTap = 0, lastX = 0, lastY = 0;
+  let start = null, pinch = null, moved = false, downAt = 0, lastTap = 0, lastX = 0, lastY = 0, over = {x:0, y:0}, trail = [];
   st.addEventListener("pointerdown", (e) => {
     try{ st.setPointerCapture(e.pointerId); }catch(err){}
     pts.set(e.pointerId, {x:e.clientX, y:e.clientY});
-    if (pts.size === 1){ start = {x:e.clientX, y:e.clientY, tx:Z.tx, ty:Z.ty}; moved = false; downAt = Date.now(); }
+    if (pts.size === 1){ start = {x:e.clientX, y:e.clientY, tx:Z.tx, ty:Z.ty}; moved = false; downAt = Date.now(); over = {x:0, y:0}; trail = [{t:downAt, x:e.clientX, y:e.clientY}]; }
     else if (pts.size === 2){ const [a, b] = [...pts.values()]; pinch = {d:dist(a, b), m:mid(a, b), sc:Z.sc, tx:Z.tx, ty:Z.ty}; moved = true; }
   });
   st.addEventListener("pointermove", (e) => {
@@ -1445,51 +1472,68 @@ function bindZoom(el){
       const [a, b] = [...pts.values()], z = zoomBox(), m = mid(a, b);
       const s = Math.max(1, Math.min(5, pinch.sc * dist(a, b) / pinch.d));
       const px = (pinch.m.x - z.cx - pinch.tx) / pinch.sc, py = (pinch.m.y - z.cy - pinch.ty) / pinch.sc;
-      Z.sc = s; Z.tx = m.x - z.cx - px * s; Z.ty = m.y - z.cy - py * s;
+      Z.sc = s; Z.tx = m.x - z.cx - px * s; Z.ty = m.y - z.cy - py * s; Z.touched = true;
       zoomClamp(); zoomApply(false);
       return;
     }
     if (!start) return;
     const dx = e.clientX - start.x, dy = e.clientY - start.y;
     if (Math.abs(dx) > 8 || Math.abs(dy) > 8) moved = true;
-    if (Z.sc > 1.01){ Z.tx = start.tx + dx; Z.ty = start.ty + dy; zoomClamp(); zoomApply(false); return; }
-    // Not zoomed in: drag sideways for the next photo, down to close.
-    const down = dy > 0 && Math.abs(dy) > Math.abs(dx);
-    img.style.transition = "none";
-    img.style.transform = down ? `translate(0px, ${dy}px) scale(${Math.max(0.75, 1 - dy / 1400)})` : `translate(${dx}px, 0px)`;
-    el.style.background = down ? `rgba(11,12,14,${Math.max(0.35, 1 - dy / 450).toFixed(2)})` : "";
+    trail.push({t:Date.now(), x:e.clientX, y:e.clientY}); if (trail.length > 6) trail.shift();
+    // Drag to look around; past the photo's edge it stretches a little (and at the opening size, a swipe
+    // past the edge, or a quick flick, goes to the next photo; down closes).
+    const rx = start.tx + dx, ry = start.ty + dy;
+    Z.tx = rx; Z.ty = ry; zoomClamp();
+    over = {x:rx - Z.tx, y:ry - Z.ty};
+    const near = zoomNear();
+    zoomApply(false, over.x * (near ? 0.7 : 0.2), over.y * (near && over.y > 0 ? 0.8 : 0.2));
+    el.style.background = near && over.y > 0 && Math.abs(over.y) > Math.abs(over.x) ? `rgba(11,12,14,${Math.max(0.35, 1 - over.y / 450).toFixed(2)})` : "";
   });
   const up = (e) => {
     if (!pts.has(e.pointerId)) return;
     pts.delete(e.pointerId);
-    if (pts.size === 1){ const [a] = [...pts.values()]; start = {x:a.x, y:a.y, tx:Z.tx, ty:Z.ty}; pinch = null; return; } // keep panning with the finger that's left
+    if (pts.size === 1){ const [a] = [...pts.values()]; start = {x:a.x, y:a.y, tx:Z.tx, ty:Z.ty}; pinch = null; trail = []; return; } // keep panning with the finger that's left
     if (pts.size) return;
     pinch = null;
     const s0 = start; start = null;
     if (!s0) return;
     const dx = e.clientX - s0.x, dy = e.clientY - s0.y;
     if (!moved && Date.now() - downAt < 400){
-      // Two quick taps: zoom in on that spot, or back out.
-      const now = Date.now();
-      if (now - lastTap < 350 && Math.hypot(e.clientX - lastX, e.clientY - lastY) < 40){ lastTap = 0; if (Z.sc > 1.01){ Z.sc = 1; Z.tx = Z.ty = 0; zoomApply(true); } else zoomAt(e.clientX, e.clientY, 2.5, true); }
+      // Two quick taps: closer on that spot, or back to the opening size.
+      const now = Date.now(), def = Z.def || 1;
+      if (now - lastTap < 350 && Math.hypot(e.clientX - lastX, e.clientY - lastY) < 40){
+        lastTap = 0;
+        if (Math.abs(Z.sc - def) < 0.05 * def) zoomAt(e.clientX, e.clientY, Math.min(5, def * 2.2), true);
+        else { Z.sc = def; Z.tx = Z.ty = 0; zoomClamp(); zoomApply(true); }
+      }
       else { lastTap = now; lastX = e.clientX; lastY = e.clientY; }
       return;
     }
-    if (Z.sc > 1.01) return;
+    Z.touched = true;
     el.style.background = "";
-    if (e.type === "pointerup" && dy > 110 && Math.abs(dy) > Math.abs(dx)){ zoomClose(); return; }
-    if (e.type === "pointerup" && Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy)){
-      const k = Z.k + (dx < 0 ? 1 : -1);
-      if (k >= 0 && k < Z.list.length){ zoomShow(k); return; }
+    const f = trail[0], l = trail[trail.length - 1], dt = f && l ? Math.max(1, l.t - f.t) : 1;
+    const vx = f && l ? (l.x - f.x) / dt : 0, vy = f && l ? (l.y - f.y) / dt : 0; // px per ms, over the last moves
+    if (e.type === "pointerup" && zoomNear()){
+      if ((over.y > 110 || (vy > 0.6 && dy > 60)) && Math.abs(dy) > Math.abs(dx)){ zoomClose(); return; }
+      if ((Math.abs(over.x) > 70 || (Math.abs(vx) > 0.5 && Math.abs(dx) > 50)) && Math.abs(dx) > Math.abs(dy)){
+        const k = Z.k + (dx < 0 ? 1 : -1);
+        if (k >= 0 && k < Z.list.length){ zoomShow(k); return; }
+      }
     }
-    zoomApply(true); // back in place
+    over = {x:0, y:0};
+    zoomApply(true); // back inside the edges
   };
   st.addEventListener("pointerup", up);
   st.addEventListener("pointercancel", up);
   // iPhone: keep Safari's own page zoom out of the way, the viewer handles the pinch.
   for (const ev of ["gesturestart", "gesturechange", "gestureend"]) el.addEventListener(ev, (e) => e.preventDefault());
   st.addEventListener("wheel", (e) => { e.preventDefault(); zoomAt(e.clientX, e.clientY, Z.sc * (e.deltaY < 0 ? 1.2 : 1 / 1.2), false); }, {passive:false});
-  img.addEventListener("load", () => { zoomClamp(); zoomApply(false); });
+  // Each photo opens at the size that fills the screen; the sharp copy arriving later keeps what you've done.
+  img.addEventListener("load", () => {
+    if (!Z.def){ Z.def = zoomFill(); if (!Z.touched){ Z.sc = Z.def; Z.tx = Z.ty = 0; } }
+    zoomClamp(); zoomApply(false);
+    img.style.opacity = "1";
+  });
   el.querySelector("#zClose").addEventListener("click", () => zoomClose());
   el.querySelector("#zPrev").addEventListener("click", () => zoomShow(Z.k - 1));
   el.querySelector("#zNext").addEventListener("click", () => zoomShow(Z.k + 1));
@@ -1994,7 +2038,7 @@ function bindSwipe(){
     if (e.type === "pointerup" && Math.abs(dx) < 10 && Math.abs(dy) < 10 && Date.now() - t0 < 600){
       // A tap: on the photo, its left or right side flips to the previous or next photo; on the text, the details open.
       back();
-      const img = downEl && downEl.closest(".idea-img");
+      const img = downEl && !downEl.closest(".idea-body") && downEl.closest(".idea-img");
       if (img){
         const r = img.getBoundingClientRect(), x = (sx - r.left) / r.width;
         if (photosOf(S.current).length < 2 || (x > 1 / 3 && x < 2 / 3)) zoomOpen(S.current, curPh());
