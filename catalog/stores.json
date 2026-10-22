@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-22T18:55:08.116Z",
+ "updated": "2026-10-22T21:15:23.446Z",
  "format": 2,
  "chunks": 128,
  "stores": [
@@ -314,25 +314,25 @@
   }
  ],
  "counts": {
-  "Shirts": 2931,
-  "Jackets": 2290,
-  "Trousers": 1708,
-  "Knitwear": 2478,
-  "T-shirts": 1131,
-  "Shorts": 483,
+  "Shirts": 2919,
+  "Jackets": 2252,
+  "Trousers": 1659,
+  "Knitwear": 2452,
+  "T-shirts": 1067,
+  "Shorts": 472,
   "Overshirts": 230,
-  "Shoes": 971
+  "Shoes": 853
  },
  "report": [
   {
    "store": "rowingblazers.com",
    "pages": 4,
    "raw": 835,
-   "kept": 449,
+   "kept": 447,
    "drop": {
     "notHis": 248,
     "notClothes": 111,
-    "soldOut": 27,
+    "soldOut": 29,
     "noPhoto": 0,
     "noType": 0
    },
@@ -346,15 +346,15 @@
     ],
     "noType": []
    },
-   "ms": 4078
+   "ms": 4972
   },
   {
    "store": "alexmill.com",
    "pages": 4,
-   "raw": 902,
+   "raw": 907,
    "kept": 191,
    "drop": {
-    "notHis": 613,
+    "notHis": 618,
     "notClothes": 76,
     "soldOut": 20,
     "noPhoto": 1,
@@ -362,17 +362,17 @@
    },
    "samples": {
     "notHis": [
-     "Joshua Ellis Plaid Scarf in Cashmere [Unisex Accessories] <women>",
-     "Sleep Scrunchie In Bistripe [Women's Accessories] <Women>",
-     "Sleep Scrunchie In Bistripe [Women's Accessories] <Women>",
-     "Sleep Scrunchie In Merry Stripe [Women's Accessories] <Women>",
-     "Sleep Scrunchie In Merry Stripe [Women's Accessories] <Women>"
+     "Bea Fairisle Sweater in Alpaca [Women's Sweaters] <Women>",
+     "Bea Fairisle Sweater in Alpaca [Women's Sweaters] <Women>",
+     "Bea Fairisle Sweater in Alpaca [Women's Sweaters] <Women>",
+     "The Perfect Weekday Tote [Unisex Accessories] <women>",
+     "The Perfect Weekday Tote [Unisex Accessories] <women>"
     ],
     "noType": [
      "Alex Mill Gift Wrapping []"
     ]
    },
-   "ms": 4726
+   "ms": 5283
   },
   {
    "store": "toddsnyder.com",
@@ -382,9 +382,9 @@
    "drop": {
     "notHis": 9,
     "notClothes": 729,
-    "soldOut": 519,
+    "soldOut": 520,
     "noPhoto": 0,
-    "noType": 40
+    "noType": 39
    },
    "samples": {
     "notHis": [
@@ -402,7 +402,7 @@
      "Mykonos Swim Brief [TS SWIM]"
     ]
    },
-   "ms": 15851
+   "ms": 17446
   },
   {
    "store": "drakes.com",
@@ -420,7 +420,7 @@
     "notHis": [],
     "noType": []
    },
-   "ms": 12264
+   "ms": 13456
   },
   {
    "store": "aimeleondore.com",
@@ -450,19 +450,19 @@
      "Café Leon Dore Cappuccino Cup & Saucer (Set of 6) [Lifestyle]"
     ]
    },
-   "ms": 4108
+   "ms": 4768
   },
   {
    "store": "taylorstitch.com",
    "pages": 12,
    "raw": 3000,
-   "kept": 486,
+   "kept": 473,
    "drop": {
     "notHis": 50,
-    "notClothes": 551,
-    "soldOut": 1901,
+    "notClothes": 573,
+    "soldOut": 1902,
     "noPhoto": 2,
-    "noType": 10
+    "noType": 0
    },
    "samples": {
     "notHis": [
@@ -472,25 +472,19 @@
      "The Rib Beanie in Dark Spruce [Accessories] <baby>",
      "The Rib Beanie in Oat Heather [Accessories] <baby>"
     ],
-    "noType": [
-     "Spacer - USA Made Clothing [General]",
-     "Spacer - The Indigo Shop [General]",
-     "Spacer - The Hemp Shop [General]",
-     "Spacer - The Jack 01 [General]",
-     "Spacer - Ojai 02 [General]"
-    ]
+    "noType": []
    },
-   "ms": 18797
+   "ms": 17072
   },
   {
    "store": "noahny.com",
    "pages": 3,
-   "raw": 600,
+   "raw": 555,
    "kept": 258,
    "drop": {
     "notHis": 5,
-    "notClothes": 147,
-    "soldOut": 184,
+    "notClothes": 138,
+    "soldOut": 148,
     "noPhoto": 0,
     "noType": 6
    },
@@ -510,17 +504,17 @@
      "Oysterman Wetsuit [Clothing]"
     ]
    },
-   "ms": 3625
+   "ms": 2505
   },
   {
    "store": "percivalclo.com",
    "pages": 4,
    "raw": 910,
-   "kept": 550,
+   "kept": 549,
    "drop": {
     "notHis": 3,
     "notClothes": 163,
-    "soldOut": 186,
+    "soldOut": 187,
     "noPhoto": 0,
     "noType": 8
    },
@@ -538,7 +532,7 @@
      "PCVL Performance Top | Rust [Jersey]"
     ]
    },
-   "ms": 7783
+   "ms": 7777
   },
   {
    "store": "portugueseflannel.com",
@@ -556,7 +550,7 @@
     "notHis": [],
     "noType": []
    },
-   "ms": 974
+   "ms": 1046
   },
   {
    "store": "oliverspencer.co.uk",
@@ -586,7 +580,7 @@
      "Attirecare Garment Spray Aureum 250ml [Home & Garden-Rollover]"
     ]
    },
-   "ms": 4131
+   "ms": 4503
   },
   {
    "store": "universalworks.co.uk",
@@ -610,37 +604,37 @@
      "F/CE.® Black 420 re/cor Daytrip BP 2.0 [F/CE]"
     ]
    },
-   "ms": 6535
+   "ms": 9357
   },
   {
    "store": "kith.com",
    "pages": 12,
    "raw": 3000,
-   "kept": 1601,
+   "kept": 1297,
    "drop": {
-    "notHis": 606,
-    "notClothes": 549,
-    "soldOut": 176,
+    "notHis": 1228,
+    "notClothes": 332,
+    "soldOut": 120,
     "noPhoto": 0,
-    "noType": 68
+    "noType": 23
    },
    "samples": {
     "notHis": [
-     "Nike PS Kobe 8 - Red Plum / Pink Flash / Electric Green [Low Top Sneakers] <kids>",
-     "NikeSKIMS Performance Cotton Blend Short Sleeve V Neck Crop Top - University Red [Short Sleeve Tees] <Crop Top>",
-     "NikeSKIMS Matte Double Strap Triangle Bra - University Red [Bras] <Bra>",
-     "Peachy Den Twiggy Double Dress - Onyx [Mini Dresses] <Dress>",
-     "Peachy Den Gloria Double Blouse Shirt - Porcelain [Button Up Shirts] <Blouse>"
+     "Nike WMNS Moon Shoe OG - University Red / Black [Low Top Sneakers] <WMNS>",
+     "Nike WMNS Caitlin 1 - Yellow Zest / Soft Yellow / Racer Blue [Low Top Sneakers] <WMNS>",
+     "Nike PS Kobe 8 - Red Plum / Pink Flash / Electric Green [Low Top Sneakers] <Nike PS>",
+     "NikeSKIMS Sherpa Oversized Quarter Zip Jacket - Boulder / Obsidian [Jackets] <wmns>",
+     "NikeSKIMS Performance Cotton Blend Short Sleeve V Neck Crop Top - University Red [Short Sleeve Tees] <Crop Top>"
     ],
     "noType": [
-     "UGG WMNS Zora Ballet Flat - Sand [Flats]",
-     "UGG WMNS Zora Ballet Flat - Dusted Cocoa [Flats]",
-     "UGG WMNS Zora Ballet Flat - Chestnut [Flats]",
-     "UGG WMNS Zora Leather Ballet Flat - Black [Flats]",
-     "Kith for The Matrix 500 Piece Puzzle - Multi [Activities]"
+     "Rick Owens Portable Ashtray - Palladio [Lifestyle]",
+     "Kith Ivy for Wilson Classic Terry Wristbands - Magma [Wristbands]",
+     "Kith Ivy for Wilson Striped Wristbands - Clementine [Wristbands]",
+     "Kith Ivy for Wilson Striped Wristbands - Nocturnal [Wristbands]",
+     "Kith Ivy for Wilson Striped Wristbands - Magma [Wristbands]"
     ]
    },
-   "ms": 14493
+   "ms": 16322
   },
   {
    "store": "corridornyc.com",
@@ -664,17 +658,17 @@
      "Red Rocks LS [LS w/ 1 Chest Pocket]"
     ]
    },
-   "ms": 2048
+   "ms": 2374
   },
   {
    "store": "outerknown.com",
    "pages": 5,
-   "raw": 1014,
+   "raw": 1011,
    "kept": 259,
    "drop": {
-    "notHis": 418,
+    "notHis": 417,
     "notClothes": 121,
-    "soldOut": 136,
+    "soldOut": 134,
     "noPhoto": 3,
     "noType": 77
    },
@@ -694,7 +688,7 @@
      "Lowtide Crew - Outerworn [Loungewear Tops]"
     ]
    },
-   "ms": 6213
+   "ms": 5415
   },
   {
    "store": "howlerbros.com",
@@ -718,18 +712,18 @@
      "H Bar B Snapshirt - Grampa’s Curtains : Antique Black []"
     ]
    },
-   "ms": 4813
+   "ms": 5619
   },
   {
    "store": "ledbury.com",
    "pages": 3,
    "raw": 713,
-   "kept": 313,
+   "kept": 314,
    "drop": {
     "notHis": 2,
     "notClothes": 134,
     "soldOut": 258,
-    "noPhoto": 6,
+    "noPhoto": 5,
     "noType": 0
    },
    "samples": {
@@ -739,7 +733,7 @@
     ],
     "noType": []
    },
-   "ms": 2765
+   "ms": 2210
   },
   {
    "store": "knickerbocker.nyc",
@@ -757,17 +751,17 @@
     "notHis": [],
     "noType": []
    },
-   "ms": 1030
+   "ms": 914
   },
   {
    "store": "ironandresin.com",
    "pages": 3,
    "raw": 704,
-   "kept": 294,
+   "kept": 295,
    "drop": {
     "notHis": 21,
     "notClothes": 164,
-    "soldOut": 201,
+    "soldOut": 200,
     "noPhoto": 1,
     "noType": 23
    },
@@ -787,27 +781,28 @@
      "Wilderness X INR Jersey []"
     ]
    },
-   "ms": 4100
+   "ms": 3988
   },
   {
    "store": "clubmonaco.com",
    "pages": 1,
-   "raw": 140,
+   "raw": 145,
    "kept": 25,
    "drop": {
-    "notHis": 1,
-    "notClothes": 14,
+    "notHis": 2,
+    "notClothes": 18,
     "soldOut": 99,
     "noPhoto": 1,
     "noType": 0
    },
    "samples": {
     "notHis": [
+     "Refined Dress Belt [Men-Belts] <Dress>",
      "Refined Dress Belt [Men-Belts] <Dress>"
     ],
     "noType": []
    },
-   "ms": 700
+   "ms": 1003
   },
   {
    "store": "jpressonline.com",
@@ -837,7 +832,7 @@
      "Vintage Nantucket Island Framed Needlepoint Map 17.5 x 22.5 in. [Vintage]"
     ]
    },
-   "ms": 16281
+   "ms": 15541
   },
   {
    "store": "grayers.com",
@@ -867,7 +862,7 @@
      "Edward Stretch Straight Fit Denim - Vintage Wash [Bottom]"
     ]
    },
-   "ms": 2372
+   "ms": 1436
   },
   {
    "store": "kamakurashirts.com",
@@ -891,7 +886,7 @@
      "TOKYO SLIM FIT - Cutaway Panama Mesh J-TECH EASY CARE [Men Easy Care]"
     ]
    },
-   "ms": 4323
+   "ms": 5374
   },
   {
    "store": "sunspel.com",
@@ -917,7 +912,7 @@
      "Gift Box [Gift Box]"
     ]
    },
-   "ms": 5686
+   "ms": 7070
   },
   {
    "store": "privatewhitevc.com",
@@ -937,7 +932,7 @@
      "The Lifeline - Charcoal [Jersey]"
     ]
    },
-   "ms": 1268
+   "ms": 2274
   },
   {
    "store": "colhays.com",
@@ -955,7 +950,7 @@
     "notHis": [],
     "noType": []
    },
-   "ms": 923
+   "ms": 575
   }
  ]
 }
