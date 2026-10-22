@@ -64,8 +64,16 @@ AI-drawn photos on the free plan were too generic and too slow, so Drape shows r
 - **AI** (Gemma, `POST /keywords`): reads the brief, and each heart, as words to look for (e.g. "oxford", "madras", "rugby stripe") and the stores that fit. A heart also puts the closest pieces right after the next card.
 - Settings in the pick sheet still apply: "Only stores that ship to Israel" (from each store's settings) and the budget.
 
+### Photos and details (since 1.2)
+
+- **On the card**: bars at the top show how many photos a piece has (up to 8). Tap the right or left side of the photo for the next or previous one, like Tinder. A tap never votes; only a swipe does.
+- **Details**: tap the text under the photo, the ⓘ button, or swipe up. All the photos (swipe through them or tap a thumbnail), price (with the full price when it's on sale), colour, fabric, fit, sizes in stock and sold out (your size is marked), the other colours it comes in, and the store's own description. ✕ / Save / ♥ at the bottom answer for the card, the same as a swipe. "View at …" opens it in the store.
+- **Full screen**: tap a photo in the details. Pinch or double-tap to zoom (up to 5×), drag to look around, swipe sideways for the next photo, swipe down or ✕ to close. It loads a 2000px copy from the store. The phone's back gesture closes it, then the details.
+- **Saved**: the bookmark at the top (with a count) opens a grid of saved pieces; each opens the same details view.
+- **Catalog format 2**: each store's photo folder is in `stores.json` (`ip`) and each photo is saved without it or a size; the app asks the store's image server for the size it needs (200 for lists, 900 for cards, 2000 for zoom). Longer details (description, sold-out sizes, colours, maker) are in `catalog/details/000.json`–`127.json`, chosen by a hash of the piece's id, and loaded only when a piece is opened (about 30–50 KB each). `catalog.yml` can also be run with `target: preview` to build into the `catalog-preview` branch without publishing.
+
 Ralph Lauren and J.Crew themselves don't publish their products this way, so they stay as search links on "Find similar in other stores".
 
 ## Live test
 
-`.github/workflows/live-test.yml` runs the real app against the real worker (Actions → live test → Run workflow). It signs in with a short-lived GitHub token for this repo (no stored secret), swipes through ten cards with a fixed brief, and saves timings, errors, screenshots and the AI photos to the `live-results` branch. One run uses roughly 1,000–1,500 of the 10,000 daily neurons.
+`.github/workflows/live-test.yml` runs the real app against the real worker (Actions → live test → Run workflow). It signs in with a short-lived GitHub token for this repo (no stored secret), swipes through eight cards with a fixed brief, then flips through a card's photos, opens its details and the full-screen photo (double-tap zoom), saves it and opens Saved; it saves timings, errors, screenshots and the AI photos to the `live-results` branch. One run uses roughly 1,000–1,500 of the 10,000 daily neurons.

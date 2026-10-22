@@ -47,10 +47,22 @@ try {
   const cat = JSON.parse(fs.readFileSync("catalog/stores.json", "utf8"));
   R.catalog = { updated: cat.updated, counts: cat.counts, failedStores: cat.report.filter((r) => r.error).map((r) => r.store + ": " + r.error) };
   const shirts = JSON.parse(fs.readFileSync("catalog/shirts.json", "utf8"));
+  // Format 2 saves photos without the store's folder ("ip") and without a size; the app asks for one.
+  const photo = (x, k, w) => { const st = cat.stores[x.s]; let u = x.im[k]; if (!/^https?:/.test(u)) u = (st.ip || "") + u; u = u.replace(/([?&])width=\d+&?/, "$1").replace(/[?&]$/, ""); return u + (u.includes("?") ? "&" : "?") + "width=" + w; };
+  const nPh = shirts.map((x) => x.im.length).sort((a, b) => a - b);
+  R.catalog.format = cat.format || 1;
+  R.catalog.photosPerShirt = { median: nPh[Math.floor(nPh.length / 2)], min: nPh[0], max: nPh[nPh.length - 1], oneOnly: nPh.filter((n) => n === 1).length, of: nPh.length };
+  if (cat.format === 2) {
+    const files = fs.readdirSync("catalog/details"), det = {};
+    for (const f of files) Object.assign(det, JSON.parse(fs.readFileSync(path.join("catalog/details", f), "utf8")));
+    R.catalog.details = { files: files.length, pieces: Object.keys(det).length, withDescription: Object.values(det).filter((d) => d.d).length, withSoldOutSizes: Object.values(det).filter((d) => d.so).length, onSale: shirts.filter((x) => x.cp).length + " shirts" };
+  }
   R.photosApi = [];
   for (const [n, x] of shirts.filter((_, k) => k % Math.floor(shirts.length / 6) === 0).slice(0, 6).entries()) {
-    const res = await timed(async () => { const r = await fetch(x.im[0]); const buf = Buffer.from(await r.arrayBuffer()); if (r.ok) fs.writeFileSync(path.join(OUT, `catalog-photo-${n + 1}.jpg`), buf); return { status: r.status, bytes: buf.length }; });
-    R.photosApi.push({ title: x.t, store: cat.stores[x.s].name, ...res });
+    for (const [k, w] of [[0, 900], [Math.min(1, x.im.length - 1), 2000]]) {
+      const res = await timed(async () => { const r = await fetch(photo(x, k, w)); const buf = Buffer.from(await r.arrayBuffer()); if (r.ok) fs.writeFileSync(path.join(OUT, `catalog-photo-${n + 1}${w === 2000 ? "-big" : ""}.jpg`), buf); return { status: r.status, bytes: buf.length }; });
+      R.photosApi.push({ title: x.t, store: cat.stores[x.s].name, width: w, ...res });
+    }
   }
   R.keywordsApi = await timed(async () => {
     const r = await fetch(WORKER + "/keywords", { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ code: tok, query: BRIEF }) });
@@ -71,6 +83,8 @@ try {
   const browser = await chromium.launch(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : {});
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, timezoneId: "Asia/Jerusalem" });
   const page = await ctx.newPage();
+  // Local dry run only: stand-in photos when the stores' image server can't be reached.
+  if (process.env.FAKE_PHOTOS) await page.route("https://cdn.shopify.com/**", (r) => r.fulfill({ status: 200, contentType: "image/jpeg", body: fs.readFileSync(process.env.FAKE_PHOTOS) }));
   R.app = { requests: [], errors: [], cards: [] };
   page.on("pageerror", (e) => R.app.errors.push("pageerror: " + e.message));
   page.on("console", (m) => { if (m.type() === "error") R.app.errors.push("console: " + m.text()); });
@@ -130,6 +144,55 @@ try {
     }
     await page.waitForTimeout(300);
   }
+  /* ---------- 3. more photos, the details view, the full-screen photo, saved ---------- */
+  if (first && !R.app.stuckAfter) {
+    const g = (R.app.gallery = {});
+    const votes0 = await page.evaluate(() => TASTE.votes.length), a0votes = () => votes0;
+    try {
+      await page.waitForSelector("#card img.prod.ok", { timeout: 20000 });
+      g.card = await page.evaluate(() => ({ title: S.current.title, store: S.current.store, photos: photosOf(S.current).length }));
+      const box = await page.locator("#card .idea-img").boundingBox();
+      let t = Date.now();
+      await page.touchscreen.tap(box.x + box.width * 0.8, box.y + box.height / 2);
+      g.flipMs = await page.waitForFunction(() => { const i = document.querySelector("#card img.prod"); return curPh() === 1 && i && i.complete && i.naturalWidth > 0 && i.src === photoAt(S.current, 1, 900); }, null, { timeout: 15000 }).then(() => Date.now() - t).catch(() => null);
+      g.tapVoted = await page.evaluate(() => TASTE.votes.length) !== a0votes();
+      await page.screenshot({ path: path.join(OUT, "gallery-photo-2.png") });
+      t = Date.now();
+      await page.click("#card .idea-title");
+      await page.waitForSelector("#detail", { timeout: 5000 });
+      g.detailsMs = Date.now() - t;
+      g.moreMs = await page.waitForFunction(() => S.more[S.detail.item.id] !== undefined, null, { timeout: 10000 }).then(() => Date.now() - t).catch(() => null);
+      await page.waitForTimeout(1200); // photos settle
+      g.details = await page.evaluate(() => ({ photos: document.querySelectorAll("#dtPhotos .dt-ph").length, loaded: [...document.querySelectorAll("#dtPhotos img")].slice(0, 2).map((i) => i.complete && i.naturalWidth), desc: ((document.getElementById("dtDesc") || {}).innerText || "").slice(0, 300), sizes: [...document.querySelectorAll(".sz")].map((x) => x.innerText + (x.classList.contains("out") ? " (sold out)" : "")), specs: [...document.querySelectorAll("#detail .specs div")].map((x) => x.innerText.replace("\n", ": ")), price: document.querySelector(".dt-price") && document.querySelector(".dt-price").innerText, cta: (document.querySelector("#detail a.cta") || {}).href }));
+      await page.screenshot({ path: path.join(OUT, "details-1.png") });
+      await page.evaluate(() => { document.getElementById("detail").scrollTop = 560; });
+      await page.waitForTimeout(400);
+      await page.screenshot({ path: path.join(OUT, "details-2.png") });
+      await page.evaluate(() => { document.getElementById("detail").scrollTop = 0; });
+      t = Date.now();
+      await page.click('.dt-ph[data-v="0"]');
+      await page.waitForSelector("#zoom", { timeout: 5000 });
+      g.sharpMs = await page.waitForFunction(() => { const i = document.getElementById("zImg"); return i && /width=2000/.test(i.src) && i.complete && i.naturalWidth > 0; }, null, { timeout: 20000 }).then(() => Date.now() - t).catch(() => null);
+      g.sharpWidth = await page.evaluate(() => document.getElementById("zImg").naturalWidth);
+      await page.waitForTimeout(500);
+      await page.screenshot({ path: path.join(OUT, "zoom-1.png") });
+      const zb = await page.locator("#zStage").boundingBox();
+      await page.touchscreen.tap(zb.x + zb.width / 2, zb.y + zb.height * 0.4); await page.waitForTimeout(120);
+      await page.touchscreen.tap(zb.x + zb.width / 2, zb.y + zb.height * 0.4); await page.waitForTimeout(600);
+      g.zoomScale = await page.evaluate(() => Z.sc);
+      await page.screenshot({ path: path.join(OUT, "zoom-2-double-tap.png") });
+      await page.keyboard.press("Escape"); await page.waitForTimeout(500);
+      g.zoomClosed = await page.evaluate(() => !document.getElementById("zoom") && !!document.getElementById("detail"));
+      await page.click(".dt-bar .rbtn.sv"); await page.waitForTimeout(300);
+      await page.keyboard.press("Escape"); await page.waitForTimeout(500);
+      g.detailsClosed = await page.evaluate(() => !document.getElementById("detail"));
+      await page.click('header [data-act="saved"]'); await page.waitForTimeout(1500);
+      g.saved = await page.evaluate(() => ({ screen: S.screen, cards: document.querySelectorAll(".sv-card").length, photos: [...document.querySelectorAll(".sv-card img")].filter((i) => i.complete && i.naturalWidth > 0).length }));
+      await page.screenshot({ path: path.join(OUT, "saved.png") });
+      await page.click('[data-act="saved-back"]'); await page.waitForTimeout(400);
+    } catch (e) { g.error = String((e && e.message) || e); await page.screenshot({ path: path.join(OUT, "gallery-error.png") }).catch(() => {}); }
+    log("gallery & details", g);
+  }
   R.app.report = await page.evaluate(() => askSnapshot()).catch((e) => "report failed: " + e.message);
   fs.writeFileSync(path.join(OUT, "report.txt"), R.app.report);
   await page.screenshot({ path: path.join(OUT, "final.png") });
@@ -148,12 +211,13 @@ const md = [
   `# Drape live test — ${R.started}`,
   `Server: ${R.deployed} (expected ${R.expectedServer})`,
   `Catalog: ${JSON.stringify(R.catalog)}`,
-  `Catalog photos: ${(R.photosApi || []).map((i) => i.store + " " + i.status + " " + i.ms + "ms " + i.bytes + "B").join(" | ")}`,
+  `Catalog photos: ${(R.photosApi || []).map((i) => i.store + " w" + i.width + " " + i.status + " " + i.ms + "ms " + i.bytes + "B").join(" | ")}`,
   `API keywords: ${JSON.stringify(R.keywordsApi)}`,
   `App first card: ${a.firstCardMs == null ? "NOT SHOWN" : a.firstCardMs + "ms"}`,
   `App searches: ${ideas.map((r) => r.kind + " " + (r.status || "fail") + " " + r.ms + "ms " + (r.count != null ? r.count + " items " : "") + (r.model || r.failed || r.error || "")).join(" | ")}`,
   `App photos: ${imgs.length} requests; ${imgs.filter((r) => r.status === 200).length} ok; models ${[...new Set(imgs.map((r) => r.model))].join(",")}; median card photo wait ${photoMs.length ? photoMs.sort((x, y) => x - y)[Math.floor(photoMs.length / 2)] + "ms" : "-"}`,
   `Cards (waited = from the previous swipe until the card was there; photo = until its photo was there):`, ...(a.cards || []).map((c) => `  ${c.n}. ${c.title} — ${c.brand || ""} at ${c.store || ""} ${c.price || ""} ${c.currency || ""} — why: ${c.why || ""} — waited ${c.waitedMs}ms — photo ${c.photoMs == null ? "FAILED " + c.photoError : c.photoMs + "ms"} — ${c.swipe}${c.boost === 10 ? " (heart variation)" : ""}`),
+  `Gallery, details, zoom, saved: ${JSON.stringify(a.gallery || null)}`,
   `Errors: ${(a.errors || []).join(" | ") || "none"}`,
   a.stuck ? `STUCK at start: ${JSON.stringify(a.stuck)}` : "",
   a.stuckAfter ? `STUCK after card ${a.stuckAfter.n}: ${JSON.stringify(a.stuckAfter)}` : "",

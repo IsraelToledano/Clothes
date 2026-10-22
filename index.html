@@ -215,6 +215,85 @@ a.cta{text-decoration:none}
 .dot{width:10px;height:10px;border-radius:5px;background:var(--line);flex:none}
 .dot.on{background:#1E8E4E}
 details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px;display:flex;align-items:center}
+/* photos on the card: bars like Tinder, tap the sides for the next or previous one */
+.bars{position:absolute;z-index:2;top:8px;left:10px;right:10px;display:flex;gap:4px;pointer-events:none}
+.bars i{flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.6);box-shadow:0 0 0 .5px rgba(22,24,29,.3)}
+.bars i.on{background:var(--ink);box-shadow:0 0 0 1px rgba(255,255,255,.75)}
+.bars ~ .tag{top:22px}
+.photo-hint{bottom:56px}
+.idea-body.row{flex-direction:row;align-items:center;gap:10px;cursor:pointer}
+.idea-body.row .idea-head{flex:1;min-width:0}
+.idea .idea-title{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.info-btn{flex:none;width:46px;height:46px;border-radius:23px;border:1.5px solid var(--ink);background:var(--card);color:var(--ink);display:grid;place-items:center;padding:0}
+.info-btn svg{width:22px;height:22px}
+.was{color:var(--muted);font-weight:400}
+.sale{color:var(--danger);font-weight:700;font-size:.9em}
+.icon-btn{position:relative}
+.badge{position:absolute;top:-3px;right:-3px;min-width:19px;height:19px;border-radius:10px;background:var(--accent);color:#fff;font-family:var(--mono);font-size:11px;font-weight:500;display:grid;place-items:center;padding:0 5px;border:2px solid var(--bg)}
+/* the details view: all the photos, the store's description, sizes, colours */
+.detail{position:fixed;inset:0;z-index:45;background:var(--card);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.dt{max-width:520px;margin:0 auto;padding-bottom:calc(112px + var(--safe-b));position:relative}
+.dt.nobar{padding-bottom:calc(28px + var(--safe-b))}
+.dt-top{position:sticky;top:0;z-index:3;height:0;display:flex;justify-content:space-between;align-items:flex-start;padding:0 12px}
+.dt-top > *{margin-top:calc(10px + var(--safe-t));box-shadow:0 2px 12px rgba(0,0,0,.14)}
+.dt-gal{position:relative;background:#fff}
+.dt-photos{display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;width:100%;height:min(125vw,54dvh,650px);scrollbar-width:none;overscroll-behavior-x:contain}
+.dt-photos::-webkit-scrollbar{display:none}
+.dt-ph{flex:0 0 100%;scroll-snap-align:center;scroll-snap-stop:always;border:0;padding:0;margin:0;background:#fff;position:relative;cursor:zoom-in}
+.dt-ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;-webkit-user-drag:none;-webkit-touch-callout:none}
+.dt-ph .ph{position:absolute;inset:0;justify-content:center}
+.dt-count{position:absolute;right:12px;bottom:12px;z-index:2;display:flex;align-items:center;gap:6px;background:rgba(22,24,29,.8);color:#fff;font-family:var(--mono);font-size:12px;padding:7px 11px;border-radius:999px;pointer-events:none}
+.dt-count svg{width:14px;height:14px}
+.dt-thumbs{display:flex;gap:6px;overflow-x:auto;padding:10px 16px 2px;scrollbar-width:none}
+.dt-thumbs::-webkit-scrollbar{display:none}
+.dt-thumb{flex:none;width:44px;height:55px;border-radius:10px;border:2px solid var(--soft);padding:0;overflow:hidden;background:#fff;position:relative}
+.dt-thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.dt-thumb[aria-current="true"]{border-color:var(--ink)}
+.dt-body{padding:12px 16px 0;display:flex;flex-direction:column;gap:16px}
+#dt-more{display:flex;flex-direction:column;gap:16px}
+#dt-more:empty{display:none}
+.dt-title{margin:0;font-family:var(--display);font-weight:800;font-size:27px;line-height:1.08;letter-spacing:-.02em}
+.dt-price{margin:0;font-size:19px;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.dt-sec{display:flex;flex-direction:column;gap:8px}
+.szs{display:flex;flex-wrap:wrap;gap:6px}
+.sz{min-width:44px;height:36px;padding:0 10px;border-radius:10px;border:1px solid var(--line);display:inline-grid;place-items:center;font-size:14px;background:var(--card)}
+.sz.out{color:#7A808B;text-decoration:line-through;background:var(--bg);border-color:var(--soft)}
+.sz.mine{border:2px solid var(--ink);font-weight:700}
+.dt-desc{margin:0;font-size:15px;line-height:1.5;color:var(--ink);white-space:pre-line;overflow-wrap:anywhere}
+.dt-desc.clamp{display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}
+.dt-bar{position:fixed;left:0;right:0;bottom:0;z-index:46;display:flex;justify-content:center;align-items:flex-end;gap:28px;padding:16px 16px calc(10px + var(--safe-b));background:linear-gradient(to top,var(--card) 55%,rgba(255,255,255,0));pointer-events:none}
+.dt-bar > *{pointer-events:auto}
+.rbtn{display:flex;flex-direction:column;align-items:center;gap:5px;border:0;background:none;padding:0;font-size:12px;font-weight:700;color:var(--ink)}
+.rbtn .c{width:56px;height:56px;border-radius:28px;display:grid;place-items:center;background:var(--hate);box-shadow:0 4px 14px rgba(0,0,0,.14)}
+.rbtn.like .c{background:var(--accent);color:#fff}
+.rbtn.sv .c{width:48px;height:48px;background:var(--card);border:1.5px solid var(--ink);margin-bottom:4px}
+.rbtn.sv.on .c{background:var(--ink);color:#fff}
+.rbtn svg{width:24px;height:24px}
+.rbtn:active .c{transform:scale(.94)}
+/* full-screen photo: pinch, double-tap, drag */
+.zoom{position:fixed;inset:0;z-index:80;background:#0B0C0E;color:#fff;touch-action:none;user-select:none;-webkit-user-select:none;transition:background .15s}
+.z-stage{position:absolute;inset:0;overflow:hidden;touch-action:none;cursor:zoom-in}
+.zoom.zoomed .z-stage{cursor:grab}
+.z-img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;transform-origin:50% 50%;will-change:transform;-webkit-user-drag:none;pointer-events:none}
+.z-top{position:absolute;top:0;right:0;display:flex;padding:calc(10px + var(--safe-t)) 12px 0;z-index:2}
+.z-btn{width:46px;height:46px;border-radius:23px;border:0;background:rgba(255,255,255,.16);color:#fff;display:grid;place-items:center;padding:0}
+.z-btn svg{width:22px;height:22px}
+.z-btn:disabled{opacity:.25}
+.z-foot{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;gap:18px;padding:0 12px calc(16px + var(--safe-b));z-index:2;pointer-events:none}
+.z-foot > *{pointer-events:auto}
+.z-count{font-family:var(--mono);font-size:13px;min-width:60px;text-align:center}
+.z-hint{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(76px + var(--safe-b));margin:0;font-size:13px;background:rgba(255,255,255,.16);padding:8px 13px;border-radius:999px;white-space:nowrap;pointer-events:none;transition:opacity .5s;z-index:2}
+/* saved: a grid of photos */
+.sv-grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 12px}
+.sv-card{display:flex;flex-direction:column;gap:5px;width:100%;border:0;background:none;padding:0;text-align:left;color:var(--ink)}
+.sv-ph{position:relative;display:block;width:100%;aspect-ratio:4/5;border-radius:16px;overflow:hidden;background:#fff}
+.sv-ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.sv-ph > svg{position:absolute;inset:0;margin:auto;width:28px;height:28px;color:#3B404A}
+.sv-t{font-size:14px;font-weight:700;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.sv-s{font-size:12px;color:var(--muted)}
+.sv-strip{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
+.sv-strip::-webkit-scrollbar{display:none}
+.sv-strip .sv-ph{flex:none;width:76px;border:0;padding:0}
 @media (prefers-reduced-motion:reduce){.shimmer,.ph.wait .mono-label{animation:none}}
 @media (max-height:760px){
   .recent-wrap{display:none}
@@ -237,7 +316,7 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "1.1.2";
+const APP_VERSION = "1.2.0";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
 const SERVER_EXPECTED = "1.1.0"; // the worker/worker.js version this app was built with
 
@@ -338,6 +417,9 @@ const ICON = {
   refresh: sv('<path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/>'),
   share: sv('<path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/>'),
   copy: sv('<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>'),
+  info: sv('<circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><path d="M12 7.6v.2"/>', {w:2.4}),
+  zoom: sv('<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4M11 8v6M8 11h6"/>'),
+  fwd: sv('<path d="M9 18l6-6-6-6"/>', {w:2.2}),
 };
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
@@ -349,7 +431,8 @@ let PICKS = load("picks", []);
 let SAVED = load("saved", []); // pieces you kept: full idea + when
 const S = {screen:"start", prev:"start", round:{votes:[]}, current:null, picked:null, sheet:false, modal:null, toast:null, busy:false,
   // AI: ideas waiting to be shown, the request in flight, what the AI has learned this round
-  queue:[], fetching:null, gen:0, aiErr:null, aiInsight:"", anchor:null, sampleRound:false, checking:false};
+  queue:[], fetching:null, gen:0, aiErr:null, aiInsight:"", anchor:null, sampleRound:false, checking:false,
+  detail:null, more:{}, ph:0, phFor:null, stack:[]};
 const aiRound = () => aiOn() && !S.sampleRound;
 
 /* ---------------- taste model ----------------
@@ -382,7 +465,7 @@ function toggleSave(i){
   SAVED.push(Object.assign({}, i, {savedAt:Date.now()}));
   if (SAVED.length > 200) SAVED = SAVED.slice(-200);
   applySave(i, 1);
-  save("saved", SAVED); toast("Saved · find it in your profile");
+  save("saved", SAVED); toast("Saved · it's under the bookmark at the top");
 }
 function undoVote(rec){
   const i = TASTE.votes.lastIndexOf(rec);
@@ -585,6 +668,24 @@ function preloadAhead(){ S.queue.slice(0, PRELOAD_N).forEach(preload); }
 // with the app (catalog/). Searching it happens here on the phone: instant, and the stores never see a
 // burst of requests. The AI (when it's on) only turns your brief and your hearts into words to look for.
 const isProduct = (i) => !!(i && String(i.id).startsWith("p-"));
+// The stores' image service (Shopify's) sends each photo in the size asked for: small for lists, big for zooming.
+function sized(u, w){
+  u = String(u || "");
+  if (!u) return "";
+  if (u.startsWith("//")) u = "https:" + u;
+  if (!/cdn\.shopify\.com|\/cdn\/shop\//.test(u)) return u;
+  u = u.replace(/([?&])width=\d+&?/, "$1").replace(/[?&]$/, "");
+  return u + (u.includes("?") ? "&" : "?") + "width=" + w;
+}
+// Every photo of a piece: up to 8 for a real product, the one AI photo for an idea.
+function photosOf(i){
+  if (!i) return [];
+  if (isProduct(i)) return (i.images && i.images.length ? i.images : [i.image]).filter(Boolean);
+  const u = i.image || imgUrl(i);
+  return u ? [u] : [];
+}
+const photoAt = (i, k, w) => { const l = photosOf(i), u = l[Math.max(0, Math.min(l.length - 1, k))] || ""; return isProduct(i) ? sized(u, w) : u; };
+const curPh = () => (S.current && S.phFor === S.current.id ? S.ph || 0 : 0);
 function prepProduct(p){
   return Object.assign({desc:"", fit:"", vibe:"", styles:[], palette:[], search:p.title}, p, {type:p.type || (Q.type && Q.type !== "Surprise me" ? Q.type : ""), tint:"#FFFFFF"});
 }
@@ -615,13 +716,31 @@ const CAT_TYPES = TYPES.filter((t) => t !== "Surprise me");
 const typeFile = (t) => "catalog/" + t.toLowerCase().replace(/[^a-z]+/g, "-") + ".json";
 function fromCat(x, type){
   const st = CAT.stores.stores[x.s] || {};
-  const p = {id:x.id, store:st.name, domain:st.d, brand:st.name, title:x.t, price:x.p, currency:st.cur, url:"https://" + st.d + "/products/" + x.h, image:x.im[0], images:x.im, type, ptype:x.pt || "", fabric:x.f || "", colour:x.c || "", tags:x.tg || [], sizes:x.sz || [], ships:st.il, storeTags:st.tags || [], date:x.d || ""};
+  // Catalog format 2 saves photos without the store's common folder ("ip"); format 1 has full addresses.
+  const abs = (u) => (/^https?:\/\//.test(u) ? u : u.startsWith("//") ? "https:" + u : (st.ip || "") + u);
+  const ims = (x.im || []).map(abs);
+  const p = {id:x.id, store:st.name, domain:st.d, brand:st.name, title:x.t, price:x.p, was:x.cp || 0, currency:st.cur, url:"https://" + st.d + "/products/" + x.h, image:sized(ims[0], 900), images:ims, type, ptype:x.pt || "", fabric:x.f || "", colour:x.c || "", fit:x.ft || "", tags:x.tg || [], sizes:x.sz || [], ships:st.il, storeTags:st.tags || [], date:x.d || ""};
   p.kind = kindOf(p);
   return prepProduct(p);
 }
+async function loadStores(){
+  if (!CAT.stores) CAT.stores = await fetch("catalog/stores.json", {cache:"no-cache"}).then((r) => { if (!r.ok) throw new Error("The product catalog didn't load (" + r.status + ")"); return r.json(); });
+  return CAT.stores;
+}
+// The longer details of a piece (the store's description, sold-out sizes, colours): in small files the
+// app loads only when you open a piece, one of 128 picked by the piece's id.
+const MORE = {};
+async function moreOf(i){
+  if (!isProduct(i)) return null;
+  const st = await loadStores().catch(() => null);
+  if (!st || st.format !== 2) return null;
+  const n = hashStr(i.id) % (st.chunks || 128);
+  if (!MORE[n]) MORE[n] = fetch("catalog/details/" + String(n).padStart(3, "0") + ".json").then((r) => (r.ok ? r.json() : {})).catch(() => { delete MORE[n]; return {}; });
+  return (await MORE[n])[i.id] || null;
+}
 async function loadCatalog(){
   const want = Q.type && Q.type !== "Surprise me" ? [Q.type] : CAT_TYPES;
-  if (!CAT.stores) CAT.stores = await fetch("catalog/stores.json", {cache:"no-cache"}).then((r) => { if (!r.ok) throw new Error("The product catalog didn't load (" + r.status + ")"); return r.json(); });
+  await loadStores();
   await Promise.all(want.filter((t) => !CAT.lists[t]).map((t) => fetch(typeFile(t), {cache:"no-cache"}).then((r) => (r.ok ? r.json() : [])).then((l) => { CAT.lists[t] = l.map((x) => fromCat(x, t)); }).catch(() => { CAT.lists[t] = []; })));
   return want.flatMap((t) => CAT.lists[t] || []);
 }
@@ -811,7 +930,7 @@ function preload(i){ const u = imgUrl(i); if (u && !PRELOADED.has(u)){ PRELOADED
 // Thumbnails (profile lists) only show photos already on the phone: "thumb=1" never draws a new one.
 function thumbImg(id){
   const i = byId(id);
-  if (isProduct(i)) return `<img src="${esc(String(i.image).replace(/width=\d+/, "width=200"))}" alt="" loading="lazy" onerror="this.remove()">`;
+  if (isProduct(i)) return `<img src="${esc(sized(photosOf(i)[0], 200))}" alt="" loading="lazy" onerror="this.remove()">`;
   const u = imgUrl(i) && imgUrl(i) + "&thumb=1";
   return u ? `<img src="${esc(u)}" alt="" crossorigin="anonymous" loading="lazy" onerror="this.remove()">` : "";
 }
@@ -857,6 +976,7 @@ function restoreSession(){
     if (!S.current) S.current = nextIdea();
   }
   else if (s.screen === "shop" && S.picked) S.screen = "shop";
+  else if (s.screen === "saved") S.screen = "saved";
 }
 
 /* ---------------- screens ---------------- */
@@ -868,7 +988,7 @@ function renderStart(){
     <fieldset><legend class="label">Style <span class="hint">· pick any</span></legend><div class="chips">${STYLES.map((s) => { const on = Q.styles.includes(s); return `<button type="button" class="chip" data-act="style" data-v="${esc(s)}" aria-pressed="${on}">${on ? ICON.check : ""}${esc(s)}</button>`; }).join("")}</div></fieldset>
     <div><label class="label" for="txt">In your own words <span class="hint">· optional</span></label><textarea id="txt" rows="3" placeholder="e.g. something light to throw over a tee on summer evenings, nothing too sporty">${esc(Q.text)}</textarea></div>
     <div class="bottom sticky"><button type="button" class="cta" data-act="go">Show me ideas ${ICON.arrow}</button>
-      ${SAVED.length ? `<button type="button" class="link-btn" data-act="profile">Saved pieces · ${SAVED.length}</button>` : ""}
+      ${SAVED.length ? `<button type="button" class="link-btn" data-act="saved">Saved pieces · ${SAVED.length}</button>` : ""}
       ${aiOn() ? "" : `<p class="small-note" style="margin-top:6px">Sample ideas for now · <button type="button" class="link-btn" data-act="profile">turn on AI</button></p>`}</div>
   </main>`;
 }
@@ -878,7 +998,7 @@ function steps(stage){
 }
 
 function ideaImage(i){
-  if (isProduct(i)) return `<div class="ph wait">${ICON.image}<span class="mono-label">Loading the photo…</span></div><img class="prod" src="${esc(i.image)}" alt="${esc(i.title + " by " + i.brand)}" draggable="false" onload="this.classList.add('ok');this.previousElementSibling.classList.remove('wait')" onerror="this.previousElementSibling.classList.remove('wait');this.previousElementSibling.lastChild.textContent='Photo unavailable';this.remove()">`;
+  if (isProduct(i)) return `<div class="ph wait">${ICON.image}<span class="mono-label">Loading the photo…</span></div><img class="prod" src="${esc(photoAt(i, curPh(), 900))}" alt="${esc(i.title + " by " + i.brand)}" draggable="false" onload="this.classList.add('ok');this.previousElementSibling.classList.remove('wait')" onerror="this.previousElementSibling.classList.remove('wait');this.previousElementSibling.lastChild.textContent='Photo unavailable';this.remove()">`;
   const u = i.image || imgUrl(i);
   if (u) return `<div class="ph wait">${ICON.image}<span class="mono-label">Drawing the photo…</span></div><img src="${esc(u)}" alt="${esc("AI photo of " + i.title + ": " + i.desc)}" crossorigin="anonymous" draggable="false" onload="this.classList.add('ok');this.previousElementSibling.classList.remove('wait')" onerror="imgFail(this)">`;
   return `<div class="ph">${ICON.image}<span class="mono-label">${isAI(i) ? "No photo" : "Sample idea · no photo"}</span>${!isAI(i) && /allowance/i.test(S.sampleWhy || "") ? `<span class="small-note">AI ideas and photos are back after ${resetIn().at}, when the free daily allowance resets. Start a new search then.</span>` : ""}</div>`;
@@ -971,22 +1091,302 @@ function renderExplore(){
   }
   const insight = (aiRound() && S.round.votes.length >= 3 && S.aiInsight ? S.aiInsight : roundInsight()).replace(/[.\s]+$/, "");
   const b = i.why || because(i);
+  const np = photosOf(i).length, k = curPh();
   return `<main class="screen fixed">${head}
     <article class="idea" id="card" aria-labelledby="idea-t">
       <div class="idea-img" style="background:${esc(i.tint)}">
+        ${np > 1 ? `<div class="bars" aria-hidden="true">${Array.from({length:np}, (_, j) => `<i${j === k ? ' class="on"' : ""}></i>`).join("")}</div>` : ""}
         <span class="tag">${isProduct(i) ? esc(i.brand && i.brand !== i.store ? i.brand + " · " + i.store : i.store) : (isAI(i) ? "AI idea" : "Sample idea") + " · not a real product"}</span>
         ${ideaImage(i)}
         ${insight ? `<div class="insight" role="status">${ICON.sliders}<span>${esc(insight)}</span></div>` : ""}
         <span class="stamp no" aria-hidden="true">${ICON.close}Not now</span><span class="stamp yes" aria-hidden="true">${ICON.heart}Closer</span>
         ${S.round.votes.length < 3 ? `<span class="swipe-hint" aria-hidden="true">← Not now · Getting closer →</span>` : ""}
+        ${S.round.votes.length < 2 && np > 1 ? `<span class="swipe-hint photo-hint" aria-hidden="true">Tap the photo's sides for more photos</span>` : ""}
       </div>
-      <div class="idea-body">
-        <div class="idea-head">${b ? `<span class="because">${esc(b)}</span>` : ""}<h1 id="idea-t" class="idea-title">${esc(i.title)}</h1>${isProduct(i) ? `<p class="idea-desc"><b class="price">${esc(money(i.price, i.currency))}</b> · ${esc(i.store)}</p>` : `<p class="idea-desc">${esc(i.desc)}</p>`}</div>
-        ${isProduct(i) ? "" : `<p class="specline">${[i.colour, i.fabric, i.fit, i.vibe].filter(Boolean).map(esc).join(" · ")}</p>`}
+      <div class="idea-body row">
+        <div class="idea-head">${b ? `<span class="because">${esc(b)}</span>` : ""}<h1 id="idea-t" class="idea-title">${esc(i.title)}</h1>${isProduct(i) ? `<p class="idea-desc">${priceHtml(i)} · ${esc(i.store)}</p>` : `<p class="idea-desc">${esc(i.desc)}</p>`}</div>
+        <button type="button" class="info-btn" data-act="details" aria-label="Details${np > 1 ? " and all " + np + " photos" : ""}">${ICON.info}</button>
       </div>
     </article>
     ${voteBtns(false)}
     <div class="acts"><button type="button" class="outline-btn save-btn${isSaved(i.id) ? " on" : ""}" data-act="save" aria-pressed="${isSaved(i.id)}">${isSaved(i.id) ? ICON.marked + "Saved" : ICON.mark + "Save"}</button><button type="button" class="outline-btn" data-act="pick">${ICON.bag}${isProduct(i) ? "This is it — view in store" : "This is it — where to buy"}</button></div>
+  </main>`;
+}
+
+function priceHtml(i){
+  return `<b class="price">${esc(money(i.price, i.currency))}</b>${i.was > i.price ? ` <s class="was">${esc(money(i.was, i.currency))}</s>` : ""}`;
+}
+
+/* ---------------- details: every photo, the store's description, sizes and colours ---------------- */
+function rbtn(v){
+  if (v === "save"){ const on = isSaved(S.detail.item.id); return `<button type="button" class="rbtn sv${on ? " on" : ""}" data-act="dt-save" aria-pressed="${on}"><span class="c">${on ? ICON.marked : ICON.mark}</span>${on ? "Saved" : "Save"}</button>`; }
+  return v === "later" ? `<button type="button" class="rbtn later" data-act="dt-vote" data-v="later"><span class="c">${ICON.close}</span>Not now</button>`
+    : `<button type="button" class="rbtn like" data-act="dt-vote" data-v="like"><span class="c">${ICON.heart}</span>Closer</button>`;
+}
+function moreHtml(i){
+  const m = S.more[i.id];
+  const mine = i.type === "Shoes" ? PREFS.shoe : PREFS.size;
+  if (m === undefined) return `<div class="dt-sec" aria-busy="true"><span class="mono-label">From ${esc(i.store)}</span><span class="sk" style="width:94%"></span><span class="sk" style="width:86%"></span><span class="sk" style="width:58%"></span></div>`;
+  const out = [];
+  const sizes = (i.sizes || []).map((x) => [x, true]).concat(((m && m.so) || []).map((x) => [x, false]));
+  if (sizes.length){
+    // In the store's own order when it gave one (in stock and sold out together).
+    const order = (m && m.so) ? sizes.sort((a, b) => sizeRank(a[0]) - sizeRank(b[0])) : sizes;
+    out.push(`<div class="dt-sec"><span class="mono-label">Sizes in stock</span><div class="szs">${order.map(([x, ok]) => `<span class="sz${ok ? "" : " out"}${String(x).toUpperCase() === String(mine).toUpperCase() ? " mine" : ""}"${ok ? "" : ' aria-label="' + esc(x) + ', sold out"'}>${esc(x)}</span>`).join("")}</div>${(i.sizes || []).some((x) => String(x).toUpperCase() === String(mine).toUpperCase()) ? `<span class="small-note" style="text-align:left">Your size (${esc(mine)}) is in stock.</span>` : ""}</div>`);
+  }
+  for (const [name, values] of (m && m.o) || []) out.push(`<div class="dt-sec"><span class="mono-label">${esc(/colou?r/i.test(name) ? "Also comes in" : name)}</span><div class="szs">${values.map((x) => `<span class="sz">${esc(x)}</span>`).join("")}</div></div>`);
+  if (m && m.d){
+    const long = m.d.length > 300 || m.d.split("\n").length > 6;
+    out.push(`<div class="dt-sec"><span class="mono-label">From ${esc(i.store)}${m.v ? " · " + esc(m.v) : ""}</span><p class="dt-desc${long ? " clamp" : ""}" id="dtDesc">${esc(m.d)}</p>${long ? `<button type="button" class="link-btn" data-act="dt-more-toggle" style="align-self:flex-start;padding:0;min-height:32px">Read more</button>` : ""}</div>`);
+  }
+  return out.join("");
+}
+const SIZE_ORDER = ["XXXS","XXS","XS","S","M","L","XL","XXL","XXXL","2XL","3XL","4XL"];
+function sizeRank(x){ const u = String(x).toUpperCase(), k = SIZE_ORDER.indexOf(u); if (k >= 0) return k; const n = parseFloat(u); return Number.isFinite(n) ? 100 + n : 1000; }
+function renderDetail(){
+  const d = S.detail, i = d.item, pr = isProduct(i), photos = photosOf(i), n = photos.length, k = Math.min(d.ph || 0, Math.max(0, n - 1));
+  const card = d.from === "card", saved = isSaved(i.id);
+  const pct = pr && i.was > i.price ? Math.round((1 - i.price / i.was) * 100) : 0;
+  const specs = [["Colour", i.colour], ["Fabric", i.fabric], ["Fit", i.fit], ["Kind", i.kind && i.kind !== i.fabric && i.kind !== i.type ? i.kind : ""]].filter((x) => x[1]);
+  const src = (u, w) => esc(pr ? sized(u, w) : u);
+  return `<div class="detail" id="detail" data-id="${esc(i.id)}" role="dialog" aria-modal="true" aria-labelledby="dt-t"><div class="dt${card ? "" : " nobar"}">
+    <div class="dt-top"><button type="button" class="icon-btn" data-act="dt-close" aria-label="Back">${ICON.back}</button>${askBtn().replace(' id="askFab"', "")}</div>
+    <div class="dt-gal">
+      <div class="dt-photos" id="dtPhotos">${n ? photos.map((u, j) => `<button type="button" class="dt-ph" data-act="zoom" data-v="${j}" aria-label="Photo ${j + 1} of ${n}: open it full screen to zoom in"><img src="${src(u, 900)}" alt="" draggable="false"${j > 1 ? ' loading="lazy"' : ""}${pr ? "" : ' crossorigin="anonymous"'}></button>`).join("") : `<div class="dt-ph"><div class="ph">${ICON.image}<span class="mono-label">No photo</span></div></div>`}</div>
+      ${n ? `<span class="dt-count" id="dtCount">${ICON.zoom}<span>${k + 1} / ${n}</span></span>` : ""}
+    </div>
+    ${n > 1 ? `<div class="dt-thumbs" role="group" aria-label="All photos">${photos.map((u, j) => `<button type="button" class="dt-thumb" data-act="dt-photo" data-v="${j}" aria-label="Show photo ${j + 1}" aria-current="${j === k}"><img src="${src(u, 160)}" alt="" loading="lazy"></button>`).join("")}</div>` : ""}
+    <div class="dt-body">
+      <div class="idea-head"><span class="mono-label">${esc(pr ? (i.brand && i.brand !== i.store ? i.brand + " · " + i.store : i.store) : (isAI(i) ? "AI idea · not a real product" : "Sample idea · not a real product"))}</span><h1 id="dt-t" class="dt-title">${esc(i.title)}</h1>
+        ${pr ? `<p class="dt-price">${priceHtml(i)}${pct ? ` <span class="sale">${pct}% off</span>` : ""}</p>` : `<p class="idea-desc" style="white-space:normal">${esc(i.desc)}</p>`}</div>
+      ${pr ? `<a class="cta" href="${esc(i.url)}" target="_blank" rel="noopener" data-act="open-product">View at ${esc(i.store)} ${ICON.ext}</a>` : `<button type="button" class="cta" data-act="dt-similar">Where to buy ${ICON.arrow}</button>`}
+      ${card ? "" : `<button type="button" class="outline-btn${saved ? "" : " filled"} save-btn${saved ? " on" : ""}" data-act="dt-save" aria-pressed="${saved}" style="width:100%">${saved ? ICON.marked + "Saved · tap to remove" : ICON.mark + "Save"}</button>`}
+      ${specs.length ? `<dl class="specs">${specs.map(([a, b]) => `<div><dt>${a}</dt><dd>${esc(b)}</dd></div>`).join("")}</dl>` : ""}
+      ${pr ? `<div id="dt-more">${moreHtml(i)}</div>` : ""}
+      ${pr ? `<p class="small-note" style="text-align:left">${[i.ships === true ? "Ships to Israel" : i.ships === false ? "Doesn't ship to Israel" : "", "Prices in " + (i.currency || "USD"), "From the store's site, refreshed daily"].filter(Boolean).join(" · ")}</p>
+      <button type="button" class="outline-btn filled" data-act="dt-similar">Find similar in other stores</button>` : ""}
+    </div>
+  </div>
+  ${card ? `<div class="dt-bar" role="group" aria-label="Your answer">${rbtn("later")}${rbtn("save")}${rbtn("like")}</div>` : ""}
+  </div>`;
+}
+function openDetail(i, from){
+  if (!i) return;
+  S.detail = {item:i, from, ph:from === "card" ? curPh() : 0};
+  pushLayer("detail");
+  S.focus = "#detail .dt-top .icon-btn";
+  render();
+  if (isProduct(i) && S.more[i.id] === undefined) moreOf(i).then((m) => {
+    S.more[i.id] = m;
+    const el = document.getElementById("dt-more");
+    if (el && S.detail && S.detail.item.id === i.id) el.innerHTML = moreHtml(i);
+  });
+}
+// The phone's back gesture closes the photo viewer and the details view instead of leaving the app.
+function pushLayer(kind){ try{ history.pushState({drape:kind}, ""); }catch(e){} }
+const ourLayer = (kind) => !!(history.state && history.state.drape === kind);
+function closeDetail(){
+  if (!S.detail) return;
+  if (ourLayer("detail")){ history.back(); return; } // popstate closes it
+  dropDetail(); render();
+}
+function dropDetail(){
+  if (!S.detail) return;
+  S.detail = null;
+  if (ourLayer("detail")) history.back(); // nothing left to close when it arrives
+}
+window.addEventListener("popstate", () => {
+  if (Z.open){ zoomClose(true); return; }
+  if (S.detail){ S.detail = null; render(); }
+});
+function bindDetail(){
+  const box = document.getElementById("dtPhotos");
+  if (!box || !S.detail) return;
+  const n = box.children.length;
+  const sync = () => {
+    const k = Math.max(0, Math.min(n - 1, Math.round(box.scrollLeft / (box.clientWidth || 1))));
+    if (S.detail) S.detail.ph = k;
+    const c = document.querySelector("#dtCount span");
+    if (c) c.textContent = (k + 1) + " / " + n;
+    document.querySelectorAll(".dt-thumb").forEach((t, j) => t.setAttribute("aria-current", String(j === k)));
+  };
+  box.addEventListener("scroll", sync, {passive:true});
+  if (S.detail.ph) box.scrollLeft = S.detail.ph * box.clientWidth;
+}
+
+/* ---------------- full-screen photo: pinch or double-tap to zoom, drag around ---------------- */
+const Z = {open:false, k:0, list:[], pr:false, sc:1, tx:0, ty:0, pts:new Map()};
+function zoomOpen(i, k){
+  const list = photosOf(i);
+  if (!list.length || Z.open) return;
+  Object.assign(Z, {open:true, item:i, list, pr:isProduct(i), k:0, sc:1, tx:0, ty:0, pts:new Map()});
+  const el = document.createElement("div");
+  el.id = "zoom"; el.className = "zoom";
+  el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", "Photo, full screen");
+  el.innerHTML = `<div class="z-stage" id="zStage"><img class="z-img" id="zImg" alt="${esc(i.title)}" draggable="false"></div>
+    <div class="z-top"><button type="button" class="z-btn" id="zClose" aria-label="Close the photo">${ICON.close}</button></div>
+    <p class="z-hint" id="zHint" aria-hidden="true">Pinch or double-tap to zoom</p>
+    <div class="z-foot"><button type="button" class="z-btn" id="zPrev" aria-label="Previous photo">${ICON.back}</button><span class="z-count" id="zCount" aria-live="polite"></span><button type="button" class="z-btn" id="zNext" aria-label="Next photo">${ICON.fwd}</button></div>`;
+  document.body.appendChild(el);
+  document.body.classList.add("lock");
+  pushLayer("zoom");
+  bindZoom(el);
+  zoomShow(k);
+  el.querySelector("#zClose").focus();
+  setTimeout(() => { const h = document.getElementById("zHint"); if (h) h.style.opacity = "0"; }, 2600);
+}
+function zoomShow(k){
+  if (!Z.open) return;
+  Z.k = Math.max(0, Math.min(Z.list.length - 1, k));
+  Z.sc = 1; Z.tx = Z.ty = 0;
+  const img = document.getElementById("zImg"), u = Z.list[Z.k];
+  // The sharp copy (2000px wide) replaces the one already on the phone as soon as it arrives.
+  img.src = Z.pr ? sized(u, 900) : u;
+  if (Z.pr){ const hi = sized(u, 2000), im = new Image(); im.onload = () => { if (Z.open && Z.list[Z.k] === u) img.src = hi; }; im.src = hi; }
+  zoomApply(false);
+  const el = document.getElementById("zoom");
+  if (el) el.style.background = "";
+  document.getElementById("zCount").textContent = (Z.k + 1) + " / " + Z.list.length;
+  document.getElementById("zPrev").disabled = Z.k === 0;
+  document.getElementById("zNext").disabled = Z.k === Z.list.length - 1;
+}
+function zoomClose(fromHistory){
+  if (!Z.open) return;
+  if (!fromHistory && ourLayer("zoom")){ history.back(); return; } // popstate comes back here
+  Z.open = false;
+  const el = document.getElementById("zoom");
+  if (el) el.remove();
+  document.body.classList.toggle("lock", !!(S.sheet || S.modal || S.detail));
+  // The details view stays on the photo you were looking at.
+  if (S.detail){
+    S.detail.ph = Z.k;
+    const box = document.getElementById("dtPhotos");
+    if (box){ box.scrollLeft = Z.k * box.clientWidth; const b = box.children[Z.k]; if (b && b.focus) b.focus({preventScroll:true}); }
+  }
+}
+function zoomBox(){
+  const st = document.getElementById("zStage"), img = document.getElementById("zImg");
+  const b = st.getBoundingClientRect();
+  const ar = img.naturalWidth && img.naturalHeight ? img.naturalWidth / img.naturalHeight : b.width / b.height;
+  let fw = b.width, fh = fw / ar;
+  if (fh > b.height){ fh = b.height; fw = fh * ar; }
+  return {cx:b.left + b.width / 2, cy:b.top + b.height / 2, w:b.width, h:b.height, fw, fh};
+}
+function zoomClamp(){
+  if (Z.sc <= 1.01){ Z.sc = Math.max(1, Z.sc); if (Z.sc === 1){ Z.tx = 0; Z.ty = 0; } }
+  const z = zoomBox(), mx = Math.max(0, (z.fw * Z.sc - z.w) / 2), my = Math.max(0, (z.fh * Z.sc - z.h) / 2);
+  Z.tx = Math.max(-mx, Math.min(mx, Z.tx)); Z.ty = Math.max(-my, Math.min(my, Z.ty));
+}
+function zoomApply(anim){
+  const img = document.getElementById("zImg");
+  if (!img) return;
+  img.style.transition = anim ? "transform .22s ease" : "none";
+  img.style.transform = `translate(${Z.tx}px, ${Z.ty}px) scale(${Z.sc})`;
+  const el = document.getElementById("zoom");
+  if (el) el.classList.toggle("zoomed", Z.sc > 1.01);
+}
+// Zoom to scale s, keeping the point under (x, y) where it is.
+function zoomAt(x, y, s, anim){
+  s = Math.max(1, Math.min(5, s));
+  const z = zoomBox(), px = (x - z.cx - Z.tx) / Z.sc, py = (y - z.cy - Z.ty) / Z.sc;
+  Z.sc = s; Z.tx = x - z.cx - px * s; Z.ty = y - z.cy - py * s;
+  zoomClamp(); zoomApply(anim);
+}
+function zoomStep(f){ const z = zoomBox(); zoomAt(z.cx, z.cy, Z.sc * f, true); }
+function bindZoom(el){
+  const st = el.querySelector("#zStage"), img = el.querySelector("#zImg"), pts = Z.pts;
+  const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y) || 1, mid = (a, b) => ({x:(a.x + b.x) / 2, y:(a.y + b.y) / 2});
+  let start = null, pinch = null, moved = false, downAt = 0, lastTap = 0, lastX = 0, lastY = 0;
+  st.addEventListener("pointerdown", (e) => {
+    try{ st.setPointerCapture(e.pointerId); }catch(err){}
+    pts.set(e.pointerId, {x:e.clientX, y:e.clientY});
+    if (pts.size === 1){ start = {x:e.clientX, y:e.clientY, tx:Z.tx, ty:Z.ty}; moved = false; downAt = Date.now(); }
+    else if (pts.size === 2){ const [a, b] = [...pts.values()]; pinch = {d:dist(a, b), m:mid(a, b), sc:Z.sc, tx:Z.tx, ty:Z.ty}; moved = true; }
+  });
+  st.addEventListener("pointermove", (e) => {
+    if (!pts.has(e.pointerId)) return;
+    pts.set(e.pointerId, {x:e.clientX, y:e.clientY});
+    if (pts.size >= 2 && pinch){
+      const [a, b] = [...pts.values()], z = zoomBox(), m = mid(a, b);
+      const s = Math.max(1, Math.min(5, pinch.sc * dist(a, b) / pinch.d));
+      const px = (pinch.m.x - z.cx - pinch.tx) / pinch.sc, py = (pinch.m.y - z.cy - pinch.ty) / pinch.sc;
+      Z.sc = s; Z.tx = m.x - z.cx - px * s; Z.ty = m.y - z.cy - py * s;
+      zoomClamp(); zoomApply(false);
+      return;
+    }
+    if (!start) return;
+    const dx = e.clientX - start.x, dy = e.clientY - start.y;
+    if (Math.abs(dx) > 8 || Math.abs(dy) > 8) moved = true;
+    if (Z.sc > 1.01){ Z.tx = start.tx + dx; Z.ty = start.ty + dy; zoomClamp(); zoomApply(false); return; }
+    // Not zoomed in: drag sideways for the next photo, down to close.
+    const down = dy > 0 && Math.abs(dy) > Math.abs(dx);
+    img.style.transition = "none";
+    img.style.transform = down ? `translate(0px, ${dy}px) scale(${Math.max(0.75, 1 - dy / 1400)})` : `translate(${dx}px, 0px)`;
+    el.style.background = down ? `rgba(11,12,14,${Math.max(0.35, 1 - dy / 450).toFixed(2)})` : "";
+  });
+  const up = (e) => {
+    if (!pts.has(e.pointerId)) return;
+    pts.delete(e.pointerId);
+    if (pts.size === 1){ const [a] = [...pts.values()]; start = {x:a.x, y:a.y, tx:Z.tx, ty:Z.ty}; pinch = null; return; } // keep panning with the finger that's left
+    if (pts.size) return;
+    pinch = null;
+    const s0 = start; start = null;
+    if (!s0) return;
+    const dx = e.clientX - s0.x, dy = e.clientY - s0.y;
+    if (!moved && Date.now() - downAt < 400){
+      // Two quick taps: zoom in on that spot, or back out.
+      const now = Date.now();
+      if (now - lastTap < 350 && Math.hypot(e.clientX - lastX, e.clientY - lastY) < 40){ lastTap = 0; if (Z.sc > 1.01){ Z.sc = 1; Z.tx = Z.ty = 0; zoomApply(true); } else zoomAt(e.clientX, e.clientY, 2.5, true); }
+      else { lastTap = now; lastX = e.clientX; lastY = e.clientY; }
+      return;
+    }
+    if (Z.sc > 1.01) return;
+    el.style.background = "";
+    if (e.type === "pointerup" && dy > 110 && Math.abs(dy) > Math.abs(dx)){ zoomClose(); return; }
+    if (e.type === "pointerup" && Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy)){
+      const k = Z.k + (dx < 0 ? 1 : -1);
+      if (k >= 0 && k < Z.list.length){ zoomShow(k); return; }
+    }
+    zoomApply(true); // back in place
+  };
+  st.addEventListener("pointerup", up);
+  st.addEventListener("pointercancel", up);
+  st.addEventListener("wheel", (e) => { e.preventDefault(); zoomAt(e.clientX, e.clientY, Z.sc * (e.deltaY < 0 ? 1.2 : 1 / 1.2), false); }, {passive:false});
+  img.addEventListener("load", () => { zoomClamp(); zoomApply(false); });
+  el.querySelector("#zClose").addEventListener("click", () => zoomClose());
+  el.querySelector("#zPrev").addEventListener("click", () => zoomShow(Z.k - 1));
+  el.querySelector("#zNext").addEventListener("click", () => zoomShow(Z.k + 1));
+}
+
+/* ---------------- the card: tap the sides of the photo for the next or previous one ---------------- */
+function flipPhoto(d){
+  const i = S.current;
+  if (!i) return;
+  const n = photosOf(i).length, k0 = curPh(), k = Math.max(0, Math.min(n - 1, k0 + d));
+  if (n < 2 || k === k0) return;
+  S.phFor = i.id; S.ph = k;
+  const img = document.querySelector("#card img.prod");
+  if (!img){ render(); return; }
+  img.src = photoAt(i, k, 900);
+  document.querySelectorAll("#card .bars i").forEach((b, j) => b.classList.toggle("on", j === k));
+  preloadUrl(photoAt(i, k + 1, 900));
+}
+function preloadUrl(u){ if (u && !PRELOADED.has(u)){ PRELOADED.add(u); const im = new Image(); im.src = u; } }
+
+/* ---------------- saved: a grid of everything you kept ---------------- */
+function savedImg(p, w){
+  const u = photosOf(p)[0];
+  if (isProduct(p)) return u ? `<img src="${esc(sized(u, w))}" alt="" loading="lazy" onerror="this.remove()">` : ICON.image;
+  return ICON.image + thumbImg(p.id);
+}
+function renderSaved(){
+  const list = SAVED.slice().reverse(), n = list.length;
+  return `<main class="screen">
+    <header class="top"><button type="button" class="icon-btn" data-act="saved-back" aria-label="Back">${ICON.back}</button><span class="meta">Saved</span>${hbtns(true)}</header>
+    <div style="display:flex;flex-direction:column;gap:6px"><h1 class="h1" style="font-size:32px">Saved</h1><span class="mono-label">${n} piece${n === 1 ? "" : "s"} · they help your next searches</span></div>
+    ${n ? `<ul class="sv-grid">${list.map((p) => `<li><button type="button" class="sv-card" data-act="open-saved" data-v="${esc(p.id)}"><span class="sv-ph" style="background:${esc(isProduct(p) ? "#fff" : p.tint)}">${savedImg(p, 500)}</span><span class="sv-t">${esc(p.title)}</span><span class="sv-s">${isProduct(p) ? priceHtml(p) + " · " + esc(p.store) : esc([p.colour, p.fabric].filter(Boolean).join(" · ") || "Idea")}</span></button></li>`).join("")}</ul>`
+      : `<section class="card"><h2>Nothing saved yet</h2><p>While you swipe, tap Save on anything you'd like to come back to. It lands here with all its photos and details, and it helps your next searches.</p></section>
+      <div class="bottom"><button type="button" class="cta" data-act="home">Start a search ${ICON.arrow}</button></div>`}
   </main>`;
 }
 
@@ -1111,7 +1511,7 @@ function renderProfile(){
         ${neg.length ? `<div style="display:flex;flex-direction:column;gap:8px"><span class="mono-label">Less of</span><div class="tchips">${neg.map((k) => `<span class="tchip minus">– ${esc(chipLabel(k))}</span>`).join("")}</div></div>` : ""}`
       : `<p>Vote on a few ideas and this fills in.</p>`}
     </section>
-    <section class="card" aria-labelledby="sv"><h2 id="sv">Saved${SAVED.length ? " · " + SAVED.length : ""}</h2>${SAVED.length ? `<ul class="hist saved">${SAVED.slice().reverse().map((p) => `<li><button type="button" class="sv-open" data-act="open-saved" data-v="${esc(p.id)}"><span class="sw" style="background:${esc(p.tint)}" aria-hidden="true">${thumbImg(p.id)}</span><span class="t">${esc(p.title)}<small>${esc([p.colour, p.fabric].filter(Boolean).join(" · "))} · where to buy</small></span></button><button type="button" class="icon-btn sm" data-act="unsave" data-v="${esc(p.id)}" aria-label="Remove ${esc(p.title)} from saved">${ICON.close}</button></li>`).join("")}</ul>` : `<p>Tap Save on any idea to keep it here. Saved pieces also shape future searches.</p>`}</section>
+    <section class="card" aria-labelledby="sv"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h2 id="sv">Saved${SAVED.length ? " · " + SAVED.length : ""}</h2>${SAVED.length ? `<button type="button" class="link-btn" data-act="saved" style="min-height:32px;padding:0">See all</button>` : ""}</div>${SAVED.length ? `<div class="sv-strip">${SAVED.slice(-10).reverse().map((p) => `<button type="button" class="sv-ph" data-act="open-saved" data-v="${esc(p.id)}" aria-label="${esc(p.title)}" style="background:${esc(isProduct(p) ? "#fff" : p.tint)}">${savedImg(p, 200)}</button>`).join("")}</div>` : `<p>Tap Save on any piece to keep it. Saved pieces also shape future searches.</p>`}</section>
     ${picks.length ? `<section class="card" aria-labelledby="pk"><h2 id="pk">Picked</h2><ul class="hist">${picks.map((p) => `<li><span class="sw" style="background:${esc(p.tint)}" aria-hidden="true">${thumbImg(p.id)}</span><span class="t">${esc(p.title)}</span><span class="v">${ago(p.at)}</span></li>`).join("")}</ul></section>` : ""}
     ${votes.length ? `<section class="card" aria-labelledby="rv"><h2 id="rv">Recent votes</h2><ul class="hist">${votes.map((v) => `<li><span class="sw" style="background:${esc(v.tint)}" aria-hidden="true">${thumbImg(v.id)}</span><span class="t">${esc(v.title)}</span><span class="v ${v.v}">${VOTE_LABEL[v.v]} · ${ago(v.at)}</span></li>`).join("")}</ul></section>` : ""}
     ${aiCard()}
@@ -1162,17 +1562,33 @@ function renderToast(){
 /* ---------------- render ---------------- */
 function render(){
   const app = document.getElementById("app");
-  let html = S.screen === "explore" ? renderExplore() : S.screen === "shop" ? renderShop() : S.screen === "profile" ? renderProfile() : renderStart();
+  // Re-drawing keeps the details view where you had scrolled it.
+  const dt = document.getElementById("detail"), keepTop = dt && S.detail && dt.dataset.id === S.detail.item.id ? dt.scrollTop : 0;
+  let html = S.screen === "explore" ? renderExplore() : S.screen === "shop" ? renderShop() : S.screen === "profile" ? renderProfile() : S.screen === "saved" ? renderSaved() : renderStart();
   if (S.sheet && S.current) html += renderSheet();
+  if (S.detail) html += renderDetail();
   if (S.modal) html += renderModal();
   if (S.toast && !S.toast.undo) html += renderToast();
   app.innerHTML = html;
-  document.body.classList.toggle("lock", !!(S.sheet || S.modal));
-  if (S.screen === "explore") bindSwipe();
+  document.body.classList.toggle("lock", !!(S.sheet || S.modal || S.detail || Z.open));
+  if (S.detail){ const d2 = document.getElementById("detail"); if (d2) d2.scrollTop = keepTop; bindDetail(); }
+  if (S.screen === "explore"){ bindSwipe(); if (S.current) preloadUrl(photoAt(S.current, curPh() + 1, 900)); }
   const f = S.focus && document.querySelector(S.focus);
   if (f) f.focus();
   S.focus = null;
   saveSession();
+}
+// Saved and the taste profile open on top of where you were; Back returns there. Opening one that's
+// already open underneath goes back to it instead of piling up.
+function openScreen(name){
+  if (S.screen === name) return;
+  const ix = S.stack.indexOf(name);
+  if (ix >= 0) S.stack = S.stack.slice(0, ix); else S.stack.push(S.screen);
+  go(name);
+}
+function backScreen(){
+  const prev = S.stack.pop();
+  go(prev && prev !== S.screen ? prev : "start");
 }
 function go(screen){
   if (screen !== S.screen){
@@ -1317,9 +1733,26 @@ async function askClaude(){
 }
 
 const ACTIONS = {
-  profile(){ go("profile"); },
-  "profile-back"(){ go(S.prev && S.prev !== "profile" ? S.prev : "start"); },
-  home(){ S.sheet = false; go("start"); },
+  profile(){ openScreen("profile"); },
+  "profile-back"(){ backScreen(); },
+  saved(){ openScreen("saved"); },
+  "saved-back"(){ backScreen(); },
+  details(){ openDetail(S.current, "card"); },
+  "dt-close"(){ closeDetail(); },
+  "dt-vote"(el){ const v = el.dataset.v; dropDetail(); render(); vote(v); },
+  "dt-save"(){ if (S.detail) toggleSave(S.detail.item); render(); },
+  "dt-photo"(el){ const box = document.getElementById("dtPhotos"); if (box) box.scrollTo({left:+el.dataset.v * box.clientWidth, behavior:matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"}); },
+  zoom(el){ if (S.detail) zoomOpen(S.detail.item, +el.dataset.v || 0); },
+  "dt-more-toggle"(el){ const d = document.getElementById("dtDesc"); if (!d) return; const open = d.classList.toggle("clamp"); el.textContent = open ? "Read more" : "Show less"; },
+  "dt-similar"(){
+    const i = S.detail && S.detail.item;
+    if (!i) return;
+    const fromCard = S.detail.from === "card";
+    dropDetail();
+    if (fromCard && S.current && S.current.id === i.id){ S.shopFrom = null; toShop(); return; }
+    S.shopFrom = S.screen; S.picked = i; go("shop");
+  },
+  home(){ S.sheet = false; S.stack = []; go("start"); },
   type(el){ const v = el.dataset.v; Q.type = Q.type === v ? "" : v; save("query", Q); render(); },
   style(el){ const v = el.dataset.v; Q.styles = Q.styles.includes(v) ? Q.styles.filter((s) => s !== v) : Q.styles.concat(v); save("query", Q); render(); },
   go(){ startRound(); },
@@ -1328,15 +1761,23 @@ const ACTIONS = {
   pick(){ pickCurrent(); },
   save(){ toggleSave(S.current); render(); },
   "unsave"(el){ const i = SAVED.find((x) => x.id === el.dataset.v); if (i) toggleSave(i); render(); },
-  "open-saved"(el){ const i = SAVED.find((x) => x.id === el.dataset.v); if (!i) return; if (isProduct(i)){ window.open(i.url, "_blank", "noopener"); return; } S.picked = i; S.current = i; S.sheet = false; go("shop"); },
-  "open-product"(){ const i = S.current; if (!i) return; if (!S.round.votes.some((v) => v.id === i.id && v.v === "love")){ const rec = recordVote(i, "love", 1, "pick"); S.round.votes.push(rec); } const last = PICKS[PICKS.length - 1]; if (!last || last.id !== i.id){ PICKS.push({id:i.id, title:i.title, tint:i.tint, at:Date.now()}); save("picks", PICKS); } setTimeout(() => { S.sheet = false; render(); }, 300); },
+  "open-saved"(el){ const i = SAVED.find((x) => x.id === el.dataset.v); if (i) openDetail(i, "saved"); },
+  // Going to the store counts as a pick (and, for the card on screen, as a "this is it").
+  "open-product"(){
+    const i = (S.detail && S.detail.item) || S.current;
+    if (!i) return;
+    if (S.current && S.current.id === i.id && !S.round.votes.some((v) => v.id === i.id && v.v === "love")){ const rec = recordVote(i, "love", 1, "pick"); S.round.votes.push(rec); }
+    const last = PICKS[PICKS.length - 1];
+    if (!last || last.id !== i.id){ PICKS.push({id:i.id, title:i.title, tint:i.tint, at:Date.now()}); save("picks", PICKS); }
+    if (S.sheet) setTimeout(() => { S.sheet = false; render(); }, 300);
+  },
   broaden(){ Q.type = "Surprise me"; save("query", Q); S.current = nextIdea(); render(); },
   scrim(el, e){ if (e.target !== el) return; if (S.modal){ S.modal = null; } else S.sheet = false; render(); },
   "sheet-close"(){ S.sheet = false; render(); },
   budget(el){ PREFS.budget = el.dataset.v; save("prefs", PREFS); render(); },
   size(el){ if (S.current && S.current.type === "Shoes") PREFS.shoe = el.dataset.v; else PREFS.size = el.dataset.v; save("prefs", PREFS); render(); },
   shop(){ toShop(); },
-  "back-explore"(){ S.current = S.picked || S.current; go("explore"); },
+  "back-explore"(){ if (S.shopFrom && S.shopFrom !== "explore" && S.shopFrom !== "shop"){ const f = S.shopFrom; S.shopFrom = null; go(f); return; } S.current = S.picked || S.current; go("explore"); },
   "edit-prefs"(){ S.current = S.picked; S.sheet = true; S.screen = "explore"; render(); },
   "copy-q"(el){ copyText(el.dataset.v, "Search copied"); },
   "more-like"(){ moreLike(); },
@@ -1366,11 +1807,20 @@ document.addEventListener("change", (e) => {
   if (e.target.id === "shipIL"){ PREFS.shipIL = e.target.checked; save("prefs", PREFS); }
 });
 document.addEventListener("keydown", (e) => {
-  if ((e.key === "ArrowLeft" || e.key === "ArrowRight") && S.screen === "explore" && !S.modal && !S.sheet && !/^(INPUT|TEXTAREA)$/.test((e.target && e.target.tagName) || "")){
+  if (Z.open){
+    if (e.key === "Escape") zoomClose();
+    else if (e.key === "ArrowLeft") zoomShow(Z.k - 1);
+    else if (e.key === "ArrowRight") zoomShow(Z.k + 1);
+    else if (e.key === "+" || e.key === "=") zoomStep(1.5);
+    else if (e.key === "-") zoomStep(1 / 1.5);
+    return;
+  }
+  if ((e.key === "ArrowLeft" || e.key === "ArrowRight") && S.screen === "explore" && !S.modal && !S.sheet && !S.detail && !/^(INPUT|TEXTAREA)$/.test((e.target && e.target.tagName) || "")){
     vote(e.key === "ArrowLeft" ? "later" : "like"); return;
   }
   if (e.key !== "Escape") return;
   if (S.modal){ S.modal = null; render(); }
+  else if (S.detail) closeDetail();
   else if (S.sheet){ S.sheet = false; render(); }
 });
 
@@ -1378,10 +1828,10 @@ document.addEventListener("keydown", (e) => {
 function bindSwipe(){
   const card = document.getElementById("card");
   if (!card) return;
-  let x0 = null, y0 = 0, dx = 0, dy = 0, pid = null;
+  let x0 = null, y0 = 0, dx = 0, dy = 0, pid = null, t0 = 0, downEl = null;
   card.addEventListener("pointerdown", (e) => {
-    if (S.busy) return;
-    x0 = e.clientX; y0 = e.clientY; dx = dy = 0; pid = e.pointerId;
+    if (S.busy || e.button > 0 || e.target.closest("button, a")) return; // the details button is a plain tap
+    x0 = e.clientX; y0 = e.clientY; dx = dy = 0; pid = e.pointerId; t0 = Date.now(); downEl = e.target;
     try{ card.setPointerCapture(pid); }catch(err){}
     card.style.transition = "none";
   });
@@ -1392,12 +1842,23 @@ function bindSwipe(){
     card.style.setProperty("--yes", Math.max(0, Math.min(1, dx / 90)).toFixed(2));
     card.style.setProperty("--no", Math.max(0, Math.min(1, -dx / 90)).toFixed(2));
   });
-  const end = () => {
+  const back = () => { card.style.transition = "transform .18s ease"; card.style.transform = ""; card.style.setProperty("--yes", 0); card.style.setProperty("--no", 0); };
+  const end = (e) => {
     if (x0 === null) return;
+    const sx = x0;
     x0 = null;
+    if (e.type === "pointerup" && Math.abs(dx) < 10 && Math.abs(dy) < 10 && Date.now() - t0 < 600){
+      // A tap: on the photo, its left or right side flips to the previous or next photo; on the text, the details open.
+      back();
+      const img = downEl && downEl.closest(".idea-img");
+      if (img){ const r = img.getBoundingClientRect(); flipPhoto(sx < r.left + r.width / 2 ? -1 : 1); }
+      else if (downEl && downEl.closest(".idea-body")) openDetail(S.current, "card");
+      return;
+    }
     if (dx < -90) vote("later");
     else if (dx > 90) vote("like");
-    else { card.style.transition = "transform .18s ease"; card.style.transform = ""; card.style.setProperty("--yes", 0); card.style.setProperty("--no", 0); }
+    else if (e.type === "pointerup" && dy < -90 && Math.abs(dx) < 70){ back(); openDetail(S.current, "card"); } // swipe up: details
+    else back();
   };
   card.addEventListener("pointerup", end);
   card.addEventListener("pointercancel", end);
@@ -1414,15 +1875,23 @@ function askBtn(){
   const label = askState === "working" ? "…" : askState === "ready" ? "Send" : ASK_ICON;
   return `<button type="button" id="askFab" class="icon-btn ask-btn${askState === "ready" ? " ready" : ""}" data-act="ask-report" data-report-ui="1" aria-label="${askState === "ready" ? "Tap again to send" : "Send this screen to Claude"}">${label}</button>`;
 }
+function savedBtn(){
+  const n = SAVED.length;
+  return `<button type="button" class="icon-btn" data-act="saved" aria-label="Saved pieces${n ? " (" + n + ")" : ""}">${ICON.mark}${n ? `<span class="badge" aria-hidden="true">${n > 99 ? "99+" : n}</span>` : ""}</button>`;
+}
+// Explore: report + saved. Start: all three. Saved: report + taste. Taste: report.
 function hbtns(withProfile){
-  return `<span class="hbtns">${askBtn()}${withProfile ? `<button type="button" class="icon-btn" data-act="profile" aria-label="Your taste profile">${ICON.person}</button>` : ""}</span>`;
+  const saved = S.screen === "explore" || S.screen === "start";
+  const prof = withProfile && S.screen !== "explore";
+  return `<span class="hbtns">${askBtn()}${saved ? savedBtn() : ""}${prof ? `<button type="button" class="icon-btn" data-act="profile" aria-label="Your taste profile">${ICON.person}</button>` : ""}</span>`;
 }
 function askSetState(st){
   askState = st;
-  const b = document.getElementById("askFab"); if (!b) return;
-  b.classList.toggle("ready", st === "ready");
-  b.innerHTML = st === "working" ? "…" : st === "ready" ? "Send" : ASK_ICON;
-  b.setAttribute("aria-label", st === "ready" ? "Tap again to send" : "Send this screen to Claude");
+  document.querySelectorAll(".ask-btn").forEach((b) => {
+    b.classList.toggle("ready", st === "ready");
+    b.innerHTML = st === "working" ? "…" : st === "ready" ? "Send" : ASK_ICON;
+    b.setAttribute("aria-label", st === "ready" ? "Tap again to send" : "Send this screen to Claude");
+  });
 }
 function askSetMsg(t){
   const m = document.getElementById("askMsg"); if (!m) return;
@@ -1469,9 +1938,9 @@ async function askCapture(){
 // The readable half of the report: what the app is doing and why, which a screenshot can't show.
 function askSnapshot(){
   const L = [];
-  const row = (i) => !i ? "none" : isProduct(i) ? `${i.title} — ${i.brand} at ${i.store}, ${money(i.price, i.currency)} [${[i.colour, i.fabric, i.kind].filter(Boolean).join(", ")}] ${i.url}` : `${i.title} [${i.type}; ${i.colour}, ${i.fabric}, ${i.fit}, ${i.vibe}; ${(i.styles || []).join("/")}]${isAI(i) ? " (AI)" : " (sample)"}`;
+  const row = (i) => !i ? "none" : isProduct(i) ? `${i.title} — ${i.brand} at ${i.store}, ${money(i.price, i.currency)}${i.was > i.price ? " (was " + money(i.was, i.currency) + ")" : ""} [${[i.colour, i.fabric, i.kind].filter(Boolean).join(", ")}] ${i.url}` : `${i.title} [${i.type}; ${i.colour}, ${i.fabric}, ${i.fit}, ${i.vibe}; ${(i.styles || []).join("/")}]${isAI(i) ? " (AI)" : " (sample)"}`;
   L.push(`app: ${APP_VERSION}   when: ${new Date().toISOString()}`);
-  L.push(`screen: ${S.screen}${S.sheet ? " + pick sheet" : ""}${S.modal ? " + dialog" : ""}`);
+  L.push(`screen: ${S.screen}${S.sheet ? " + pick sheet" : ""}${S.modal ? " + dialog" : ""}${S.detail ? " + details of \"" + S.detail.item.title + "\" (from " + S.detail.from + ", photo " + ((S.detail.ph || 0) + 1) + " of " + photosOf(S.detail.item).length + ")" : ""}${Z.open ? " + full-screen photo " + (Z.k + 1) + "/" + Z.list.length + " at " + Z.sc.toFixed(2) + "x" : ""}`);
   L.push(`ua: ${navigator.userAgent}`);
   L.push(`ai: ${aiOn() ? "on" : "off"}${S.sampleRound ? " (this round uses sample ideas)" : ""}   server: ${AI.url || DEFAULT_WORKER}   health: ${JSON.stringify(AI.health || null)}`);
   L.push(`ai request: ${S.fetching ? "in flight for " + Math.round((Date.now() - (S.fetchAt || Date.now())) / 1000) + "s" : "idle"}${S.huntFetch ? " + heart variations in flight" : ""}   last error: ${S.aiErr || "none"}   waiting ideas: ${S.queue.length}`);
@@ -1483,7 +1952,7 @@ function askSnapshot(){
   L.push(`\nSEARCH: type=${Q.type || "-"}  styles=${(Q.styles || []).join(", ") || "-"}  text="${Q.text || ""}"`);
   L.push(`PREFS: ${JSON.stringify(PREFS)}`);
   L.push(`\nON SCREEN: ${row(S.current)}`);
-  if (S.current) L.push(`  why: "${S.current.why || ""}"   search: "${S.current.search || ""}"`);
+  if (S.current) L.push(`  why: "${S.current.why || ""}"   search: "${S.current.search || ""}"   photo ${curPh() + 1} of ${photosOf(S.current).length}`);
   if (S.current && S.current.image_prompt) L.push(`  photo prompt: ${S.current.image_prompt}`);
   if (S.picked) L.push(`PICKED: ${row(S.picked)}`);
   if (S.queue.length) L.push(`NEXT UP: ${S.queue.slice(0, 5).map((i) => i.title).join("; ")}`);
