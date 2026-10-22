@@ -323,7 +323,7 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "1.3.0";
+const APP_VERSION = "1.3.1";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
 const SERVER_EXPECTED = "1.1.0"; // the worker/worker.js version this app was built with
 
@@ -996,8 +996,12 @@ function converge(i){
   const pick = [], stores = {};
   const titles = new Set([pieceKey(i)].concat(S.round.votes.map(seenKey), S.queue.slice(0, ON_DECK).map(pieceKey)));
   for (const [p] of close){ if ((stores[p.store] || 0) >= 2 || titles.has(pieceKey(p))) continue; stores[p.store] = (stores[p.store] || 0) + 1; titles.add(pieceKey(p)); pick.push(Object.assign(p, {_boost:10, why:"More like: " + i.title.slice(0, 34)})); if (pick.length >= 3) break; }
-  const pickIds = new Set(pick.map((p) => p.id));
-  S.queue = S.queue.slice(0, ON_DECK).concat(pick, S.queue.slice(ON_DECK).filter((p) => !pickIds.has(p.id)));
+  // Never the same store twice in a row, in the variations too.
+  const order = [], rest = pick.slice();
+  let prev = S.queue[ON_DECK - 1] || S.current;
+  while (rest.length){ let k = rest.findIndex((p) => !prev || p.store !== prev.store); if (k < 0) k = 0; prev = rest.splice(k, 1)[0]; order.push(prev); }
+  const pickIds = new Set(order.map((p) => p.id));
+  S.queue = S.queue.slice(0, ON_DECK).concat(order, S.queue.slice(ON_DECK).filter((p) => !pickIds.has(p.id)));
   preloadAhead();
   if (aiRound()) aiKeywords(i, S.gen);
 }
