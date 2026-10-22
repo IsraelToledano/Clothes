@@ -64,6 +64,13 @@ AI-drawn photos on the free plan were too generic and too slow, so Drape shows r
 - **AI** (Gemma, `POST /keywords`): reads the brief, and each heart, as words to look for (e.g. "oxford", "madras", "rugby stripe") and the stores that fit. A heart also puts the closest pieces right after the next card.
 - Settings in the pick sheet still apply: "Only stores that ship to Israel" (from each store's settings) and the budget.
 
+### Your words, your taste and your pieces (since 1.3)
+
+- **Brands in your own words** count at once, on the phone, without waiting for the AI: Ralph Lauren, Club Monaco, J.Crew, Brooks Brothers, J.Press, Banana Republic, Todd Snyder, Aimé Leon Dore, COS/Uniqlo, Massimo Dutti and "quiet luxury" are each read as store styles to favour and avoid, words to look for (oxford, button-down, polo, rugby, poplin, linen...) and words to avoid (western, snap, graphic...), plus the stores closest to them (`BRAND_READS` in `index.html`). A store you name that's in the catalog (Club Monaco, Drake's...) is favoured too. Each card's blue line says what it matched: "Like Ralph Lauren: oxford, button-down".
+- **Long-term taste is fair to what you see most**: something counts for you when you liked pieces with it more often than you like pieces in general (smoothed). Before 1.3 every "not now" pushed against everything in the piece, so the most common things (cotton, relaxed fit, even the smart-casual you asked for) piled up against you.
+- **Your pieces** (the bookmark at the top): **Saved** and **Liked** (every piece you swiped right on). Liked pieces from before 1.3 are found again from your votes.
+- **More stores** that fit classic briefs and ship to Israel: Club Monaco (its men's collection), J.Press, Grayers, Kamakura Shirts, Sunspel, Private White V.C. and Colhay's. The catalog also stopped dropping cream, printed, patch-pocket and tie-dye pieces and men's "dress" trousers and shirts, and now types sweatshirts, hoodies, outerwear and jeans. `stores.json` reports how many pieces each store had and why the rest were left out.
+
 ### Photos and details (since 1.2)
 
 - **On the card**: bars at the top show how many photos a piece has (up to 8). Tap the right or left side of the photo for the next or previous one, like Tinder. A tap never votes; only a swipe does.

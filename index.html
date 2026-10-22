@@ -292,6 +292,12 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
 .sv-ph > svg{position:absolute;inset:0;margin:auto;width:28px;height:28px;color:#3B404A}
 .sv-t{font-size:14px;font-weight:700;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .sv-s{font-size:12px;color:var(--muted)}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--soft);border-radius:16px;padding:4px;flex:none}
+.seg-btn{height:44px;border:0;border-radius:12px;background:transparent;color:var(--muted);font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px}
+.seg-btn[aria-selected="true"]{background:var(--card);color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.seg-n{font-family:var(--mono);font-size:12px;font-weight:500;background:var(--bg);border-radius:999px;padding:2px 8px}
+.sv-flag{position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:15px;background:var(--ink);color:#fff;display:grid;place-items:center}
+.sv-flag svg{width:15px;height:15px}
 .sv-strip{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
 .sv-strip::-webkit-scrollbar{display:none}
 .sv-strip .sv-ph{flex:none;width:76px;border:0;padding:0}
@@ -317,7 +323,7 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "1.2.2";
+const APP_VERSION = "1.3.0";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
 const SERVER_EXPECTED = "1.1.0"; // the worker/worker.js version this app was built with
 
@@ -384,7 +390,7 @@ function rememberIdeas(list){
   if (ids.length > 400) for (const id of ids.slice(0, ids.length - 400)) delete AIDB[id];
   save("ai-ideas", AIDB);
 }
-const byId = (id) => AIDB[id] || SAMPLE_BY_ID[id] || SAVED.find((x) => x.id === id);
+const byId = (id) => AIDB[id] || SAMPLE_BY_ID[id] || SAVED.find((x) => x.id === id) || (LIKED || []).find((x) => x.id === id);
 const isAI = (i) => !!(i && String(i.id).startsWith("ai-"));
 
 // A soft background for the photo area: the idea's main colour mixed with white.
@@ -430,6 +436,7 @@ let TASTE = load("taste", {w:{}, votes:[]});
 let PREFS = load("prefs", {budget:"any", size:"M", shoe:"43", shipIL:true});
 let PICKS = load("picks", []);
 let SAVED = load("saved", []); // pieces you kept: full idea + when
+let LIKED = load("liked", null); // real pieces you swiped right on (newest first), so they can be shown again
 const S = {screen:"start", prev:"start", round:{votes:[]}, current:null, picked:null, sheet:false, modal:null, toast:null, busy:false,
   // AI: ideas waiting to be shown, the request in flight, what the AI has learned this round
   queue:[], fetching:null, gen:0, aiErr:null, aiInsight:"", anchor:null, sampleRound:false, checking:false,
@@ -444,7 +451,15 @@ const aiRound = () => aiOn() && !S.sampleRound;
 const attrsOf = (i) => [["type",i.type],["fit",i.fit],["fabric",i.fabric],["colour",i.colour],["vibe",i.vibe],["brand",i.brand],["kind",i.kind]].filter((a) => a[1]).concat((i.styles || []).map((s) => ["style",s]));
 const akey = (a) => a[0] + ":" + a[1];
 
+function keepLiked(idea, on){
+  if (!LIKED) LIKED = [];
+  LIKED = LIKED.filter((x) => x.id !== idea.id);
+  if (on) LIKED.unshift(Object.assign({}, idea, {likedAt:Date.now()}));
+  if (LIKED.length > 200) LIKED = LIKED.slice(0, 200);
+  save("liked", LIKED);
+}
 function recordVote(idea, v, f, src){
+  if (isProduct(idea) && (v === "like" || v === "love")) keepLiked(idea, true);
   if (VAL[v]) for (const a of attrsOf(idea)){ const k = akey(a); TASTE.w[k] = (TASTE.w[k] || 0) + VAL[v] * f; }
   const rec = {id:idea.id, title:idea.title, tint:idea.tint, v, f, src, at:Date.now()};
   TASTE.votes.push(rec);
@@ -466,7 +481,7 @@ function toggleSave(i){
   SAVED.push(Object.assign({}, i, {savedAt:Date.now()}));
   if (SAVED.length > 200) SAVED = SAVED.slice(-200);
   applySave(i, 1);
-  save("saved", SAVED); toast("Saved · it's under the bookmark at the top");
+  save("saved", SAVED); toast("Saved · under the bookmark at the top");
 }
 function undoVote(rec){
   const i = TASTE.votes.lastIndexOf(rec);
@@ -478,10 +493,11 @@ function undoVote(rec){
   }
   TASTE.votes.splice(i, 1);
   save("taste", TASTE);
+  if (idea && (rec.v === "like" || rec.v === "love") && !TASTE.votes.some((x) => x.id === rec.id && (x.v === "like" || x.v === "love"))) keepLiked(idea, false);
   return true;
 }
 
-const STOP = new Set("the and for with that this something some over under into onto from about like want need looking look just very really also have has had are was were will would could should can lot lots bit maybe kind sort thing things wear wearing throw".split(" "));
+const STOP = new Set("the and for with that this something some over under into onto from about like want need looking look just very really also have has had are was were will would could should can lot lots bit maybe kind sort thing things wear wearing throw style styles vibe vibes take version brand brands".split(" "));
 const NEG = new Set(["not","no","nothing","without","avoid","never","hate","dont","don't","isnt","isn't","less"]);
 function textSignals(text){
   const toks = String(text || "").toLowerCase().replace(/[^a-z'\s-]/g, " ").split(/\s+/).filter(Boolean);
@@ -497,12 +513,41 @@ function textSignals(text){
 function hay(i){ return [i.title, i.desc, i.type, i.fit, i.fabric, i.colour, i.vibe, i.brand, i.kind].concat(i.styles || []).filter(Boolean).join(" ").toLowerCase(); }
 // What you asked for on the start screen (type, styles) is never held against an idea.
 const asked = (kind, v) => (kind === "style" && Q.styles.includes(v)) || (kind === "type" && v === Q.type);
+// Long-term taste, fairly: something counts for you when you liked pieces with it more often than you like
+// pieces in general, and against you when you seldom did. Before 1.3 every "not now" pushed against everything
+// in the piece, so the most common things (cotton, relaxed fit, the smart-casual you asked for) piled up
+// against you just because most pieces have them. Saved pieces count as liked; each piece counts once.
+let TM = null, TM_KEY = "";
+function tasteModel(){
+  const last = TASTE.votes[TASTE.votes.length - 1];
+  const key = TASTE.votes.length + ":" + (last ? last.at + last.v : "") + ":" + SAVED.length + ":" + (SAVED.length ? SAVED[SAVED.length - 1].id : "");
+  if (TM && TM_KEY === key) return TM;
+  const n = {}, l = {}, done = new Set();
+  let N = 0, L = 0;
+  const add = (i, liked) => { N++; L += liked; for (const a of attrsOf(i)){ const k = akey(a); n[k] = (n[k] || 0) + 1; l[k] = (l[k] || 0) + liked; } };
+  for (let j = TASTE.votes.length - 1; j >= 0; j--){
+    const v = TASTE.votes[j];
+    if (done.has(v.id)) continue; // the newest answer about a piece is the one that counts
+    done.add(v.id);
+    const i = byId(v.id);
+    if (i) add(i, v.v === "like" || v.v === "love" || isSaved(v.id) ? 1 : 0);
+  }
+  for (const x of SAVED) if (!done.has(x.id)){ done.add(x.id); add(x, 1); }
+  const p = N ? L / N : 0.25, A = 4, pref = {};
+  for (const k in n) pref[k] = {v:(l[k] + A * p) / (n[k] + A) - p, n:n[k], l:l[k]};
+  TM = {p, pref, N, L}; TM_KEY = key;
+  return TM;
+}
 function score(i, sig, steady){
   let s = 0;
+  const tm = tasteModel();
   for (const a of attrsOf(i)){
-    let w = TASTE.w[akey(a)] || 0;
+    if (a[0] === "type") continue; // you chose the type
+    const t = tm.pref[akey(a)];
+    if (!t) continue;
+    let w = t.v * 6;
     if (w < 0 && asked(a[0], a[1])) w = 0;
-    s += w * (a[0] === "type" ? 0.3 : 1);
+    s += w;
   }
   for (const st of Q.styles) if (i.styles.includes(st)) s += 3;
   const h = hay(i);
@@ -573,8 +618,9 @@ function tasteLists(){
   for (const v of TASTE.votes){ const i = byId(v.id); if (!i) continue; if (v.v === "like" || v.v === "love") count(i, yes); else if (v.v === "later" || v.v === "hate") count(i, no); }
   for (const x of SAVED) count(x, yes);
   const usable = (k) => { const ix = k.indexOf(":"); return !k.startsWith("type:") && !asked(k.slice(0, ix), k.slice(ix + 1)); };
+  const pref = tasteModel().pref;
   return {
-    pos: Object.entries(TASTE.w).filter(([k, w]) => w >= 2 && !k.startsWith("type:")).sort((a, b) => b[1] - a[1]).slice(0, 6).map((e) => e[0]),
+    pos: Object.entries(pref).filter(([k, t]) => t.l >= 2 && t.v >= 0.1 && !k.startsWith("type:")).sort((a, b) => b[1].v - a[1].v).slice(0, 6).map((e) => e[0]),
     neg: Object.entries(no).filter(([k, n]) => n >= 4 && !yes[k] && usable(k)).sort((a, b) => b[1] - a[1]).slice(0, 6).map((e) => e[0]),
   };
 }
@@ -758,10 +804,39 @@ async function loadCatalog(){
 
 // What the brief asks for, as store styles: the chips, and brands or words in your own text.
 const STYLE_TAGS = {"Relaxed":["relaxed"], "Minimal":["minimal"], "Smart-casual":["smart","classic","tailored"], "Streetwear":["streetwear","youthful"], "Vintage":["vintage","workwear"], "Sporty":["sporty","surf"]};
+// Brands in your own words. The catalog doesn't carry them, so each is read as what it looks like: the
+// stores that fit (by their style tags), words to look for in a piece, and words and store styles to avoid.
+// This works on the phone at once, with or without the AI.
+const BRAND_READS = [
+  {re:/ralph\s*lauren|polo\s+ralph|\brrl\b|\bralph\b|\blauren\b/i, name:"Ralph Lauren", stores:["J.Press","Rowing Blazers","Grayers"], tags:["preppy","classic"], words:["oxford","button down","button-down","polo","rugby","madras","cable","chambray","seersucker","stripe","navy","cricket"], avoid:["graphic","snap","western","tech","utility","camo","fleece"], notTags:["streetwear","surf"]},
+  {re:/club\s*monaco/i, name:"Club Monaco", stores:["Club Monaco"], tags:["smart","minimal","classic","tailored"], words:["poplin","linen","merino","knit polo","oxford","stripe","camp collar","ecru","stone","navy","white","cotton-linen"], avoid:["graphic","western","snap","flannel","camo","fleece","tie-dye"], notTags:["streetwear","rugged","surf"]},
+  {re:/j\.?\s*crew|jcrew/i, name:"J.Crew", stores:["Alex Mill","Grayers"], tags:["classic","preppy","relaxed"], words:["oxford","chambray","gingham","garment-dyed","broken-in","stripe","button down","button-down","pocket","flannel","corduroy"], avoid:["graphic","tech","snap"], notTags:["streetwear"]},
+  {re:/j\.?\s*press|\bivy\b/i, name:"J.Press", stores:["J.Press"], tags:["preppy","classic","tailored"], words:["oxford","button down","button-down","shetland","tweed","madras","seersucker","stripe","flannel"], avoid:["graphic","tech","snap"], notTags:["streetwear","surf"]},
+  {re:/brooks\s*brothers/i, name:"Brooks Brothers", stores:["J.Press","Kamakura Shirts"], tags:["preppy","classic","tailored"], words:["oxford","button down","button-down","poplin","stripe","polo","cable","non-iron"], avoid:["graphic","snap","fleece"], notTags:["streetwear","surf"]},
+  {re:/banana\s*republic/i, name:"Banana Republic", stores:["Club Monaco"], tags:["smart","minimal","classic"], words:["linen","poplin","merino","knit polo","oxford","camp collar"], avoid:["graphic","snap"], notTags:["streetwear","rugged"]},
+  {re:/todd\s*snyder/i, name:"Todd Snyder", stores:["Todd Snyder"], tags:["classic","tailored","preppy"], words:["oxford","knit polo","cashmere","suede"], avoid:["graphic"], notTags:[]},
+  {re:/aim[eé]\s*leon\s*dore|\bald\b/i, name:"Aimé Leon Dore", stores:["Aimé Leon Dore"], tags:["preppy","youthful"], words:["rugby","knit polo","cable","varsity","fair isle","stripe"], avoid:["tech"], notTags:[]},
+  {re:/uniqlo|\bcos\b|everlane|arket|muji/i, name:"COS / Uniqlo", stores:["Sunspel"], tags:["minimal"], words:["oxford","poplin","linen","merino","relaxed","boxy"], avoid:["graphic","print","logo"], notTags:["streetwear","vintage"]},
+  {re:/massimo\s*dutti|\bzara\b|mango/i, name:"Massimo Dutti", stores:["Club Monaco"], tags:["smart","minimal"], words:["linen","poplin","overshirt","knit polo","suede","merino"], avoid:["graphic"], notTags:["streetwear","rugged"]},
+  {re:/old money|quiet luxury|\bloro\b|brunello|cucinelli/i, name:"quiet luxury", stores:["Colhay's","Sunspel","Private White V.C."], tags:["luxe","classic","smart"], words:["cashmere","linen","knit polo","merino","suede","cream","camel"], avoid:["graphic","logo","camo"], notTags:["streetwear"]},
+];
+const COLOURISH = /^(navy|white|ecru|stone|cream|camel|black|grey|blue|olive)$/;
+function briefRead(){
+  const text = Q.text || "";
+  if (S.brief && S.brief.text === text) return S.brief;
+  const out = {text, brands:[], words:[], avoid:[], tags:{}, notTags:{}, stores:{}};
+  for (const b of BRAND_READS) if (b.re.test(text)){
+    out.brands.push(b.name);
+    (b.stores || []).forEach((st, k) => { out.stores[st] = Math.max(out.stores[st] || 0, k ? 1.5 : 3); });
+    for (const t of b.tags) out.tags[t] = (out.tags[t] || 0) + 2.5;
+    for (const t of b.notTags) out.notTags[t] = (out.notTags[t] || 0) + 1.5;
+    out.words.push(...b.words); out.avoid.push(...b.avoid);
+  }
+  out.words = uniq(out.words); out.avoid = uniq(out.avoid).filter((w) => !out.words.includes(w));
+  return (S.brief = out);
+}
 const TEXT_TAGS = [
-  [/ralph\s*lauren|\bpolo\s+ralph|\brl\b|preppy|ivy|old money/i, ["preppy","classic"]],
-  [/j\.?\s*crew|jcrew/i, ["classic","relaxed","preppy"]],
-  [/aim[eé]\s*leon\s*dore|\bald\b/i, ["preppy","youthful","streetwear"]],
+  [/preppy|ivy|old money|nantucket|hamptons/i, ["preppy","classic"]],
   [/younger|young|youthful|modern|fresh/i, ["youthful"]],
   [/workwear|rugged|carhartt/i, ["workwear","rugged"]],
   [/minimal|clean|\bcos\b|uniqlo/i, ["minimal"]],
@@ -771,7 +846,7 @@ const TEXT_TAGS = [
   [/luxur|quiet luxury|loro|brunello/i, ["luxe"]],
 ];
 function briefTags(){
-  const t = {};
+  const t = Object.assign({}, briefRead().tags);
   for (const s of Q.styles || []) for (const x of STYLE_TAGS[s] || []) t[x] = (t[x] || 0) + 1;
   for (const [re, xs] of TEXT_TAGS) if (re.test(Q.text || "")) for (const x of xs) t[x] = (t[x] || 0) + 2;
   return t;
@@ -786,8 +861,14 @@ function fitScore(p, ctx){
   if (PREFS.shipIL && p.ships === false) return -Infinity;
   const b = BUDGETS_ILS[PREFS.budget];
   if (b && (ils(p) < b[0] || ils(p) > b[1])) return -Infinity;
-  const hay = (p.title + " " + p.ptype + " " + p.tags.join(" ") + " " + p.kind).toLowerCase();
-  let s = p.storeTags.reduce((a, t) => a + (ctx.tags[t] || 0), 0) * 1.2;
+  const hay = (p.title + " " + p.ptype + " " + p.tags.join(" ") + " " + p.kind + " " + (p.fabric || "")).toLowerCase();
+  let s = p.storeTags.reduce((a, t) => a + (ctx.tags[t] || 0) - (ctx.brief.notTags[t] || 0), 0) * 1.2;
+  s += Math.max(ctx.brief.stores[p.store] || 0, ctx.named.has(p.store) ? 3 : 0); // a store you named, or one that fits a brand you named
+  // Words from the brands you named: up to three count, each one is shown on the card as the reason.
+  const hit = ctx.brief.words.filter((w) => hay.includes(w));
+  s += Math.min(3, hit.length) * 2.5;
+  for (const w of ctx.brief.avoid) if (hay.includes(w)) s -= 3;
+  p._hit = hit;
   for (const w of ctx.sig.pos) if (hay.includes(w)) s += 2;
   for (const w of ctx.sig.neg) if (hay.includes(w)) s -= 4;
   for (const w of S.aiKeys || []) if (hay.includes(w)) s += 2.5;
@@ -805,7 +886,9 @@ function refill(){
   // Keep the card on deck and any "more like" pieces from a heart; re-rank everything else.
   const keep = S.queue.slice(0, ON_DECK).concat(S.queue.slice(ON_DECK).filter((i) => i._boost === 10));
   const ids = new Set(S.round.votes.map((v) => v.id).concat(keep.map((i) => i.id), S.current ? [S.current.id] : []));
-  const ctx = {tags:briefTags(), sig:textSignals(Q.text), recent:new Date(Date.now() - 120 * 864e5).toISOString().slice(0, 10)};
+  const norm = (x) => String(x || "").toLowerCase().replace(/[^a-z0-9]/g, ""), said = norm(Q.text);
+  const named = new Set(((CAT.stores && CAT.stores.stores) || []).map((x) => x.name).filter((n) => norm(n).length > 3 && said.includes(norm(n))));
+  const ctx = {tags:briefTags(), brief:briefRead(), named, sig:textSignals(Q.text), recent:new Date(Date.now() - 120 * 864e5).toISOString().slice(0, 10)};
   // Never the same piece twice in a search, in any colour.
   const seenK = new Set(S.round.votes.map(seenKey).concat(keep.map(pieceKey), S.current ? [pieceKey(S.current)] : []));
   const cands = [];
@@ -835,7 +918,21 @@ function refill(){
     perStore[chosen.store] = (perStore[chosen.store] || 0) + 1;
     out.push(chosen);
   }
-  S.queue = keep.concat(out.map((p) => Object.assign(p, {_boost:0, why:p.kind})));
+  // The reason on each card: the words from your brief it matched ("Like Ralph Lauren: oxford, stripe"), or its kind.
+  const br = ctx.brief, ai = S.aiKeys || [];
+  const reason = (p) => {
+    const hay = (p.title + " " + p.ptype + " " + p.tags.join(" ") + " " + p.kind + " " + (p.fabric || "")).toLowerCase();
+    // Things (oxford, polo, linen) before colours; credited to the brand you named that they come from.
+    const mine = (p._hit || []).filter((w) => !(p._hit || []).some((x) => x !== w && x.includes(w))).sort((a, b) => COLOURISH.test(a) - COLOURISH.test(b)).slice(0, 2);
+    if (mine.length){ const b = BRAND_READS.find((x) => br.brands.includes(x.name) && x.words.includes(mine[0])); return (b ? "Like " + b.name + ": " : "You asked: ") + mine.join(", "); }
+    if (ctx.named.has(p.store)) return "You named " + p.store + " · " + p.kind;
+    const bs = BRAND_READS.find((x) => br.brands.includes(x.name) && (x.stores || []).includes(p.store));
+    if (bs) return "Like " + bs.name + " · " + p.kind;
+    const fromAi = ai.filter((w) => hay.includes(w)).slice(0, 2);
+    if (fromAi.length && Q.text) return "From your words: " + fromAi.join(", ");
+    return p.kind;
+  };
+  S.queue = keep.concat(out.map((p) => Object.assign(p, {_boost:0, why:reason(p)})));
   preloadAhead();
 }
 
@@ -1397,14 +1494,19 @@ function savedImg(p, w){
   if (isProduct(p)) return u ? `<img src="${esc(sized(u, w))}" alt="" loading="lazy" onerror="this.remove()">` : ICON.image;
   return ICON.image + thumbImg(p.id);
 }
+function likedList(){ return (LIKED || []).filter((x) => isProduct(x)); }
 function renderSaved(){
-  const list = SAVED.slice().reverse(), n = list.length;
+  const liked = likedList(), tab = S.savedTab || (SAVED.length || !liked.length ? "saved" : "liked");
+  const list = tab === "liked" ? liked : SAVED.slice().reverse(), n = list.length;
+  const tabBtn = (id, label, count) => `<button type="button" class="seg-btn" role="tab" data-act="saved-tab" data-v="${id}" aria-selected="${tab === id}">${label} <span class="seg-n">${count}</span></button>`;
+  const empty = tab === "liked"
+    ? `<section class="card"><h2>No hearts yet</h2><p>Every piece you swipe right on ("getting closer") lands here, with its photos and details, so you can come back to it.</p></section>`
+    : `<section class="card"><h2>Nothing saved yet</h2><p>Tap Save on anything you'd like to keep. Saved pieces stay here and count the most for your next searches. Pieces you swiped right on are under Liked.</p></section>`;
   return `<main class="screen">
-    <header class="top"><button type="button" class="icon-btn" data-act="saved-back" aria-label="Back">${ICON.back}</button><span class="meta">Saved</span>${hbtns(true)}</header>
-    <div style="display:flex;flex-direction:column;gap:6px"><h1 class="h1" style="font-size:32px">Saved</h1><span class="mono-label">${n} piece${n === 1 ? "" : "s"} · they help your next searches</span></div>
-    ${n ? `<ul class="sv-grid">${list.map((p) => `<li><button type="button" class="sv-card" data-act="open-saved" data-v="${esc(p.id)}"><span class="sv-ph" style="background:${esc(isProduct(p) ? "#fff" : p.tint)}">${savedImg(p, 500)}</span><span class="sv-t">${esc(p.title)}</span><span class="sv-s">${isProduct(p) ? priceHtml(p) + " · " + esc(p.store) : esc([p.colour, p.fabric].filter(Boolean).join(" · ") || "Idea")}</span></button></li>`).join("")}</ul>`
-      : `<section class="card"><h2>Nothing saved yet</h2><p>While you swipe, tap Save on anything you'd like to come back to. It lands here with all its photos and details, and it helps your next searches.</p></section>
-      <div class="bottom"><button type="button" class="cta" data-act="home">Start a search ${ICON.arrow}</button></div>`}
+    <header class="top"><button type="button" class="icon-btn" data-act="saved-back" aria-label="Back">${ICON.back}</button><span class="meta">Your pieces</span>${hbtns(true)}</header>
+    <div class="seg" role="tablist" aria-label="Your pieces">${tabBtn("saved", "Saved", SAVED.length)}${tabBtn("liked", "Liked", liked.length)}</div>
+    ${n ? `<ul class="sv-grid">${list.map((p) => `<li><button type="button" class="sv-card" data-act="open-saved" data-v="${esc(p.id)}"><span class="sv-ph" style="background:${esc(isProduct(p) ? "#fff" : p.tint)}">${savedImg(p, 500)}${tab === "liked" && isSaved(p.id) ? `<span class="sv-flag" aria-label="Saved">${ICON.marked}</span>` : ""}</span><span class="sv-t">${esc(p.title)}</span><span class="sv-s">${isProduct(p) ? priceHtml(p) + " · " + esc(p.store) : esc([p.colour, p.fabric].filter(Boolean).join(" · ") || "Idea")}</span></button></li>`).join("")}</ul>`
+      : empty + `<div class="bottom"><button type="button" class="cta" data-act="home">Start a search ${ICON.arrow}</button></div>`}
   </main>`;
 }
 
@@ -1779,7 +1881,8 @@ const ACTIONS = {
   pick(){ pickCurrent(); },
   save(){ toggleSave(S.current); render(); },
   "unsave"(el){ const i = SAVED.find((x) => x.id === el.dataset.v); if (i) toggleSave(i); render(); },
-  "open-saved"(el){ const i = SAVED.find((x) => x.id === el.dataset.v); if (i) openDetail(i, "saved"); },
+  "open-saved"(el){ const i = SAVED.find((x) => x.id === el.dataset.v) || likedList().find((x) => x.id === el.dataset.v); if (i) openDetail(i, "saved"); },
+  "saved-tab"(el){ S.savedTab = el.dataset.v; render(); },
   // Going to the store counts as a pick (and, for the card on screen, as a "this is it").
   "open-product"(){
     const i = (S.detail && S.detail.item) || S.current;
@@ -1894,8 +1997,8 @@ function askBtn(){
   return `<button type="button" id="askFab" class="icon-btn ask-btn${askState === "ready" ? " ready" : ""}" data-act="ask-report" data-report-ui="1" aria-label="${askState === "ready" ? "Tap again to send" : "Send this screen to Claude"}">${label}</button>`;
 }
 function savedBtn(){
-  const n = SAVED.length;
-  return `<button type="button" class="icon-btn" data-act="saved" aria-label="Saved pieces${n ? " (" + n + ")" : ""}">${ICON.mark}${n ? `<span class="badge" aria-hidden="true">${n > 99 ? "99+" : n}</span>` : ""}</button>`;
+  const n = SAVED.length + likedList().filter((x) => !isSaved(x.id)).length;
+  return `<button type="button" class="icon-btn" data-act="saved" aria-label="Saved and liked pieces${n ? " (" + n + ")" : ""}">${ICON.mark}${n ? `<span class="badge" aria-hidden="true">${n > 99 ? "99+" : n}</span>` : ""}</button>`;
 }
 // Explore: report + saved. Start: all three. Saved: report + taste. Taste: report.
 function hbtns(withProfile){
@@ -1968,6 +2071,8 @@ function askSnapshot(){
   if (S.diag) L.push(`AI check: ${JSON.stringify(S.diag)}`);
   L.push(`last photo error: ${S.imgErr || "none"}`);
   L.push(`\nSEARCH: type=${Q.type || "-"}  styles=${(Q.styles || []).join(", ") || "-"}  text="${Q.text || ""}"`);
+  try{ const b = briefRead(); L.push(`YOUR WORDS READ AS: brands ${b.brands.join(", ") || "-"}; look for ${b.words.join(", ") || "-"}; avoid ${b.avoid.join(", ") || "-"}; store styles +${Object.keys(b.tags).join("/") || "-"} -${Object.keys(b.notTags).join("/") || "-"}; stores ${Object.keys(b.stores).join(", ") || "-"}`); }catch(e){}
+  L.push(`LIKED: ${likedList().slice(0, 8).map((x) => x.title).join("; ") || "-"}`);
   L.push(`PREFS: ${JSON.stringify(PREFS)}`);
   L.push(`\nON SCREEN: ${row(S.current)}`);
   if (S.current) L.push(`  why: "${S.current.why || ""}"   search: "${S.current.search || ""}"   photo ${curPh() + 1} of ${photosOf(S.current).length}`);
@@ -2088,6 +2193,12 @@ function rebuildTaste(){
   save("taste", TASTE);
 }
 if (TASTE.ver !== 2) rebuildTaste();
+if (!LIKED){
+  LIKED = [];
+  const done = new Set();
+  for (let j = TASTE.votes.length - 1; j >= 0; j--){ const v = TASTE.votes[j]; if (done.has(v.id)) continue; done.add(v.id); const i = AIDB[v.id] || SAVED.find((x) => x.id === v.id); if (i && isProduct(i) && (v.v === "like" || v.v === "love")) LIKED.push(Object.assign({}, i, {likedAt:v.at})); }
+  save("liked", LIKED);
+}
 restoreSession();
 render();
 afterUpdate();

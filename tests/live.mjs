@@ -12,7 +12,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const R = { started: new Date().toISOString(), worker: WORKER, log: [] };
 const log = (...a) => { const line = a.map((x) => (typeof x === "string" ? x : JSON.stringify(x))).join(" "); console.log(line); R.log.push(line); };
 const save = () => fs.writeFileSync(path.join(OUT, "summary.json"), JSON.stringify(R, null, 2));
-const BRIEF = { type: "Shirts", styles: ["Smart-casual"], text: "Ralph Lauren style, j crew" };
+const BRIEF = { type: "Shirts", styles: ["Smart-casual"], text: "Ralph Lauren, Club Monaco and J.Crew style" };
 
 // A short-lived GitHub token for this repo; the worker accepts it in place of the access code.
 async function token() {
@@ -191,6 +191,9 @@ try {
       await page.click('header [data-act="saved"]'); await page.waitForTimeout(1500);
       g.saved = await page.evaluate(() => ({ screen: S.screen, cards: document.querySelectorAll(".sv-card").length, photos: [...document.querySelectorAll(".sv-card img")].filter((i) => i.complete && i.naturalWidth > 0).length }));
       await page.screenshot({ path: path.join(OUT, "saved.png") });
+      await page.click('[data-act="saved-tab"][data-v="liked"]'); await page.waitForTimeout(1200);
+      g.liked = await page.evaluate(() => ({ cards: [...document.querySelectorAll(".sv-card .sv-t")].map((e) => e.innerText), hearted: S.round.votes.filter((v) => v.v === "like").map((v) => v.title) }));
+      await page.screenshot({ path: path.join(OUT, "liked.png") });
       await page.click('[data-act="saved-back"]'); await page.waitForTimeout(400);
     } catch (e) { g.error = String((e && e.message) || e); await page.screenshot({ path: path.join(OUT, "gallery-error.png") }).catch(() => {}); }
     log("gallery & details", g);
@@ -220,6 +223,7 @@ const md = [
   `App photos: ${imgs.length} requests; ${imgs.filter((r) => r.status === 200).length} ok; models ${[...new Set(imgs.map((r) => r.model))].join(",")}; median card photo wait ${photoMs.length ? photoMs.sort((x, y) => x - y)[Math.floor(photoMs.length / 2)] + "ms" : "-"}`,
   `Cards (waited = from the previous swipe until the card was there; photo = until its photo was there):`, ...(a.cards || []).map((c) => `  ${c.n}. ${c.title} — ${c.brand || ""} at ${c.store || ""} ${c.price || ""} ${c.currency || ""} — why: ${c.why || ""} — waited ${c.waitedMs}ms — photo ${c.photoMs == null ? "FAILED " + c.photoError : c.photoMs + "ms"} — ${c.swipe}${c.boost === 10 ? " (heart variation)" : ""}`),
   `Same piece twice (any colour): ${a.samePiece && a.samePiece.length ? a.samePiece.join("; ") : "never"}`,
+  `Cards that show what in your words they match: ${(a.cards || []).filter((c) => /^(Like |You asked|You named|From your words)/.test(c.why || "")).length} of ${(a.cards || []).length}`,
   `Gallery, details, zoom, saved: ${JSON.stringify(a.gallery || null)}`,
   `Errors: ${(a.errors || []).join(" | ") || "none"}`,
   a.stuck ? `STUCK at start: ${JSON.stringify(a.stuck)}` : "",
