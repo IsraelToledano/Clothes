@@ -56,8 +56,31 @@ const FABRICS = ["oxford", "poplin", "linen", "seersucker", "chambray", "denim",
 const COLOURS = ["navy", "light blue", "sky blue", "blue", "white", "ecru", "cream", "ivory", "bone", "oatmeal", "oat", "sand", "stone", "khaki", "tan", "camel", "brown", "chocolate", "olive", "forest", "green", "sage", "mint", "teal", "grey", "gray", "charcoal", "black", "red", "burgundy", "wine", "pink", "rose", "coral", "orange", "rust", "yellow", "mustard", "gold", "purple", "lavender", "indigo"];
 const findWord = (list, s) => { const t = String(s).toLowerCase(); for (const w of list) if (new RegExp("\\b" + w + "\\b").test(t)) return w; return ""; };
 const cap = (s) => (s ? s.replace(/\b\w/g, (c) => c.toUpperCase()) : "");
-const sized = (u, w) => { if (!u) return ""; u = String(u).startsWith("//") ? "https:" + u : String(u); return u + (u.includes("?") ? "&" : "?") + "width=" + w; };
 const clean = (s) => String(s || "").replace(/\s+/g, " ").trim();
+const MAX_IMG = 8, DETAIL_CHUNKS = 128;
+// A store's photo address without the size (the app asks for the size it needs).
+const imgUrl = (u) => { u = String(u || ""); if (u.startsWith("//")) u = "https:" + u; return u.replace(/([?&])width=\d+&?/, "$1").replace(/[?&]$/, ""); };
+// The folder most of a store's photos live in; each photo is saved without it (it's in stores.json once).
+function prefixOf(urls){
+  const c = {}; let best = "", n = 0;
+  for (const u of urls){ const i = u.lastIndexOf("/"); if (i > 8){ const p = u.slice(0, i + 1); c[p] = (c[p] || 0) + 1; if (c[p] > n){ n = c[p]; best = p; } } }
+  return best;
+}
+// The store's description as plain text: bullet points kept, markup and boilerplate dropped.
+const ENT = {amp:"&", nbsp:" ", quot:'"', apos:"'", lt:"<", gt:">", rsquo:"’", lsquo:"‘", rdquo:"”", ldquo:"“", ndash:"–", mdash:"—", hellip:"…", deg:"°", reg:"®", trade:"™", copy:"©", eacute:"é", egrave:"è", times:"×", frac12:"½", bull:"•", middot:"·"};
+function textOf(html){
+  let s = String(html || "");
+  s = s.replace(/<(script|style|table|iframe)[\s\S]*?<\/\1>/gi, " ");
+  s = s.replace(/<li[^>]*>/gi, "\n• ").replace(/<br\s*\/?>/gi, "\n").replace(/<\/(p|div|h\d|li|ul|ol|tr|section)>/gi, "\n");
+  s = s.replace(/<[^>]+>/g, " ");
+  s = s.replace(/&(#x?[0-9a-f]+|[a-z]+\d*);/gi, (m, e) => e[0] === "#" ? String.fromCodePoint(e[1].toLowerCase() === "x" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10)) : (ENT[e.toLowerCase()] ?? m));
+  const lines = s.split("\n").map((l) => l.replace(/[ \t\u00a0]+/g, " ").trim()).filter((l) => l && l !== "•" && !/^(free shipping|free returns|shipping|returns?|size guide|model is|click here|see size|need help)/i.test(l.replace(/^•\s*/, "")));
+  let out = "";
+  for (const l of lines){ if ((out + "\n" + l).length > 1200) break; out += (out ? "\n" : "") + l; }
+  if (!out && lines.length) out = lines[0].slice(0, 1200);
+  return out;
+}
+const tagValue = (tags, re) => { for (const t of tags){ const m = re.exec(t); if (m) return clean(m[1]); } return ""; };
 
 async function getJSON(url) {
   for (let attempt = 0; attempt < 3; attempt++) {
@@ -69,9 +92,9 @@ async function getJSON(url) {
   throw new Error("gave up after retries");
 }
 
-const byType = {}, report = [];
+const byType = {}, report = [], details = Array.from({ length: DETAIL_CHUNKS }, () => ({}));
 for (const [si, s] of STORES.entries()) {
-  const t0 = Date.now(), rep = { store: s.d, pages: 0, raw: 0, kept: 0 };
+  const t0 = Date.now(), rep = { store: s.d, pages: 0, raw: 0, kept: 0 }, mine = [];
   try {
     const meta = await getJSON(`https://${s.d}/meta.json`).catch(() => null);
     s.cur = (meta && meta.currency) || "USD";
@@ -84,34 +107,64 @@ for (const [si, s] of STORES.entries()) {
         const title = clean(p.title), ptype = clean(p.product_type), tags = (Array.isArray(p.tags) ? p.tags : String(p.tags || "").split(",")).map((x) => clean(x).toLowerCase()).filter(Boolean);
         const hay = [title, ptype, tags.join(" ")].join(" ");
         if (NOT_HIS.test(hay) || NOT_CLOTHES.test(title + " " + ptype)) continue;
-        const variants = (p.variants || []).filter((v) => v.available !== false);
+        const all = p.variants || [], variants = all.filter((v) => v.available !== false);
         if (!variants.length) continue;
-        const imgs = (p.images || []).map((im) => im && im.src).filter(Boolean);
+        const imgs = [...new Set((p.images || []).map((im) => im && im.src).filter(Boolean).map(imgUrl))];
         if (!imgs.length) continue;
         const type = typeOf({ title, product_type: ptype });
         if (!type) continue;
-        const price = Math.min(...variants.map((v) => Number(v.price) || Infinity));
-        const sizes = [...new Set(variants.map((v) => clean(v.option1 || v.title)).filter((x) => x && x.length <= 6))].slice(0, 10);
-        (byType[type] = byType[type] || []).push({
-          id: "p-" + s.d.split(".")[0] + "-" + p.id, s: si, t: title, pt: ptype,
-          h: p.handle, p: Number.isFinite(price) ? price : 0,
-          im: imgs.slice(0, 3).map((u) => sized(u, 900)),
-          c: cap(findWord(COLOURS, title + " " + variants.map((v) => v.title).slice(0, 1).join(" "))), f: cap(findWord(FABRICS, title + " " + ptype + " " + tags.join(" "))),
+        // The cheapest piece in stock, and its full price when it's on sale.
+        const cheap = variants.reduce((a, v) => ((Number(v.price) || Infinity) < (Number(a.price) || Infinity) ? v : a), variants[0]);
+        const price = Number(cheap.price) || 0, was = Number(cheap.compare_at_price) || 0;
+        // Options: sizes (in stock and sold out), colours and the rest.
+        const opts = (p.options || []).map((o, k) => ({ name: clean(o.name || o), k, values: (Array.isArray(o.values) ? o.values : []).map(clean).filter(Boolean) }));
+        const sizeOpt = opts.find((o) => /^(size|waist|shoe size|us size|uk size|eu size)\b/i.test(o.name)) || opts.find((o) => /size/i.test(o.name));
+        const colourOpt = opts.find((o) => /colou?r/i.test(o.name));
+        const vo = (v, o) => clean(v["option" + (o.k + 1)]);
+        let sizes, soldOut = [];
+        if (sizeOpt){
+          const inStock = new Set(variants.map((v) => vo(v, sizeOpt)));
+          const order = sizeOpt.values.length ? sizeOpt.values : [...inStock];
+          sizes = order.filter((x) => inStock.has(x));
+          soldOut = order.filter((x) => !inStock.has(x));
+        } else sizes = [...new Set(variants.map((v) => clean(v.option1 || v.title)).filter((x) => x && x.length <= 6 && !/default/i.test(x)))];
+        const colour = (colourOpt && colourOpt.values.length === 1 && colourOpt.values[0]) || tagValue(tags, /^colou?r\s*[:_-]\s*(.+)$/) || findWord(COLOURS, title + " " + (variants[0].title || ""));
+        const fit = tagValue(tags, /^fit\s*[:_-]\s*(.+)$/);
+        const id = "p-" + s.d.split(".")[0] + "-" + p.id;
+        const item = {
+          id, s: si, t: title, pt: ptype,
+          h: p.handle, p: price,
+          im: imgs.slice(0, MAX_IMG),
+          c: cap(colour.length <= 24 ? colour : ""), f: cap(findWord(FABRICS, title + " " + ptype + " " + tags.join(" "))),
           tg: tags.filter((x) => x.length <= 24 && !/^(sale|new|yotpo|size|_|filter|price|gid:)/.test(x)).slice(0, 12),
-          sz: sizes, d: String(p.published_at || p.created_at || "").slice(0, 10),
-        });
+          sz: sizes.slice(0, 16), d: String(p.published_at || p.created_at || "").slice(0, 10),
+        };
+        if (was > price) item.cp = was;
+        if (fit && fit.length <= 20) item.ft = cap(fit);
+        (byType[type] = byType[type] || []).push(item);
+        mine.push(item);
+        // The longer details (opened from a card) go in small files the app loads only when you open one.
+        const more = { d: textOf(p.body_html) };
+        const other = opts.filter((o) => o !== sizeOpt && o.values.length > 1 && !/^title$/i.test(o.name)).map((o) => [o.name, o.values.slice(0, 12)]);
+        if (other.length) more.o = other;
+        if (soldOut.length) more.so = soldOut.slice(0, 16);
+        if (p.vendor && clean(p.vendor).toLowerCase() !== s.name.toLowerCase() && !/\.(com|co|nyc)/i.test(p.vendor)) more.v = clean(p.vendor);
+        details[Number(p.id) % DETAIL_CHUNKS][id] = more;
         rep.kept++;
       }
       if (list.length < 250) break;
       await sleep(800);
     }
   } catch (e) { rep.error = String(e.message || e); }
+  // Save each photo without the store's common folder.
+  s.ip = prefixOf(mine.flatMap((x) => x.im));
+  if (s.ip) for (const x of mine) x.im = x.im.map((u) => (u.startsWith(s.ip) ? u.slice(s.ip.length) : u));
   rep.ms = Date.now() - t0;
   report.push(rep);
   console.log(JSON.stringify(rep));
 }
 
-const stores = STORES.map((s) => ({ d: s.d, name: s.name, tags: s.tags, cur: s.cur || "USD", il: s.il }));
+const stores = STORES.map((s) => ({ d: s.d, name: s.name, tags: s.tags, cur: s.cur || "USD", il: s.il, ip: s.ip || "" }));
 const counts = {};
 for (const [t, list] of Object.entries(byType)) {
   // newest first within each store keeps the catalog fresh-looking
@@ -119,5 +172,8 @@ for (const [t, list] of Object.entries(byType)) {
   fs.writeFileSync(path.join(OUT, t.toLowerCase().replace(/[^a-z]+/g, "-") + ".json"), JSON.stringify(list));
   counts[t] = list.length;
 }
-fs.writeFileSync(path.join(OUT, "stores.json"), JSON.stringify({ updated: new Date().toISOString(), stores, counts, report }, null, 1));
+fs.mkdirSync(path.join(OUT, "details"), { recursive: true });
+details.forEach((d, n) => fs.writeFileSync(path.join(OUT, "details", String(n).padStart(3, "0") + ".json"), JSON.stringify(d)));
+// format 2: photos relative to each store's "ip", up to 8 of them; details in details/NNN.json (product id mod 128)
+fs.writeFileSync(path.join(OUT, "stores.json"), JSON.stringify({ updated: new Date().toISOString(), format: 2, chunks: DETAIL_CHUNKS, stores, counts, report }, null, 1));
 console.log("counts", counts);

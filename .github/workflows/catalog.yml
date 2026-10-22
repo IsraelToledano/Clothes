@@ -3,6 +3,10 @@
 name: catalog
 on:
   workflow_dispatch:
+    inputs:
+      target:
+        description: "main publishes it with the app; preview only puts it on the catalog-preview branch, for checking"
+        default: main
   schedule:
     - cron: "17 2 * * *"
 permissions:
@@ -23,7 +27,15 @@ jobs:
           node-version: 22
       - name: Build the catalog
         run: node scripts/build-catalog.mjs
+      - name: Preview only (catalog-preview branch)
+        if: ${{ inputs.target == 'preview' }}
+        run: |
+          git config user.name "drape-catalog"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          mv catalog /tmp/catalog && git checkout -q --orphan catalog-preview && git rm -rqf . && mv /tmp/catalog catalog
+          git add catalog && git commit -qm "Catalog preview $(date -u +%Y-%m-%dT%H:%M)" && git push -qf origin catalog-preview
       - name: Publish it
+        if: ${{ inputs.target != 'preview' }}
         run: |
           git config user.name "drape-catalog"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
