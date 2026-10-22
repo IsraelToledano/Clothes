@@ -7,6 +7,12 @@ on:
       q:
         description: Search words
         default: oxford shirt
+      mode:
+        description: "suggest (live search) or catalog (/products.json for the daily catalog)"
+        default: suggest
+      stores:
+        description: Comma-separated store domains (empty = the built-in list)
+        default: ""
 permissions:
   contents: write
 jobs:
@@ -25,6 +31,8 @@ jobs:
         run: node tests/store-probe.mjs
         env:
           Q: ${{ inputs.q }}
+          MODE: ${{ inputs.mode }}
+          STORES: ${{ inputs.stores }}
         continue-on-error: true
       - name: Save results to the live-results branch
         if: always()
