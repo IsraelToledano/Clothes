@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-22T07:38:01.052Z",
+ "updated": "2026-10-22T15:08:08.617Z",
  "format": 2,
  "chunks": 128,
  "stores": [
@@ -228,14 +228,14 @@
   }
  ],
  "counts": {
-  "Knitwear": 1533,
-  "Shirts": 1858,
-  "Jackets": 1653,
-  "Trousers": 1238,
-  "T-shirts": 888,
-  "Shorts": 486,
-  "Overshirts": 182,
-  "Shoes": 853
+  "Knitwear": 1551,
+  "Shirts": 1865,
+  "Jackets": 1665,
+  "Trousers": 1237,
+  "T-shirts": 895,
+  "Shorts": 490,
+  "Overshirts": 185,
+  "Shoes": 858
  },
  "report": [
   {
@@ -243,126 +243,126 @@
    "pages": 4,
    "raw": 835,
    "kept": 401,
-   "ms": 3916
+   "ms": 4595
   },
   {
    "store": "alexmill.com",
    "pages": 4,
-   "raw": 901,
+   "raw": 902,
    "kept": 209,
-   "ms": 4711
+   "ms": 4827
   },
   {
    "store": "toddsnyder.com",
    "pages": 12,
    "raw": 3000,
-   "kept": 1475,
-   "ms": 15844
+   "kept": 1483,
+   "ms": 16412
   },
   {
    "store": "drakes.com",
-   "pages": 8,
-   "raw": 1973,
-   "kept": 860,
-   "ms": 12036
+   "pages": 9,
+   "raw": 2063,
+   "kept": 891,
+   "ms": 12383
   },
   {
    "store": "aimeleondore.com",
    "pages": 4,
-   "raw": 882,
-   "kept": 404,
-   "ms": 3479
+   "raw": 900,
+   "kept": 417,
+   "ms": 4294
   },
   {
    "store": "taylorstitch.com",
    "pages": 12,
    "raw": 3000,
    "kept": 420,
-   "ms": 14446
+   "ms": 15134
   },
   {
    "store": "noahny.com",
    "pages": 3,
-   "raw": 598,
-   "kept": 242,
-   "ms": 4018
+   "raw": 599,
+   "kept": 243,
+   "ms": 3533
   },
   {
    "store": "percivalclo.com",
    "pages": 4,
    "raw": 910,
-   "kept": 453,
-   "ms": 7743
+   "kept": 452,
+   "ms": 7596
   },
   {
    "store": "portugueseflannel.com",
-   "pages": 2,
-   "raw": 432,
-   "kept": 83,
-   "ms": 4108
+   "pages": 1,
+   "raw": 211,
+   "kept": 58,
+   "ms": 1171
   },
   {
    "store": "oliverspencer.co.uk",
-   "pages": 2,
-   "raw": 488,
-   "kept": 302,
-   "ms": 1817
+   "pages": 3,
+   "raw": 511,
+   "kept": 323,
+   "ms": 5192
   },
   {
    "store": "universalworks.co.uk",
    "pages": 6,
-   "raw": 1367,
-   "kept": 985,
-   "ms": 7286
+   "raw": 1352,
+   "kept": 989,
+   "ms": 8168
   },
   {
    "store": "kith.com",
    "pages": 12,
    "raw": 3000,
-   "kept": 1473,
-   "ms": 12371
+   "kept": 1476,
+   "ms": 16132
   },
   {
    "store": "corridornyc.com",
    "pages": 2,
    "raw": 486,
    "kept": 183,
-   "ms": 2148
+   "ms": 2426
   },
   {
    "store": "outerknown.com",
    "pages": 5,
    "raw": 1016,
    "kept": 220,
-   "ms": 4533
+   "ms": 5735
   },
   {
    "store": "howlerbros.com",
    "pages": 4,
    "raw": 855,
    "kept": 434,
-   "ms": 5028
+   "ms": 4601
   },
   {
    "store": "ledbury.com",
    "pages": 3,
    "raw": 713,
    "kept": 183,
-   "ms": 2510
+   "ms": 3594
   },
   {
    "store": "knickerbocker.nyc",
    "pages": 1,
    "raw": 116,
    "kept": 83,
-   "ms": 709
+   "ms": 863
   },
   {
    "store": "ironandresin.com",
    "pages": 3,
    "raw": 704,
    "kept": 281,
-   "ms": 4102
+   "ms": 3376
   }
  ]
 }
