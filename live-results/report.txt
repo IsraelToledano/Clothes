@@ -1,0 +1,24 @@
+app: 1.5.1   when: 2026-10-22T21:31:28.862Z
+screen: explore
+ua: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/130.0.6723.31 Safari/537.36
+ai: on   server: https://clothes.srul7022.workers.dev   health: {"ideas":true,"images":true,"version":"1.1.0","textModel":"gemma-4-26b-a4b-it","imageModel":"schnell for the first cards, klein after"}
+ai request: idle   last error: none   waiting ideas: 35
+server version: 1.1.0   (app expects 1.1.0 or newer)
+idea model: gemma (last reply)   server says: gemma-4-26b-a4b-it
+catalog: 25 stores, updated 2026-10-22T21:15:23.446Z, {"Shirts":2919,"Jackets":2252,"Trousers":1659,"Knitwear":2452,"T-shirts":1067,"Shorts":472,"Overshirts":230,"Shoes":853}   pool for this search: 853   AI words: -
+last photo error: none
+
+SEARCH: type=Shoes  styles=-  text="Quiet luxury style"
+YOUR WORDS READ AS: brands quiet luxury; look for cashmere, linen, knit polo, merino, suede, cream, camel; avoid graphic, logo, camo; store styles +luxe/classic/smart -streetwear; stores Colhay's, Sunspel, Private White V.C.
+LIKED: Made-in-USA White Oxford Cloth Short Sleeve Sport Shirt - Classic Fit; Made-in-USA White Oxford Club Collar Dress Shirt - Classic Fit
+PREFS: {"budget":"any","size":"M","shoe":"43","shipIL":true}
+
+ON SCREEN: New Balance ‘Luxury Leather’ Chocolate Plum and Caramel Made in UK 991v1 Trainers — Drake's at Drake's, £220 [Brown, Leather, Running sneakers] https://drakes.com/products/new-balance-luxury-leather-chocolate-plum-and-caramel-made-in-uk-991v1-trainers
+  why: "Running sneakers"   search: "New Balance ‘Luxury Leather’ Chocolate Plum and Caramel Made in UK 991v1 Trainers"   photo 1 of 6
+NEXT UP: Porto Low Profile Sneaker; Sabah Terro Suede Shoes; ALD / Last Resort AB VM001-LO Suede; Yuketen Brown Suede Ranchero Boots; TS & New Balance T500 Sneaker
+
+THIS ROUND (0 votes, oldest first):
+
+TASTE: more of: -   less of: -
+PICKS: -
+SAVED: Short Sleeve Button Down Oxford

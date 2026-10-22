@@ -1,0 +1,470 @@
+{
+  "started": "2026-10-22T21:30:51.633Z",
+  "worker": "https://clothes.srul7022.workers.dev",
+  "log": [
+    "server version 1.1.0 (as expected)",
+    "health {\"ok\":true,\"ms\":72,\"status\":200,\"body\":{\"ok\":true,\"ideas\":true,\"images\":true,\"version\":\"1.1.0\",\"textModel\":\"gemma-4-26b-a4b-it\",\"imageModel\":\"schnell for the first cards, klein after\"}}",
+    "keywords (API) {\"ok\":true,\"ms\":2420,\"status\":200,\"body\":{\"keywords\":[\"oxford\",\"button down\",\"madras\",\"gingham\",\"chambray\",\"rugby stripe\",\"poplin\",\"slub linen\",\"navy\",\"garment-dyed\"],\"avoid\":[\"streetwear\",\"oversized\",\"techwear\",\"minimalist\",\"avant-garde\"],\"stores\":[\"Todd Snyder\",\"Rowing Blazers\",\"Drake's\",\"Alex Mill\",\"Percival\"],\"why\":\"targeting preppy american heritage\",\"model\":\"gemma\"}}",
+    "first card 214ms",
+    "card 1 Long-Sleeve Wide Stripe Flannel Shirt | photo 33ms | swipe later",
+    "card 2 Made-in-USA White Oxford Club Collar Dress Shirt - Classic Fit | photo 9ms | swipe like",
+    "card 3 Cotton-Linen Sport Shirt | photo 9ms | swipe later",
+    "card 4 Made-in-USA Blue Oxford Cloth Button Down Shirt - Slim Fit | photo 7ms | swipe later",
+    "card 5 Conduit Classic Shirt Brecon Oxford White (Double Button Cuff) | photo 6ms | swipe later",
+    "card 6 Made-in-USA White Oxford Cloth Short Sleeve Sport Shirt - Classic Fit | photo 9ms | swipe like",
+    "card 7 Mill Shirt In Stripe Portuguese Poplin | photo 9ms | swipe later",
+    "card 8 Made-in-USA Flap Pocket Blue University Stripe Oxford Cloth Shirt - Classic Fit | photo 7ms | swipe later",
+    "gallery & details {\"card\":{\"title\":\"Short Sleeve Button Down Oxford\",\"store\":\"Kamakura Shirts\",\"photos\":8,\"onPhoto\":0,\"layout\":{\"photoBottom\":718,\"titleBottom\":808,\"screen\":844}},\"flipMs\":16,\"tapVoted\":false,\"cardZoom\":{\"opened\":true,\"photo\":2,\"opensAt\":{\"scale\":1.77,\"fill\":1.77,\"shown\":\"1\"},\"sharpMs\":319,\"closed\":true},\"zoomScale\":2.2,\"moreMs\":2,\"details\":{\"thumbs\":8,\"desc\":\"An easygoing Oxford short-sleeve button-down shirt designed for effortless wear. With its crisp comfort and relaxed character, this shirt subtly elevates your casual weekend style while maintaining an understated, refined look.\\nFabric\\nThe distinctive texture of Oxford weave creates a naturally relax\",\"sizes\":[\"37 (S)\",\"39 (M)\",\"41 (L)\",\"43 (XL)\",\"White (10)\",\"Blue (21)\",\"Blue (23)\"],\"specs\":[\"COLOUR: White\",\"FABRIC: Oxford\"]},\"back\":{\"was\":\"Short Sleeve Button Down Oxford\",\"nowShowing\":\"Made-in-USA Flap Pocket Blue University Stripe Oxford Cloth Shirt - Classic Fit\",\"expected\":\"Made-in-USA Flap Pocket Blue University Stripe Oxford Cloth Shirt - Classic Fit\",\"ok\":true,\"thenNext\":\"Short Sleeve Button Down Oxford\"},\"saved\":{\"screen\":\"saved\",\"cards\":1,\"photos\":1},\"liked\":{\"cards\":[\"Made-in-USA White Oxford Cloth Short Sleeve Sport Shirt - Classic Fit\",\"Made-in-USA White Oxford Club Collar Dress Shirt - Classic Fit\"],\"hearted\":[\"Made-in-USA White Oxford Club Collar Dress Shirt - Classic Fit\",\"Made-in-USA White Oxford Cloth Short Sleeve Sport Shirt - Classic Fit\"]}}",
+    "shoes {\"cards\":[\"Drake's | Running sneakers | New Balance ‘Luxury Leather’ Chocolate Plum and Caramel Made in UK 991v1 Trainers\",\"Todd Snyder | Sneakers | Porto Low Profile Sneaker\",\"Drake's | Espadrilles | Sabah Terro Suede Shoes\",\"Aimé Leon Dore | Suede | ALD / Last Resort AB VM001-LO Suede\",\"Drake's | Boots | Yuketen Brown Suede Ranchero Boots\",\"Todd Snyder | Running sneakers | TS & New Balance T500 Sneaker\",\"Drake's | Chukkas & desert boots | Clifford Desert Boot Sand Suede\",\"Aimé Leon Dore | Derbies | Suede Lug Sole Derby\",\"J.Press | Loafers | Made-in-USA Mocha Suede Tassel Loafer\",\"Todd Snyder | Boat shoes | Lug Sole Boat Shoe\",\"Drake's | Running sneakers | New Balance 'Vintage Sports' Kombu Green and Sea Spray Made in UK 1500v1 Trainers\",\"Aimé Leon Dore | Boots | Suede Derby Hiker\",\"J.Press | Chukkas & desert boots | Made-in-England Snuff Suede Chukka Boot\",\"Todd Snyder | Loafers | Rubinacci Marphy Bow Loafer\",\"Drake's | Derbies | Paraboot Michael Camel Leather Derby Shoe\",\"Club Monaco | Court & canvas sneakers | Club Monaco Leather Sneaker\",\"J.Press | Chukkas & desert boots | Made-in-USA Allen Edmonds Cinnamon Suede Ridgley Chukka Boot\",\"Todd Snyder | Loafers | Sabah Aksam Suede Loafer\",\"Oliver Spencer | Derbies | Solovair x Oliver Spencer Gibson Shoe Chocolate Suede\",\"Percival | Suede | G.H.Bass | Jetty II Boater 2 Eye | Earth Suede\"],\"sameModel\":[],\"kinds\":10,\"topMaker\":[\"new balance\",3]}"
+  ],
+  "expectedServer": "1.1.0",
+  "deployed": "1.1.0",
+  "health": {
+    "ok": true,
+    "ms": 72,
+    "status": 200,
+    "body": {
+      "ok": true,
+      "ideas": true,
+      "images": true,
+      "version": "1.1.0",
+      "textModel": "gemma-4-26b-a4b-it",
+      "imageModel": "schnell for the first cards, klein after"
+    }
+  },
+  "catalog": {
+    "updated": "2026-10-22T21:15:23.446Z",
+    "counts": {
+      "Shirts": 2919,
+      "Jackets": 2252,
+      "Trousers": 1659,
+      "Knitwear": 2452,
+      "T-shirts": 1067,
+      "Shorts": 472,
+      "Overshirts": 230,
+      "Shoes": 853
+    },
+    "failedStores": [],
+    "format": 2,
+    "photosPerShirt": {
+      "median": 6,
+      "min": 1,
+      "max": 8,
+      "oneOnly": 53,
+      "of": 2919
+    },
+    "details": {
+      "files": 128,
+      "pieces": 11904,
+      "withDescription": 11631,
+      "withSoldOutSizes": 7151,
+      "onSale": "502 shirts"
+    }
+  },
+  "photosApi": [
+    {
+      "title": "Red Merino Wool Knitted Polo",
+      "store": "Drake's",
+      "width": 900,
+      "ok": true,
+      "ms": 65,
+      "status": 200,
+      "bytes": 175305
+    },
+    {
+      "title": "Red Merino Wool Knitted Polo",
+      "store": "Drake's",
+      "width": 2000,
+      "ok": true,
+      "ms": 53,
+      "status": 200,
+      "bytes": 142525
+    },
+    {
+      "title": "Lucia",
+      "store": "Portuguese Flannel",
+      "width": 900,
+      "ok": true,
+      "ms": 375,
+      "status": 200,
+      "bytes": 174322
+    },
+    {
+      "title": "Lucia",
+      "store": "Portuguese Flannel",
+      "width": 2000,
+      "ok": true,
+      "ms": 602,
+      "status": 200,
+      "bytes": 1871324
+    },
+    {
+      "title": "Brook Shirt Faye Indigo Blue",
+      "store": "Oliver Spencer",
+      "width": 900,
+      "ok": true,
+      "ms": 646,
+      "status": 200,
+      "bytes": 88562
+    },
+    {
+      "title": "Brook Shirt Faye Indigo Blue",
+      "store": "Oliver Spencer",
+      "width": 2000,
+      "ok": true,
+      "ms": 184,
+      "status": 200,
+      "bytes": 135138
+    },
+    {
+      "title": "The Dispatch Shirt in Navy Broken Twill",
+      "store": "Taylor Stitch",
+      "width": 900,
+      "ok": true,
+      "ms": 269,
+      "status": 200,
+      "bytes": 82353
+    },
+    {
+      "title": "The Dispatch Shirt in Navy Broken Twill",
+      "store": "Taylor Stitch",
+      "width": 2000,
+      "ok": true,
+      "ms": 248,
+      "status": 200,
+      "bytes": 306425
+    },
+    {
+      "title": "White Ivy Guy Cotton Pique Polo",
+      "store": "J.Press",
+      "width": 900,
+      "ok": true,
+      "ms": 50,
+      "status": 200,
+      "bytes": 15560
+    },
+    {
+      "title": "White Ivy Guy Cotton Pique Polo",
+      "store": "J.Press",
+      "width": 2000,
+      "ok": true,
+      "ms": 478,
+      "status": 200,
+      "bytes": 510137
+    },
+    {
+      "title": "Loyalty T Shirt | Lucky Cat | White",
+      "store": "Percival",
+      "width": 900,
+      "ok": true,
+      "ms": 34,
+      "status": 200,
+      "bytes": 296006
+    },
+    {
+      "title": "Loyalty T Shirt | Lucky Cat | White",
+      "store": "Percival",
+      "width": 2000,
+      "ok": true,
+      "ms": 34,
+      "status": 200,
+      "bytes": 118545
+    }
+  ],
+  "keywordsApi": {
+    "ok": true,
+    "ms": 2420,
+    "status": 200,
+    "body": {
+      "keywords": [
+        "oxford",
+        "button down",
+        "madras",
+        "gingham",
+        "chambray",
+        "rugby stripe",
+        "poplin",
+        "slub linen",
+        "navy",
+        "garment-dyed"
+      ],
+      "avoid": [
+        "streetwear",
+        "oversized",
+        "techwear",
+        "minimalist",
+        "avant-garde"
+      ],
+      "stores": [
+        "Todd Snyder",
+        "Rowing Blazers",
+        "Drake's",
+        "Alex Mill",
+        "Percival"
+      ],
+      "why": "targeting preppy american heritage",
+      "model": "gemma"
+    }
+  },
+  "app": {
+    "requests": [
+      {
+        "kind": "/health",
+        "status": 200,
+        "ms": 164,
+        "at": 1792704658375
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 2653,
+        "at": 1792704661920
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 2530,
+        "at": 1792704665918
+      }
+    ],
+    "errors": [],
+    "cards": [
+      {
+        "n": 1,
+        "id": "p-clubmonaco-6935003955272",
+        "title": "Long-Sleeve Wide Stripe Flannel Shirt",
+        "why": "Like Ralph Lauren: stripe, flannel",
+        "colour": "",
+        "fabric": "Flannel",
+        "store": "Club Monaco",
+        "brand": "Club Monaco",
+        "price": 69,
+        "currency": "USD",
+        "url": "https://clubmonaco.com/products/long-sleeve-wide-stripe-flannel-shirt-795100468-110",
+        "boost": 0,
+        "waitedMs": 214,
+        "photoMs": 33,
+        "swipe": "later"
+      },
+      {
+        "n": 2,
+        "id": "p-jpressonline-8321605238831",
+        "title": "Made-in-USA White Oxford Club Collar Dress Shirt - Classic Fit",
+        "why": "Like Ralph Lauren: oxford, white",
+        "colour": "White",
+        "fabric": "Oxford",
+        "store": "J.Press",
+        "brand": "J.Press",
+        "price": 225,
+        "currency": "USD",
+        "url": "https://jpressonline.com/products/white-oxford-club-collar-dress-shirt-classic-fit",
+        "boost": 0,
+        "waitedMs": 509,
+        "photoMs": 9,
+        "swipe": "like"
+      },
+      {
+        "n": 3,
+        "id": "p-toddsnyder-7547037581383",
+        "title": "Cotton-Linen Sport Shirt",
+        "why": "Like Club Monaco: cotton-linen, white",
+        "colour": "White",
+        "fabric": "Linen",
+        "store": "Todd Snyder",
+        "brand": "Todd Snyder",
+        "price": 178,
+        "currency": "USD",
+        "url": "https://toddsnyder.com/products/cotton-linen-slub-sport-shirt-vertical-double-stripewhite",
+        "boost": 0,
+        "waitedMs": 517,
+        "photoMs": 9,
+        "swipe": "later"
+      },
+      {
+        "n": 4,
+        "id": "p-jpressonline-8419079421999",
+        "title": "Made-in-USA Blue Oxford Cloth Button Down Shirt - Slim Fit",
+        "why": "More like: Made-in-USA White Oxford Club Coll",
+        "colour": "White",
+        "fabric": "Oxford",
+        "store": "J.Press",
+        "brand": "J.Press",
+        "price": 185,
+        "currency": "USD",
+        "url": "https://jpressonline.com/products/made-in-usa-blue-oxford-cloth-button-down-shirt-slim-fit",
+        "boost": 10,
+        "waitedMs": 510,
+        "photoMs": 7,
+        "swipe": "later"
+      },
+      {
+        "n": 5,
+        "id": "p-oliverspencer-14911035081087",
+        "title": "Conduit Classic Shirt Brecon Oxford White (Double Button Cuff)",
+        "why": "More like: Made-in-USA White Oxford Club Coll",
+        "colour": "White",
+        "fabric": "Oxford",
+        "store": "Oliver Spencer",
+        "brand": "Oliver Spencer",
+        "price": 180,
+        "currency": "GBP",
+        "url": "https://oliverspencer.co.uk/products/conduit-classic-shirt-brecon-white-new-style",
+        "boost": 10,
+        "waitedMs": 509,
+        "photoMs": 6,
+        "swipe": "later"
+      },
+      {
+        "n": 6,
+        "id": "p-jpressonline-8159043321903",
+        "title": "Made-in-USA White Oxford Cloth Short Sleeve Sport Shirt - Classic Fit",
+        "why": "More like: Made-in-USA White Oxford Club Coll",
+        "colour": "White",
+        "fabric": "Oxford",
+        "store": "J.Press",
+        "brand": "J.Press",
+        "price": 165,
+        "currency": "USD",
+        "url": "https://jpressonline.com/products/white-oxford-cloth-short-sleeve-sport-shirt-classic-fit",
+        "boost": 10,
+        "waitedMs": 507,
+        "photoMs": 9,
+        "swipe": "like"
+      },
+      {
+        "n": 7,
+        "id": "p-alexmill-7355619147835",
+        "title": "Mill Shirt In Stripe Portuguese Poplin",
+        "why": "Like Ralph Lauren: stripe, poplin",
+        "colour": "Blue/White",
+        "fabric": "Poplin",
+        "store": "Alex Mill",
+        "brand": "Alex Mill",
+        "price": 165,
+        "currency": "USD",
+        "url": "https://alexmill.com/products/mill-shirt-in-stripe-portuguese-poplin",
+        "boost": 0,
+        "waitedMs": 515,
+        "photoMs": 9,
+        "swipe": "later"
+      },
+      {
+        "n": 8,
+        "id": "p-jpressonline-6756538613807",
+        "title": "Made-in-USA Flap Pocket Blue University Stripe Oxford Cloth Shirt - Classic Fit",
+        "why": "More like: Made-in-USA White Oxford Cloth Sho",
+        "colour": "Blue",
+        "fabric": "Oxford",
+        "store": "J.Press",
+        "brand": "J.Press",
+        "price": 185,
+        "currency": "USD",
+        "url": "https://jpressonline.com/products/flap-pocket-blue-university-stripe-oxford-cloth-shirt-classic-fit",
+        "boost": 10,
+        "waitedMs": 513,
+        "photoMs": 7,
+        "swipe": "later"
+      }
+    ],
+    "firstCardMs": 214,
+    "samePiece": [],
+    "gallery": {
+      "card": {
+        "title": "Short Sleeve Button Down Oxford",
+        "store": "Kamakura Shirts",
+        "photos": 8,
+        "onPhoto": 0,
+        "layout": {
+          "photoBottom": 718,
+          "titleBottom": 808,
+          "screen": 844
+        }
+      },
+      "flipMs": 16,
+      "tapVoted": false,
+      "cardZoom": {
+        "opened": true,
+        "photo": 2,
+        "opensAt": {
+          "scale": 1.77,
+          "fill": 1.77,
+          "shown": "1"
+        },
+        "sharpMs": 319,
+        "closed": true
+      },
+      "zoomScale": 2.2,
+      "moreMs": 2,
+      "details": {
+        "thumbs": 8,
+        "desc": "An easygoing Oxford short-sleeve button-down shirt designed for effortless wear. With its crisp comfort and relaxed character, this shirt subtly elevates your casual weekend style while maintaining an understated, refined look.\nFabric\nThe distinctive texture of Oxford weave creates a naturally relax",
+        "sizes": [
+          "37 (S)",
+          "39 (M)",
+          "41 (L)",
+          "43 (XL)",
+          "White (10)",
+          "Blue (21)",
+          "Blue (23)"
+        ],
+        "specs": [
+          "COLOUR: White",
+          "FABRIC: Oxford"
+        ]
+      },
+      "back": {
+        "was": "Short Sleeve Button Down Oxford",
+        "nowShowing": "Made-in-USA Flap Pocket Blue University Stripe Oxford Cloth Shirt - Classic Fit",
+        "expected": "Made-in-USA Flap Pocket Blue University Stripe Oxford Cloth Shirt - Classic Fit",
+        "ok": true,
+        "thenNext": "Short Sleeve Button Down Oxford"
+      },
+      "saved": {
+        "screen": "saved",
+        "cards": 1,
+        "photos": 1
+      },
+      "liked": {
+        "cards": [
+          "Made-in-USA White Oxford Cloth Short Sleeve Sport Shirt - Classic Fit",
+          "Made-in-USA White Oxford Club Collar Dress Shirt - Classic Fit"
+        ],
+        "hearted": [
+          "Made-in-USA White Oxford Club Collar Dress Shirt - Classic Fit",
+          "Made-in-USA White Oxford Cloth Short Sleeve Sport Shirt - Classic Fit"
+        ]
+      }
+    },
+    "shoes": {
+      "cards": [
+        "Drake's | Running sneakers | New Balance ‘Luxury Leather’ Chocolate Plum and Caramel Made in UK 991v1 Trainers",
+        "Todd Snyder | Sneakers | Porto Low Profile Sneaker",
+        "Drake's | Espadrilles | Sabah Terro Suede Shoes",
+        "Aimé Leon Dore | Suede | ALD / Last Resort AB VM001-LO Suede",
+        "Drake's | Boots | Yuketen Brown Suede Ranchero Boots",
+        "Todd Snyder | Running sneakers | TS & New Balance T500 Sneaker",
+        "Drake's | Chukkas & desert boots | Clifford Desert Boot Sand Suede",
+        "Aimé Leon Dore | Derbies | Suede Lug Sole Derby",
+        "J.Press | Loafers | Made-in-USA Mocha Suede Tassel Loafer",
+        "Todd Snyder | Boat shoes | Lug Sole Boat Shoe",
+        "Drake's | Running sneakers | New Balance 'Vintage Sports' Kombu Green and Sea Spray Made in UK 1500v1 Trainers",
+        "Aimé Leon Dore | Boots | Suede Derby Hiker",
+        "J.Press | Chukkas & desert boots | Made-in-England Snuff Suede Chukka Boot",
+        "Todd Snyder | Loafers | Rubinacci Marphy Bow Loafer",
+        "Drake's | Derbies | Paraboot Michael Camel Leather Derby Shoe",
+        "Club Monaco | Court & canvas sneakers | Club Monaco Leather Sneaker",
+        "J.Press | Chukkas & desert boots | Made-in-USA Allen Edmonds Cinnamon Suede Ridgley Chukka Boot",
+        "Todd Snyder | Loafers | Sabah Aksam Suede Loafer",
+        "Oliver Spencer | Derbies | Solovair x Oliver Spencer Gibson Shoe Chocolate Suede",
+        "Percival | Suede | G.H.Bass | Jetty II Boater 2 Eye | Earth Suede"
+      ],
+      "sameModel": [],
+      "kinds": 10,
+      "topMaker": [
+        "new balance",
+        3
+      ]
+    },
+    "report": "app: 1.5.1   when: 2026-10-22T21:31:28.862Z\nscreen: explore\nua: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/130.0.6723.31 Safari/537.36\nai: on   server: https://clothes.srul7022.workers.dev   health: {\"ideas\":true,\"images\":true,\"version\":\"1.1.0\",\"textModel\":\"gemma-4-26b-a4b-it\",\"imageModel\":\"schnell for the first cards, klein after\"}\nai request: idle   last error: none   waiting ideas: 35\nserver version: 1.1.0   (app expects 1.1.0 or newer)\nidea model: gemma (last reply)   server says: gemma-4-26b-a4b-it\ncatalog: 25 stores, updated 2026-10-22T21:15:23.446Z, {\"Shirts\":2919,\"Jackets\":2252,\"Trousers\":1659,\"Knitwear\":2452,\"T-shirts\":1067,\"Shorts\":472,\"Overshirts\":230,\"Shoes\":853}   pool for this search: 853   AI words: -\nlast photo error: none\n\nSEARCH: type=Shoes  styles=-  text=\"Quiet luxury style\"\nYOUR WORDS READ AS: brands quiet luxury; look for cashmere, linen, knit polo, merino, suede, cream, camel; avoid graphic, logo, camo; store styles +luxe/classic/smart -streetwear; stores Colhay's, Sunspel, Private White V.C.\nLIKED: Made-in-USA White Oxford Cloth Short Sleeve Sport Shirt - Classic Fit; Made-in-USA White Oxford Club Collar Dress Shirt - Classic Fit\nPREFS: {\"budget\":\"any\",\"size\":\"M\",\"shoe\":\"43\",\"shipIL\":true}\n\nON SCREEN: New Balance ‘Luxury Leather’ Chocolate Plum and Caramel Made in UK 991v1 Trainers — Drake's at Drake's, £220 [Brown, Leather, Running sneakers] https://drakes.com/products/new-balance-luxury-leather-chocolate-plum-and-caramel-made-in-uk-991v1-trainers\n  why: \"Running sneakers\"   search: \"New Balance ‘Luxury Leather’ Chocolate Plum and Caramel Made in UK 991v1 Trainers\"   photo 1 of 6\nNEXT UP: Porto Low Profile Sneaker; Sabah Terro Suede Shoes; ALD / Last Resort AB VM001-LO Suede; Yuketen Brown Suede Ranchero Boots; TS & New Balance T500 Sneaker\n\nTHIS ROUND (0 votes, oldest first):\n\nTASTE: more of: -   less of: -\nPICKS: -\nSAVED: Short Sleeve Button Down Oxford"
+  }
+}
