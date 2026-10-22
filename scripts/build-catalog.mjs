@@ -30,10 +30,18 @@ const STORES = [
   { d: "ledbury.com", name: "Ledbury", tags: ["smart", "tailored", "classic"] },
   { d: "knickerbocker.nyc", name: "Knickerbocker", tags: ["vintage", "workwear", "classic"] },
   { d: "ironandresin.com", name: "Iron & Resin", tags: ["workwear", "vintage", "rugged"] },
+  // Added in 1.3 for briefs like "Ralph Lauren, Club Monaco, J.Crew" (all ship to Israel, checked with the store probe).
+  { d: "clubmonaco.com", name: "Club Monaco", tags: ["smart", "minimal", "classic", "tailored"] },
+  { d: "jpressonline.com", name: "J.Press", tags: ["preppy", "classic", "tailored", "vintage"] },
+  { d: "grayers.com", name: "Grayers", tags: ["preppy", "classic", "relaxed"] },
+  { d: "kamakurashirts.com", name: "Kamakura Shirts", tags: ["classic", "smart", "tailored"] },
+  { d: "sunspel.com", name: "Sunspel", tags: ["minimal", "classic", "luxe"] },
+  { d: "privatewhitevc.com", name: "Private White V.C.", tags: ["smart", "luxe", "rugged"] },
+  { d: "colhays.com", name: "Colhay's", tags: ["luxe", "classic", "minimal"] },
 ];
 
 const NOT_HIS = /\b(women|womens|women's|women’s|woman|ladies|girls?|kids?|boys?|baby|toddler|skirts?|blouses?|bralettes?|bikinis?|leggings?|camisoles?|bodysuits?|jumpsuits?|rompers?|maternity|corsets?|bras?|halter|crop tops?|scarf tank|wrap top)\b|\bdress(es)?\b(?!\s*shirts?)/i;
-const NOT_CLOTHES = /\b(ties?|bow ?ties?|neckties?|socks?|hats?|caps?|beanies?|scarf|scarves|belts?|bags?|totes?|backpacks?|wallets?|card holders?|gloves?|sunglasses|glasses|jewel(le)?ry|bracelets?|necklaces?|rings?|cufflinks?|pocket squares?|bandanas?|keyrings?|watch(es)?|watch straps?|laces|shoe care|cream|polish|brush|hangers?|mask|face covering|gift ?card|e-?gift|candle|mug|poster|sticker|book|magazine|keychain|key ring|umbrella|towel|blanket|fragrance|perfume|cologne|incense|print|pin|patch|sample|bundle|insurance|shipping|donation|cushion|pillow|rug|ornament|playing cards|dog|leash|collar for)\b/i;
+const NOT_CLOTHES = /\b(accessor(y|ies)|underwear|boxers?|briefs?|trunks? \(underwear\)|pyjamas?|pajamas?|loungewear|robes?|ties?|bow ?ties?|neckties?|socks?|hats?|caps?|beanies?|scarf|scarves|belts?|bags?|totes?|backpacks?|wallets?|card holders?|gloves?|sunglasses|glasses|jewel(le)?ry|bracelets?|necklaces?|rings?|cufflinks?|pocket squares?|bandanas?|keyrings?|watch(es)?|watch straps?|laces|shoe care|cream|polish|brush|hangers?|mask|face covering|gift ?card|e-?gift|candle|mug|poster|sticker|book|magazine|keychain|key ring|umbrella|towel|blanket|fragrance|perfume|cologne|incense|print|pin|patch|sample|bundle|insurance|shipping|donation|cushion|pillow|rug|ornament|playing cards|dog|leash|collar for)\b/i;
 
 // The app's types. First match wins, so the more specific ones come first.
 const TYPE_RULES = [
