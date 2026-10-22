@@ -64,6 +64,12 @@ AI-drawn photos on the free plan were too generic and too slow, so Drape shows r
 - **AI** (Gemma, `POST /keywords`): reads the brief, and each heart, as words to look for (e.g. "oxford", "madras", "rugby stripe") and the stores that fit. A heart also puts the closest pieces right after the next card.
 - Settings in the pick sheet still apply: "Only stores that ship to Israel" (from each store's settings) and the budget.
 
+### The card (since 1.5)
+
+- **A clean photo**: on the photo there's only the photo and thin bars for its other photos. Swipe it (← not now, → getting closer), tap its sides for the other photos and its middle for full screen. Name, store, price and the reason are under it; Back (↶), Save and "This is it" below them; scroll down for every photo, colour, fabric, sizes in stock, the store's description and "Find similar in other stores".
+- **Back (↶)** returns to the previous piece and takes back the answer you gave it, as many steps as you like.
+- **No repeats of one model**: the same model in another colour, or at another store, counts as one piece (shared name words, or the same maker's model number like 991/990). A search also moves between makers (New Balance, Allen Edmonds...) and, for shoes, between 16 kinds (loafers, chukkas, Chelsea boots, court and running sneakers, derbies, oxfords, monk straps, boat shoes, espadrilles...).
+
 ### Your words, your taste and your pieces (since 1.3)
 
 - **Brands in your own words** count at once, on the phone, without waiting for the AI: Ralph Lauren, Club Monaco, J.Crew, Brooks Brothers, J.Press, Banana Republic, Todd Snyder, Aimé Leon Dore, COS/Uniqlo, Massimo Dutti and "quiet luxury" are each read as store styles to favour and avoid, words to look for (oxford, button-down, polo, rugby, poplin, linen...) and words to avoid (western, snap, graphic...), plus the stores closest to them (`BRAND_READS` in `index.html`). A store you name that's in the catalog (Club Monaco, Drake's...) is favoured too. Each card's blue line says what it matched: "Like Ralph Lauren: oxford, button-down".

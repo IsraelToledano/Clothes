@@ -105,6 +105,8 @@ a.cta{text-decoration:none}
 .insight span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .acts{display:grid;grid-template-columns:auto 1fr;gap:8px;flex:none}
 .acts .outline-btn{min-height:46px;font-size:14px}
+.acts.three{grid-template-columns:46px auto 1fr}
+.back-btn{width:46px;padding:0}
 .save-btn{width:auto;padding:0 18px}
 .save-btn.on{background:var(--ink);color:#fff}
 .hist.saved li{padding:6px 0}
@@ -223,6 +225,22 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
 .photo-hint{bottom:56px;white-space:normal;width:max-content;max-width:calc(100% - 24px);text-align:center}
 /* the photo takes the whole card; name and price sit on it, like Tinder */
 .screen.fixed{padding-left:10px;padding-right:10px}
+.screen.explore{padding-left:10px;padding-right:10px;gap:12px}
+.idea.flat{flex:none;touch-action:pan-y}
+.idea.flat .idea-img{flex:none;height:calc(100dvh - var(--safe-t) - 196px);min-height:300px;max-height:820px}
+.hint-line{margin:0 6px;font-size:13px;line-height:1.35;color:var(--muted);text-align:center}
+.card-info{display:flex;flex-direction:column;gap:4px;padding:0 6px}
+.card-info .idea-title{font-size:24px}
+.card-meta{margin:0;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.card-meta .mono-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card-price{font-size:17px;white-space:nowrap;flex:none}
+.card-info .because{margin-top:2px}
+.insight-line{margin:0 6px;display:flex;gap:8px;align-items:center;font-size:13px;color:var(--muted)}
+.insight-line svg{width:15px;height:15px;flex:none}
+.card-more{background:var(--card);border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:16px;margin-bottom:8px}
+.dt-thumbs.flat{padding:0}
+.more-in{display:flex;flex-direction:column;gap:16px}
+.more-in:empty{display:none}
 .idea.over .idea-img{flex:1 1 auto}
 .idea-low{position:absolute;z-index:2;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none}
 .idea-low .swipe-hint{position:static;transform:none}
@@ -338,7 +356,7 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "1.4.0";
+const APP_VERSION = "1.5.0";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
 const SERVER_EXPECTED = "1.1.0"; // the worker/worker.js version this app was built with
 
@@ -442,6 +460,7 @@ const ICON = {
   info: sv('<circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><path d="M12 7.6v.2"/>', {w:2.4}),
   zoom: sv('<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4M11 8v6M8 11h6"/>'),
   fwd: sv('<path d="M9 18l6-6-6-6"/>', {w:2.2}),
+  prev: sv('<path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>', {w:2.2}),
 };
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
@@ -499,7 +518,8 @@ function toggleSave(i){
   save("saved", SAVED); toast("Saved · under the bookmark at the top");
 }
 function undoVote(rec){
-  const i = TASTE.votes.lastIndexOf(rec);
+  let i = TASTE.votes.lastIndexOf(rec);
+  if (i < 0) i = TASTE.votes.findIndex((x) => x.id === rec.id && x.at === rec.at && x.v === rec.v);
   if (i < 0) return false;
   const idea = byId(rec.id);
   if (idea && VAL[rec.v]) for (const a of attrsOf(idea)){
@@ -636,7 +656,7 @@ function tasteLists(){
   const pref = tasteModel().pref;
   return {
     pos: Object.entries(pref).filter(([k, t]) => t.l >= 2 && t.v >= 0.1 && !k.startsWith("type:")).sort((a, b) => b[1].v - a[1].v).slice(0, 6).map((e) => e[0]),
-    neg: Object.entries(no).filter(([k, n]) => n >= 4 && !yes[k] && usable(k)).sort((a, b) => b[1] - a[1]).slice(0, 6).map((e) => e[0]),
+    neg: Object.entries(pref).filter(([k, t]) => t.n >= 5 && t.v <= -0.6 * tasteModel().p && usable(k)).sort((a, b) => a[1].v - b[1].v).slice(0, 6).map((e) => e[0]),
   };
 }
 
@@ -703,6 +723,38 @@ function pieceKey(p){
   for (const w of String(p.colour || "").toLowerCase().split(/[^a-z]+/).filter((x) => x.length > 2)) t = t.split(w).join(" ");
   return (p._key = (p.store || "") + "|" + t.replace(/[^a-z0-9]+/g, " ").trim());
 }
+// What names a piece, without colours, materials' shades and filler: "Allen Edmonds Dark Brown Ramsey Plain-toe
+// Derby" and "... Walnut Ramsey Plain-toe Derby" share allen, edmonds, ramsey, plain-toe: the same shoe.
+const FAM_SKIP = new Set("the and with for in of x by a an mens men's men made usa uk england italy japan portugal spain scotland canada shoe shoes sneaker sneakers trainer trainers dress fit classic regular slim relaxed new edition exclusive collection limited".split(" "));
+const FAM_COLOURS = /\b(light|dark|pale|deep|soft|faded|bright|navy|blue|white|ecru|cream|ivory|off|black|grey|gray|charcoal|green|olive|sage|khaki|tan|sand|stone|beige|brown|camel|rust|terracotta|red|burgundy|pink|coral|orange|yellow|mustard|purple|lavender|lilac|teal|mint|indigo|sky|forest|bottle|chocolate|mocha|oatmeal|natural|walnut|chili|chilli|snuff|espresso|tobacco|cognac|chestnut|oyster|bone|taupe|plum|caramel|oxblood|cordovan|mahogany|bitter|silver|gold|multi|heather|melange|marl|antique|vintage)\b/g;
+const FAM = new WeakMap(); // (not kept on the piece itself: pieces are saved as JSON, and a Set doesn't survive that)
+function famTokens(p){
+  if (FAM.has(p)) return FAM.get(p);
+  let t = String(p.title || "").toLowerCase().replace(/['‘’"“”][^'‘’"“”]{2,40}['‘’"“”]/g, " ").replace(/\s[-–:|]\s[^-–:|]+$/, " ").replace(/made-in-[a-z]+/g, " ").replace(FAM_COLOURS, " ");
+  for (const w of String(p.colour || "").toLowerCase().split(/[^a-z]+/).filter((x) => x.length > 2)) t = t.split(w).join(" ");
+  const set = new Set(t.split(/[^a-z0-9-]+/).map((w) => w.replace(/^-+|-+$/g, "")).filter((w) => w.length > 1 && !FAM_SKIP.has(w)));
+  FAM.set(p, set);
+  return set;
+}
+function sameFamily(a, b){
+  const x = famTokens(a), y = famTokens(b);
+  let both = 0, model = false;
+  for (const w of x) if (y.has(w)) both++;
+  const nums = (set) => [...set].map((w) => (w.match(/\d{3,4}/) || [""])[0]).filter(Boolean);
+  const ny = new Set(nums(y));
+  if (nums(x).some((n) => ny.has(n))) model = true; // "991" and "991v2", "990v4" and "990v6"
+  // The same maker's model number ("991v2", "T500", "990v6") is the same shoe, whatever its colourway is called.
+  if (model && makerOf(a) === makerOf(b)) return true;
+  return both >= 2 && both / (x.size + y.size - both) >= 0.5;
+}
+// Who made it, when a store sells other makers (Kith, Todd Snyder, Drake's, J.Press...): a search shouldn't
+// be one maker after another either.
+const MAKERS = ["new balance","nike","adidas","asics","saucony","salomon","puma","vans","converse","clarks","sperry","alden","allen edmonds","paraboot","yuketen","sanders","red wing","timberland","birkenstock","hoka","reebok","diadora","onitsuka","oncept","flower mountain","kleman","jacques solovière","grenson","crockett","tricker","edward green","quoddy","rancourt","viberg","blundstone","dr. martens","merrell","hari mari","last resort","our legacy","common projects","veja","novesta","spalwart","diemme","astorflex","padmore","sabah","mephisto","cqp","porto","stone island","barbour","carhartt","engineered garments","beams","gitman","drake's","kith"];
+function makerOf(p){
+  if (p._maker !== undefined) return p._maker;
+  const t = String(p.title || "").toLowerCase();
+  return (p._maker = MAKERS.find((m) => t.includes(m)) || p.store || "");
+}
 const seenKey = (v) => { const i = byId(v.id); return i ? pieceKey(i) : "|" + String(v.title).toLowerCase(); };
 function shownIdeas(){
   const l = S.round.votes.map((v) => byId(v.id)).filter(Boolean).concat(S.queue);
@@ -733,7 +785,15 @@ function orderQueue(){
   rest.sort((a, b) => b._r - a._r);
   S.queue = deck.concat(rest);
 }
-function preloadAhead(){ S.queue.slice(0, PRELOAD_N).forEach(preload); }
+function preloadAhead(){ S.queue.slice(0, PRELOAD_N).forEach(preload); if (S.queue[0] && isProduct(S.queue[0])) moreOf(S.queue[0]).catch(() => {}); }
+function loadCardMore(i){
+  if (!isProduct(i) || S.more[i.id] !== undefined) return;
+  moreOf(i).then((m) => {
+    S.more[i.id] = m;
+    const el = document.getElementById("card-more-in");
+    if (el && S.current && S.current.id === i.id) el.innerHTML = moreHtml(i);
+  }).catch(() => {});
+}
 
 // Real products: everything you swipe is a real piece in a real store, with its own photo, price and link.
 // They come from a catalog of the stores' current menswear, rebuilt every day by GitHub Actions and served
@@ -774,7 +834,7 @@ const KIND_RULES = {
   "Jackets": [["Blazer", /blazer|sport ?coat|suit/], ["Bomber", /bomber|varsity/], ["Harrington", /harrington/], ["Field jacket", /field|m-?65|military/], ["Chore & work", /chore|work|cpo/], ["Denim & trucker", /denim|trucker/], ["Overcoat", /overcoat|topcoat|peacoat|coat/], ["Vest", /vest|gilet/], ["Suede & leather", /suede|leather/], ["Quilted & down", /quilt|down|puffer|parka/], ["Rain & shell", /rain|shell|anorak|windbreaker|cagoule/]],
   "Trousers": [["Chinos", /chino/], ["Pleated", /pleat/], ["Jeans", /jean|denim/], ["Corduroy", /cord/], ["Linen", /linen/], ["Cargo & fatigue", /cargo|fatigue|utility|carpenter/], ["Wool", /wool|flannel|tweed/], ["Drawstring", /drawstring|easy|camp/]],
   "Shorts": [["Chino shorts", /chino/], ["Swim", /swim|trunk|board/], ["Linen", /linen/], ["Cargo", /cargo|utility/], ["Denim", /denim|jean/], ["Terry & sweat", /terry|sweat|fleece/], ["Pleated", /pleat/]],
-  "Shoes": [["Sneakers", /sneaker|trainer|runner|tennis/], ["Loafers", /loafer|penny/], ["Boots", /boot/], ["Sandals", /sandal|slide/], ["Derbies & oxfords", /derby|oxford|brogue|blucher/], ["Boat shoes", /boat|deck/], ["Moccasins", /moccasin|camp/]],
+  "Shoes": [["Loafers", /loafer|penny|tassel|horsebit/], ["Boat shoes", /boat shoe|deck shoe|\bboat\b/], ["Chukkas & desert boots", /chukka|desert boot|wallabee/], ["Chelsea boots", /chelsea/], ["Boots", /boot|hiker|engadin/], ["Court & canvas sneakers", /court|tennis|canvas|\bvans\b|converse|samba|gazelle|plimsoll|\bcvo\b|slip-on|leather sneaker|authentic/], ["Running sneakers", /new balance|asics|saucony|salomon|hoka|\bnike\b|reebok|\bon running\b|runner|running|gel-|trail|xt-6|991|990|993|1906|2002/], ["Sneakers", /sneaker|trainer/], ["Monk straps", /monk/], ["Brogues & wingtips", /brogue|wing ?tip|long ?wing/], ["Derbies", /derby|blucher|apron|gibson/], ["Oxfords", /oxford|balmoral/], ["Moccasins & drivers", /moccasin|\bmoc\b|driver|camp moc/], ["Sandals & slides", /sandal|slide|flip|thong/], ["Espadrilles", /espadrille/], ["Mules & clogs", /mule|clog|slipper/]],
   "Overshirts": [["Chore", /chore/], ["Quilted", /quilt/], ["Wool", /wool|flannel|melton/], ["Corduroy", /cord/], ["Denim", /denim|chambray/], ["Suede", /suede/]],
 };
 function kindOf(p){
@@ -813,7 +873,7 @@ async function moreOf(i){
 async function loadCatalog(){
   const want = Q.type && Q.type !== "Surprise me" ? [Q.type] : CAT_TYPES;
   await loadStores();
-  await Promise.all(want.filter((t) => !CAT.lists[t]).map((t) => fetch(typeFile(t), {cache:"no-cache"}).then((r) => (r.ok ? r.json() : [])).then((l) => { CAT.lists[t] = l.map((x) => fromCat(x, t)); }).catch(() => { CAT.lists[t] = []; })));
+  await Promise.all(want.filter((t) => !CAT.lists[t]).map((t) => fetch(typeFile(t), {cache:"no-cache"}).then((r) => (r.ok ? r.json() : [])).then((l) => { CAT.lists[t] = l.filter((x) => !/\b(wmns|womens|women's)\b|^spacer\b/i.test(x.t)).map((x) => fromCat(x, t)); }).catch(() => { CAT.lists[t] = []; })));
   return want.flatMap((t) => CAT.lists[t] || []);
 }
 
@@ -911,7 +971,8 @@ function refill(){
   cands.sort((a, b) => b[1] - a[1]);
   const top = cands.slice(0, 400), out = [];
   const recent = [S.current].concat(keep).filter(Boolean);
-  const perStore = {};
+  const seenF = S.round.votes.map((v) => byId(v.id)).filter(Boolean).concat(recent);
+  const perStore = {}, perMaker = {};
   while (out.length < 36 && top.length){
     const last = recent.concat(out).slice(-3), prev = last[last.length - 1];
     let best = -1, bestScore = -Infinity;
@@ -920,17 +981,21 @@ function refill(){
       for (let k = 0; k < top.length; k++){
         const [p, sc] = top[k];
         if (seenK.has(pieceKey(p))) continue;
-        if (strict && prev && (prev.store === p.store || prev.kind === p.kind)) continue;
-        const pen = last.reduce((a, q) => a + (q.store === p.store ? 4 : 0) + (q.kind === p.kind ? 2 : 0) + (q.colour && q.colour === p.colour ? 0.5 : 0), 0)
-          + Math.max(0, (perStore[p.store] || 0) - 3) * 2.5; // no store takes over a whole search
+        if (strict && prev && (prev.store === p.store || prev.kind === p.kind || makerOf(prev) === makerOf(p))) continue;
+        const pen = last.reduce((a, q) => a + (q.store === p.store ? 4 : 0) + (q.kind === p.kind ? 2 : 0) + (makerOf(q) === makerOf(p) ? 3 : 0) + (q.colour && q.colour === p.colour ? 0.5 : 0), 0)
+          + Math.max(0, (perStore[p.store] || 0) - 3) * 2.5 // no store takes over a whole search
+          + Math.max(0, (perMaker[makerOf(p)] || 0) - 2) * 3; // nor one maker
         if (sc - pen > bestScore){ bestScore = sc - pen; best = k; }
       }
       if (best >= 0) break;
     }
     if (best < 0) break;
     const chosen = top.splice(best, 1)[0][0];
+    if (seenF.some((q) => sameFamily(q, chosen))) continue; // the same model as one you've seen: skip it
+    seenF.push(chosen);
     seenK.add(pieceKey(chosen));
     perStore[chosen.store] = (perStore[chosen.store] || 0) + 1;
+    perMaker[makerOf(chosen)] = (perMaker[makerOf(chosen)] || 0) + 1;
     out.push(chosen);
   }
   // The reason on each card: the words from your brief it matched ("Like Ralph Lauren: oxford, stripe"), or its kind.
@@ -947,7 +1012,7 @@ function refill(){
     if (fromAi.length && Q.text) return "From your words: " + fromAi.join(", ");
     return p.kind;
   };
-  S.queue = keep.concat(out.map((p) => Object.assign(p, {_boost:0, why:reason(p)})));
+  S.queue = noStoreTwice(keep.concat(out.map((p) => Object.assign(p, {_boost:0, why:reason(p)}))), 1);
   preloadAhead();
 }
 
@@ -1010,7 +1075,8 @@ function converge(i){
   const close = S.pool.filter((p) => !ids.has(p.id) && p.id !== i.id && (!PREFS.shipIL || p.ships !== false)).map((p) => [p, sim(p) + (hashStr(S.roundId + p.id) % 100) / 200]).sort((a, b) => b[1] - a[1]);
   const pick = [], stores = {};
   const titles = new Set([pieceKey(i)].concat(S.round.votes.map(seenKey), S.queue.slice(0, ON_DECK).map(pieceKey)));
-  for (const [p] of close){ if ((stores[p.store] || 0) >= 2 || titles.has(pieceKey(p))) continue; stores[p.store] = (stores[p.store] || 0) + 1; titles.add(pieceKey(p)); pick.push(Object.assign(p, {_boost:10, why:"More like: " + i.title.slice(0, 34)})); if (pick.length >= 3) break; }
+  const seenF = S.round.votes.map((v) => byId(v.id)).filter(Boolean).concat([i], S.queue.slice(0, ON_DECK));
+  for (const [p] of close){ if ((stores[p.store] || 0) >= 2 || titles.has(pieceKey(p)) || seenF.some((q) => sameFamily(q, p))) continue; seenF.push(p); stores[p.store] = (stores[p.store] || 0) + 1; titles.add(pieceKey(p)); pick.push(Object.assign(p, {_boost:10, why:"More like: " + i.title.slice(0, 34)})); if (pick.length >= 3) break; }
   const pickIds = new Set(pick.map((p) => p.id));
   S.queue = S.queue.slice(0, ON_DECK).concat(pick, S.queue.slice(ON_DECK).filter((p) => !pickIds.has(p.id)));
   noStoreTwice(S.queue, ON_DECK);
@@ -1229,28 +1295,35 @@ function renderExplore(){
   }
   const insight = (aiRound() && S.round.votes.length >= 3 && S.aiInsight ? S.aiInsight : roundInsight()).replace(/[.\s]+$/, "");
   const b = i.why || because(i);
-  const np = photosOf(i).length, k = curPh();
-  return `<main class="screen fixed">${head}
-    <article class="idea over" id="card" aria-labelledby="idea-t">
+  const np = photosOf(i).length, k = curPh(), pr = isProduct(i);
+  const specs = [["Colour", i.colour], ["Fabric", i.fabric], ["Fit", i.fit], ["Kind", i.kind && i.kind !== i.fabric && i.kind !== i.type ? i.kind : ""]].filter((x) => x[1]);
+  // On the photo: only the photo (and thin bars when there are more). Swipe it; tap its sides for the
+  // other photos, its middle for full screen. Name, price and the rest are below; scroll for the details.
+  return `<main class="screen explore">${head}
+    <article class="idea flat" id="card" aria-labelledby="idea-t">
       <div class="idea-img" style="background:${esc(i.tint)}">
         ${np > 1 ? `<div class="bars" aria-hidden="true">${Array.from({length:np}, (_, j) => `<i${j === k ? ' class="on"' : ""}></i>`).join("")}</div>` : ""}
-        <span class="tag">${isProduct(i) ? esc(i.brand && i.brand !== i.store ? i.brand + " · " + i.store : i.store) : (isAI(i) ? "AI idea" : "Sample idea") + " · not a real product"}</span>
         ${ideaImage(i)}
-        ${isProduct(i) || photosOf(i).length ? `<button type="button" class="card-zoom" data-act="card-zoom" aria-label="See this photo full screen and zoom in">${ICON.zoom}</button>` : ""}
         <span class="stamp no" aria-hidden="true">${ICON.close}Not now</span><span class="stamp yes" aria-hidden="true">${ICON.heart}Closer</span>
-        <div class="idea-low">
-          ${S.round.votes.length < 2 ? `<span class="swipe-hint photo-hint" aria-hidden="true">${np > 1 ? "Tap a side: more photos · the middle: zoom" : "Tap the photo to zoom in"}</span>` : ""}
-          ${S.round.votes.length < 3 ? `<span class="swipe-hint" aria-hidden="true">← Not now · Getting closer →</span>` : ""}
-          ${insight ? `<div class="insight" role="status">${ICON.sliders}<span>${esc(insight)}</span></div>` : ""}
-          <div class="idea-body row">
-            <div class="idea-head">${b ? `<span class="because">${esc(b)}</span>` : ""}<h1 id="idea-t" class="idea-title">${esc(i.title)}</h1>${isProduct(i) ? `<p class="idea-desc">${priceHtml(i)} · ${esc(i.store)}</p>` : `<p class="idea-desc">${esc(i.desc)}</p>`}</div>
-            <button type="button" class="info-btn" data-act="details" aria-label="Details${np > 1 ? " and all " + np + " photos" : ""}">${ICON.info}</button>
-          </div>
-        </div>
       </div>
     </article>
+    <section class="card-info">
+      <p class="card-meta"><span class="mono-label">${esc(pr ? (i.brand && i.brand !== i.store ? i.brand + " · " + i.store : i.store) : (isAI(i) ? "AI idea · not a real product" : "Sample idea · not a real product"))}</span>${pr ? `<span class="card-price">${priceHtml(i)}${i.was > i.price ? ` <span class="sale">−${Math.round((1 - i.price / i.was) * 100)}%</span>` : ""}</span>` : ""}</p>
+      <h1 id="idea-t" class="idea-title">${esc(i.title)}</h1>
+      ${pr ? "" : `<p class="idea-desc">${esc(i.desc)}</p>`}
+      ${b ? `<span class="because">${esc(b)}</span>` : ""}
+    </section>
     ${voteBtns(false)}
-    <div class="acts"><button type="button" class="outline-btn save-btn${isSaved(i.id) ? " on" : ""}" data-act="save" aria-pressed="${isSaved(i.id)}">${isSaved(i.id) ? ICON.marked + "Saved" : ICON.mark + "Save"}</button><button type="button" class="outline-btn" data-act="pick">${ICON.bag}${isProduct(i) ? "This is it — view in store" : "This is it — where to buy"}</button></div>
+    <div class="acts three"><button type="button" class="outline-btn back-btn" data-act="prev"${prevVote() ? "" : " disabled"} aria-label="Back to the previous piece">${ICON.prev}</button><button type="button" class="outline-btn save-btn${isSaved(i.id) ? " on" : ""}" data-act="save" aria-pressed="${isSaved(i.id)}">${isSaved(i.id) ? ICON.marked + "Saved" : ICON.mark + "Save"}</button><button type="button" class="outline-btn" data-act="pick">${ICON.bag}This is it</button></div>
+    ${S.round.votes.length < 3 ? `<p class="hint-line">Swipe the photo: ← not now · getting closer →. Tap its sides for more photos, its middle to zoom. Scroll down for details.</p>` : ""}
+    ${insight ? `<p class="insight-line">${ICON.sliders}<span>${esc(insight)}</span></p>` : ""}
+    <section class="card-more" aria-label="More about it">
+      ${np > 1 ? `<div class="dt-sec"><span class="mono-label">All ${np} photos</span><div class="dt-thumbs flat" role="group" aria-label="All photos">${photosOf(i).map((u, j) => `<button type="button" class="dt-thumb" data-act="card-photo" data-v="${j}" aria-label="Show photo ${j + 1}" aria-current="${j === k}"><img src="${esc(pr ? sized(u, 160) : u)}" alt="" loading="lazy"></button>`).join("")}</div></div>` : ""}
+      ${specs.length ? `<dl class="specs">${specs.map(([x, y]) => `<div><dt>${x}</dt><dd>${esc(y)}</dd></div>`).join("")}</dl>` : ""}
+      ${pr ? `<div id="card-more-in" class="more-in">${moreHtml(i)}</div>
+      <p class="small-note" style="text-align:left">${[i.ships === true ? "Ships to Israel" : i.ships === false ? "Doesn't ship to Israel" : "", "Prices in " + (i.currency || "USD"), "From the store's site, refreshed daily"].filter(Boolean).join(" · ")}</p>
+      <button type="button" class="outline-btn filled" data-act="card-similar">Find similar in other stores</button>` : ""}
+    </section>
   </main>`;
 }
 
@@ -1550,6 +1623,7 @@ function flipPhoto(d){
   if (!img){ render(); return; }
   img.src = photoAt(i, k, 900);
   document.querySelectorAll("#card .bars i").forEach((b, j) => b.classList.toggle("on", j === k));
+  document.querySelectorAll(".card-more .dt-thumb").forEach((t, j) => t.setAttribute("aria-current", String(j === k)));
   preloadUrl(photoAt(i, k + 1, 900));
 }
 function preloadUrl(u){ if (u && !PRELOADED.has(u)){ PRELOADED.add(u); const im = new Image(); im.src = u; } }
@@ -1758,7 +1832,7 @@ function render(){
   app.innerHTML = html;
   document.body.classList.toggle("lock", !!(S.sheet || S.modal || S.detail || Z.open));
   if (S.detail){ const d2 = document.getElementById("detail"); if (d2) d2.scrollTop = keepTop; bindDetail(); }
-  if (S.screen === "explore"){ bindSwipe(); if (S.current) preloadUrl(photoAt(S.current, curPh() + 1, 900)); }
+  if (S.screen === "explore"){ bindSwipe(); if (S.current){ preloadUrl(photoAt(S.current, curPh() + 1, 900)); loadCardMore(S.current); } }
   const f = S.focus && document.querySelector(S.focus);
   if (f) f.focus();
   S.focus = null;
@@ -1823,6 +1897,7 @@ function vote(v){
     S.current = nextIdea();
     toast(VOTE_LABEL[v] + " “" + i.title + "”", {rec, idea:i});
     render();
+    window.scrollTo(0, 0);
   };
   if (card && !matchMedia("(prefers-reduced-motion: reduce)").matches){
     card.style.transition = "transform .22s ease, opacity .22s ease";
@@ -1830,6 +1905,23 @@ function vote(v){
     card.style.opacity = "0";
     setTimeout(done, 200);
   } else done();
+}
+// The last answer in this search that was about another piece than the one on screen.
+function prevVote(){
+  const v = S.round.votes;
+  for (let ix = v.length - 1; ix >= 0; ix--) if (!S.current || v[ix].id !== S.current.id) return byId(v[ix].id) ? {ix, rec:v[ix]} : null;
+  return null;
+}
+function goBack(){
+  const p = prevVote();
+  if (!p) return;
+  undoVote(p.rec);
+  S.round.votes.splice(p.ix, 1);
+  if (S.current) S.queue.unshift(S.current); // the card you were on comes right after
+  S.current = byId(p.rec.id);
+  clearTimeout(toastTimer); S.toast = null;
+  render();
+  window.scrollTo(0, 0);
 }
 function undo(){
   const t = S.toast && S.toast.undo;
@@ -1929,7 +2021,10 @@ const ACTIONS = {
   "dt-save"(){ if (S.detail) toggleSave(S.detail.item); render(); },
   "dt-photo"(el){ const box = document.getElementById("dtPhotos"); if (box) box.scrollTo({left:+el.dataset.v * box.clientWidth, behavior:matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"}); },
   zoom(el){ if (S.detail) zoomOpen(S.detail.item, +el.dataset.v || 0); },
+  prev(){ goBack(); },
   "card-zoom"(){ if (S.current) zoomOpen(S.current, curPh()); },
+  "card-photo"(el){ const k = +el.dataset.v || 0; if (!S.current) return; flipPhoto(k - curPh()); document.querySelectorAll(".card-more .dt-thumb").forEach((t, j) => t.setAttribute("aria-current", String(j === k))); window.scrollTo({top:0, behavior:matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"}); },
+  "card-similar"(){ if (S.current){ S.shopFrom = null; toShop(); } },
   "dt-more-toggle"(el){ const d = document.getElementById("dtDesc"); if (!d) return; const open = d.classList.toggle("clamp"); el.textContent = open ? "Read more" : "Show less"; },
   "dt-similar"(){
     const i = S.detail && S.detail.item;
@@ -2049,7 +2144,6 @@ function bindSwipe(){
     }
     if (dx < -90) vote("later");
     else if (dx > 90) vote("like");
-    else if (e.type === "pointerup" && dy < -90 && Math.abs(dx) < 70){ back(); openDetail(S.current, "card"); } // swipe up: details
     else back();
   };
   card.addEventListener("pointerup", end);

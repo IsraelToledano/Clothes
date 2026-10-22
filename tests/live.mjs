@@ -171,35 +171,33 @@ try {
       await page.screenshot({ path: path.join(OUT, "card-zoom.png") });
       await page.keyboard.press("Escape"); await page.waitForTimeout(500);
       g.cardZoom.closed = await page.evaluate(() => !document.getElementById("zoom") && !!document.getElementById("card"));
-      t = Date.now();
-      await page.click("#card .idea-title");
-      await page.waitForSelector("#detail", { timeout: 5000 });
-      g.detailsMs = Date.now() - t;
-      g.moreMs = await page.waitForFunction(() => S.more[S.detail.item.id] !== undefined, null, { timeout: 10000 }).then(() => Date.now() - t).catch(() => null);
-      await page.waitForTimeout(1200); // photos settle
-      g.details = await page.evaluate(() => ({ photos: document.querySelectorAll("#dtPhotos .dt-ph").length, loaded: [...document.querySelectorAll("#dtPhotos img")].slice(0, 2).map((i) => i.complete && i.naturalWidth), desc: ((document.getElementById("dtDesc") || {}).innerText || "").slice(0, 300), sizes: [...document.querySelectorAll(".sz")].map((x) => x.innerText + (x.classList.contains("out") ? " (sold out)" : "")), specs: [...document.querySelectorAll("#detail .specs div")].map((x) => x.innerText.replace("\n", ": ")), price: document.querySelector(".dt-price") && document.querySelector(".dt-price").innerText, cta: (document.querySelector("#detail a.cta") || {}).href }));
-      await page.screenshot({ path: path.join(OUT, "details-1.png") });
-      await page.evaluate(() => { document.getElementById("detail").scrollTop = 560; });
-      await page.waitForTimeout(400);
-      await page.screenshot({ path: path.join(OUT, "details-2.png") });
-      await page.evaluate(() => { document.getElementById("detail").scrollTop = 0; });
-      t = Date.now();
-      await page.click('.dt-ph[data-v="0"]');
-      await page.waitForSelector("#zoom", { timeout: 5000 });
-      g.sharpMs = await page.waitForFunction(() => { const i = document.getElementById("zImg"); return i && /width=2000/.test(i.src) && i.complete && i.naturalWidth > 0; }, null, { timeout: 20000 }).then(() => Date.now() - t).catch(() => null);
-      g.sharpWidth = await page.evaluate(() => document.getElementById("zImg").naturalWidth);
-      await page.waitForTimeout(500);
-      await page.screenshot({ path: path.join(OUT, "zoom-1.png") });
+      // In full screen: a double-tap goes closer.
+      await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height * 0.45);
+      await page.waitForSelector("#zoom", { timeout: 5000 }); await page.waitForTimeout(600);
       const zb = await page.locator("#zStage").boundingBox();
       await page.touchscreen.tap(zb.x + zb.width / 2, zb.y + zb.height * 0.4); await page.waitForTimeout(120);
-      await page.touchscreen.tap(zb.x + zb.width / 2, zb.y + zb.height * 0.4); await page.waitForTimeout(600);
-      g.zoomScale = await page.evaluate(() => Z.sc);
+      await page.touchscreen.tap(zb.x + zb.width / 2, zb.y + zb.height * 0.4); await page.waitForTimeout(700);
+      g.zoomScale = await page.evaluate(() => +(Z.sc / (Z.def || 1)).toFixed(2));
       await page.screenshot({ path: path.join(OUT, "zoom-2-double-tap.png") });
       await page.keyboard.press("Escape"); await page.waitForTimeout(500);
-      g.zoomClosed = await page.evaluate(() => !document.getElementById("zoom") && !!document.getElementById("detail"));
-      await page.click(".dt-bar .rbtn.sv"); await page.waitForTimeout(300);
-      await page.keyboard.press("Escape"); await page.waitForTimeout(500);
-      g.detailsClosed = await page.evaluate(() => !document.getElementById("detail"));
+      // The card's photo is clean; the name, price and the store's details are below it (scroll down).
+      g.card.onPhoto = await page.evaluate(() => document.querySelectorAll("#card .tag, #card .card-zoom, #card .idea-body, #card .insight, #card .swipe-hint").length);
+      g.card.layout = await page.evaluate(() => { const r = (s) => { const e = document.querySelector(s); return e ? Math.round(e.getBoundingClientRect().bottom) : null; }; return { photoBottom: r("#card"), titleBottom: r("#idea-t"), screen: innerHeight }; });
+      t = Date.now();
+      g.moreMs = await page.waitForFunction(() => S.more[S.current.id] !== undefined, null, { timeout: 10000 }).then(() => Date.now() - t).catch(() => null);
+      await page.evaluate(() => scrollTo(0, document.body.scrollHeight)); await page.waitForTimeout(1000);
+      g.details = await page.evaluate(() => ({ thumbs: document.querySelectorAll(".card-more .dt-thumb").length, desc: ((document.querySelector("#card-more-in .dt-desc") || {}).innerText || "").slice(0, 300), sizes: [...document.querySelectorAll("#card-more-in .sz")].map((x) => x.innerText + (x.classList.contains("out") ? " (sold out)" : "")), specs: [...document.querySelectorAll(".card-more .specs div")].map((x) => x.innerText.replace("\n", ": ")) }));
+      await page.screenshot({ path: path.join(OUT, "card-scrolled.png") });
+      await page.evaluate(() => scrollTo(0, 0)); await page.waitForTimeout(300);
+      await page.screenshot({ path: path.join(OUT, "card-clean.png") });
+      // Back to the previous piece, then forward again.
+      const before = await page.evaluate(() => ({ title: S.current.title, prev: S.round.votes[S.round.votes.length - 1].title }));
+      await page.click('[data-act="prev"]'); await page.waitForTimeout(500);
+      g.back = { was: before.title, nowShowing: await page.evaluate(() => S.current.title), expected: before.prev };
+      g.back.ok = g.back.nowShowing === before.prev;
+      await page.keyboard.press("ArrowLeft"); await page.waitForTimeout(600);
+      g.back.thenNext = await page.evaluate(() => S.current.title);
+      await page.click('[data-act="save"]'); await page.waitForTimeout(300);
       await page.click('header [data-act="saved"]'); await page.waitForTimeout(1500);
       g.saved = await page.evaluate(() => ({ screen: S.screen, cards: document.querySelectorAll(".sv-card").length, photos: [...document.querySelectorAll(".sv-card img")].filter((i) => i.complete && i.naturalWidth > 0).length }));
       await page.screenshot({ path: path.join(OUT, "saved.png") });
@@ -209,6 +207,21 @@ try {
       await page.click('[data-act="saved-back"]'); await page.waitForTimeout(400);
     } catch (e) { g.error = String((e && e.message) || e); await page.screenshot({ path: path.join(OUT, "gallery-error.png") }).catch(() => {}); }
     log("gallery & details", g);
+  }
+  /* ---------- 4. shoes: many different shoes, not a few in several colours ---------- */
+  if (first) {
+    try {
+      await page.evaluate(() => { Q.type = "Shoes"; Q.styles = []; Q.text = "Quiet luxury style"; save("query", Q); startRound(); });
+      await page.waitForSelector("#card img.prod.ok", { timeout: 20000 }); await page.waitForTimeout(800);
+      R.app.shoes = await page.evaluate(() => {
+        const l = [S.current].concat(S.queue).slice(0, 20);
+        const same = []; for (let a = 0; a < l.length; a++) for (let b = a + 1; b < l.length; b++) if (sameFamily(l[a], l[b])) same.push(l[a].title + " ~ " + l[b].title);
+        const kinds = {}, makers = {}; for (const i of l){ kinds[i.kind] = (kinds[i.kind] || 0) + 1; makers[makerOf(i)] = (makers[makerOf(i)] || 0) + 1; }
+        return { cards: l.map((i) => i.store + " | " + i.kind + " | " + i.title), sameModel: same, kinds: Object.keys(kinds).length, topMaker: Object.entries(makers).sort((x, y) => y[1] - x[1])[0] };
+      });
+      await page.screenshot({ path: path.join(OUT, "shoes.png") });
+      log("shoes", R.app.shoes);
+    } catch (e) { R.app.shoes = { error: String((e && e.message) || e) }; }
   }
   R.app.report = await page.evaluate(() => askSnapshot()).catch((e) => "report failed: " + e.message);
   fs.writeFileSync(path.join(OUT, "report.txt"), R.app.report);
@@ -237,6 +250,7 @@ const md = [
   `Same piece twice (any colour): ${a.samePiece && a.samePiece.length ? a.samePiece.join("; ") : "never"}`,
   `Cards that show what in your words they match: ${(a.cards || []).filter((c) => /^(Like |You asked|You named|From your words)/.test(c.why || "")).length} of ${(a.cards || []).length}`,
   `Gallery, details, zoom, saved: ${JSON.stringify(a.gallery || null)}`,
+  `Shoes (first 20): ${a.shoes ? (a.shoes.error || a.shoes.kinds + " kinds; most from one maker: " + JSON.stringify(a.shoes.topMaker) + "; same model twice: " + (a.shoes.sameModel.length ? a.shoes.sameModel.join("; ") : "never")) : "-"}`,
   `Errors: ${(a.errors || []).join(" | ") || "none"}`,
   a.stuck ? `STUCK at start: ${JSON.stringify(a.stuck)}` : "",
   a.stuckAfter ? `STUCK after card ${a.stuckAfter.n}: ${JSON.stringify(a.stuckAfter)}` : "",
