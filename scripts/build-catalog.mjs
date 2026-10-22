@@ -41,7 +41,10 @@ const STORES = [
 ];
 
 const NOT_HIS = /\b(women|womens|women's|women’s|woman|ladies|girls?|kids?|boys?|baby|toddler|skirts?|blouses?|bralettes?|bikinis?|leggings?|camisoles?|bodysuits?|jumpsuits?|rompers?|maternity|corsets?|bras?|halter|crop tops?|scarf tank|wrap top)\b|\bdress(es)?\b(?!\s*shirts?)/i;
-const NOT_CLOTHES = /\b(accessor(y|ies)|underwear|boxers?|briefs?|trunks? \(underwear\)|pyjamas?|pajamas?|loungewear|robes?|ties?|bow ?ties?|neckties?|socks?|hats?|caps?|beanies?|scarf|scarves|belts?|bags?|totes?|backpacks?|wallets?|card holders?|gloves?|sunglasses|glasses|jewel(le)?ry|bracelets?|necklaces?|rings?|cufflinks?|pocket squares?|bandanas?|keyrings?|watch(es)?|watch straps?|laces|shoe care|cream|polish|brush|hangers?|mask|face covering|gift ?card|e-?gift|candle|mug|poster|sticker|book|magazine|keychain|key ring|umbrella|towel|blanket|fragrance|perfume|cologne|incense|print|pin|patch|sample|bundle|insurance|shipping|donation|cushion|pillow|rug|ornament|playing cards|dog|leash|collar for)\b/i;
+// Not clothes (or not one piece of clothing). Careful with colours and details: "Cream Oxford", "Floral Print
+// Shirt", "Patch Pocket" and "Tie-Dye" are clothes (before 1.3 those words dropped them).
+const NOT_CLOTHES = /\b(accessor(y|ies)|underwear|boxers?|boxer briefs?|briefs|pyjamas?|pajamas?|robes?|bow ?ties?|neckties?|ties?(?![- ]?dye)|socks?|hats?|caps?|beanies?|scarf|scarves|belts?|bags?|totes?|backpacks?|wallets?|card ?holders?|gloves?|sunglasses|glasses|jewel(le)?ry|bracelets?|necklaces?|rings?|cufflinks?|pocket squares?|bandanas?|keyrings?|watch(es)?|watch straps?|laces|shoe care|shoe cream|polish|shoe brush|hangers?|face ?masks?|face covering|gift ?cards?|e-?gift|candles?|mugs?|posters?|stickers?|books?|magazines?|keychains?|key rings?|umbrellas?|towels?|blankets?|fragrances?|perfumes?|cologne|incense|art prints?|enamel pins?|lapel pins?|patches|swatch(es)?|fabric samples?|samples?|bundles?|insurance|shipping|donations?|cushions?|pillows?|rugs?|ornaments?|playing cards|dog|leash|collar for|mtm|made to measure)\b/i;
+const SKU_TITLE = /^[A-Z]{1,2}\d{3}[A-Z0-9]{3,}\b/; // "M993C0370Q - Original Fabrics": a fabric for made-to-measure, not a piece
 
 // The app's types. First match wins, so the more specific ones come first.
 const TYPE_RULES = [
@@ -104,7 +107,8 @@ async function getJSON(url) {
 
 const byType = {}, report = [], details = Array.from({ length: DETAIL_CHUNKS }, () => ({}));
 for (const [si, s] of STORES.entries()) {
-  const t0 = Date.now(), rep = { store: s.d, pages: 0, raw: 0, kept: 0 }, mine = [];
+  const t0 = Date.now(), rep = { store: s.d, pages: 0, raw: 0, kept: 0, drop: { notHis: 0, notClothes: 0, soldOut: 0, noPhoto: 0, noType: 0 }, samples: { notHis: [], noType: [] } }, mine = [];
+  const drop = (why, title) => { rep.drop[why]++; if (rep.samples[why] && rep.samples[why].length < 5) rep.samples[why].push(title); };
   try {
     const meta = await getJSON(`https://${s.d}/meta.json`).catch(() => null);
     s.cur = (meta && meta.currency) || "USD";
@@ -116,13 +120,14 @@ for (const [si, s] of STORES.entries()) {
       for (const p of list) {
         const title = clean(p.title), ptype = clean(p.product_type), tags = (Array.isArray(p.tags) ? p.tags : String(p.tags || "").split(",")).map((x) => clean(x).toLowerCase()).filter(Boolean);
         const hay = [title, ptype, tags.join(" ")].join(" ");
-        if (NOT_HIS.test(hay) || NOT_CLOTHES.test(title + " " + ptype)) continue;
+        if (NOT_HIS.test(hay)) { drop("notHis", title + " [" + ptype + "]"); continue; }
+        if (NOT_CLOTHES.test(title + " " + ptype) || SKU_TITLE.test(title)) { drop("notClothes", title); continue; }
         const all = p.variants || [], variants = all.filter((v) => v.available !== false);
-        if (!variants.length) continue;
+        if (!variants.length) { drop("soldOut", title); continue; }
         const imgs = [...new Set((p.images || []).map((im) => im && im.src).filter(Boolean).map(imgUrl))];
-        if (!imgs.length) continue;
+        if (!imgs.length) { drop("noPhoto", title); continue; }
         const type = typeOf({ title, product_type: ptype });
-        if (!type) continue;
+        if (!type) { drop("noType", title + " [" + ptype + "]"); continue; }
         // The cheapest piece in stock, and its full price when it's on sale.
         const cheap = variants.reduce((a, v) => ((Number(v.price) || Infinity) < (Number(a.price) || Infinity) ? v : a), variants[0]);
         const price = Number(cheap.price) || 0, was = Number(cheap.compare_at_price) || 0;
