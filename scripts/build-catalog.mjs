@@ -40,7 +40,9 @@ const STORES = [
   { d: "colhays.com", name: "Colhay's", tags: ["luxe", "classic", "minimal"] },
 ];
 
-const NOT_HIS = /\b(women|womens|women's|women’s|woman|ladies|girls?|kids?|boys?|baby(?!\s*(cashmere|alpaca|merino|cord))|toddler|skirts?|blouses?|bralettes?|bikinis?|leggings?|camisoles?|bodysuits?|jumpsuits?|rompers?|maternity|corsets?|bras?|halter|crop tops?|scarf tank|wrap top)\b|\bdress(es)?\b(?!\s*shirts?)/i;
+const NOT_HIS = /\b(women|womens|women's|women’s|woman|ladies|girls?|kids?|boys?|baby(?![\s-]*(cashmere|alpaca|merino|cord))|toddler|skirts?|blouses?|bralettes?|bikinis?|leggings?|camisoles?|bodysuits?|jumpsuits?|rompers?|maternity|corsets?|bras?|halter|crop tops?|scarf tank|wrap top)\b/i;
+// "Dress" is a women's piece only in the title or type, and not as in dress shirt, dress trouser or dress socks.
+const A_DRESS = /\bdress(es)?\b(?!\s*(shirts?|trousers?|pants?|socks?|shoes?|boots?|chinos?|code|gordon))/i;
 // Not clothes (or not one piece of clothing). Careful with colours and details: "Cream Oxford", "Floral Print
 // Shirt", "Patch Pocket" and "Tie-Dye" are clothes (before 1.3 those words dropped them).
 const NOT_CLOTHES = /\b(accessor(y|ies)|underwear|boxers?|boxer briefs?|briefs|pyjamas?|pajamas?|robes?|bow ?ties?|neckties?|ties?(?![- ]?dye)|socks?|hats?|caps?|beanies?|scarf|scarves|belts?|bags?|totes?|backpacks?|wallets?|card ?holders?|gloves?|sunglasses|glasses|jewel(le)?ry|bracelets?|necklaces?|rings?|cufflinks?|pocket squares?|bandanas?|keyrings?|watch(es)?|watch straps?|laces|shoe care|shoe cream|polish|shoe brush|hangers?|face ?masks?|face covering|gift ?cards?|e-?gift|candles?|mugs?|posters?|stickers?|books?|magazines?|keychains?|key rings?|umbrellas?|towels?|blankets?|fragrances?|perfumes?|cologne|incense|art prints?|enamel pins?|lapel pins?|patches|swatch(es)?|fabric samples?|samples?|bundles?|insurance|shipping|donations?|cushions?|pillows?|rugs?|ornaments?|playing cards|dog|leash|collar for|mtm|made to measure|undershirts?|cummerbunds?|braces|eyewear|earrings?|ear cuffs?|snapbacks?|strapbacks?|hair|styling paste|publications?|print material|gicl[ée]e|helmets?|sacoches?|pouch(es)?|plates?|masks?)\b/i;
@@ -121,7 +123,7 @@ for (const [si, s] of STORES.entries()) {
       for (const p of list) {
         const title = clean(p.title), ptype = clean(p.product_type), tags = (Array.isArray(p.tags) ? p.tags : String(p.tags || "").split(",")).map((x) => clean(x).toLowerCase()).filter(Boolean);
         const hay = [title, ptype, tags.join(" ")].join(" ");
-        if (NOT_HIS.test(hay)) { drop("notHis", title + " [" + ptype + "] <" + NOT_HIS.exec(hay)[0] + ">"); continue; }
+        if (NOT_HIS.test(hay) || A_DRESS.test(title + " " + ptype)) { drop("notHis", title + " [" + ptype + "] <" + (NOT_HIS.exec(hay) || A_DRESS.exec(title + " " + ptype))[0] + ">"); continue; }
         if (NOT_CLOTHES.test(title + " " + ptype) || SKU_TITLE.test(title)) { drop("notClothes", title); continue; }
         const all = p.variants || [], variants = all.filter((v) => v.available !== false);
         if (!variants.length) { drop("soldOut", title); continue; }
