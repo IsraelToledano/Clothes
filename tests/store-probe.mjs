@@ -59,13 +59,22 @@ async function probeCatalog(store) {
     r.sample = mens.slice(0, 5).map((p) => p.title + " $" + ((p.variants || [])[0] || {}).price + " " + ((p.images || []).length) + " photos");
     const meta = await fetch(`https://${store}/meta.json`, { headers: { "User-Agent": UA }, signal: AbortSignal.timeout(10000) }).then((x) => (x.ok ? x.json() : null)).catch(() => null);
     if (meta) r.meta = { name: meta.name, currency: meta.currency, il: Array.isArray(meta.ships_to_countries) ? meta.ships_to_countries.includes("IL") : null };
+    // Pieces the list calls sold out: does the store's own product page agree?
+    const out = mens.filter((p) => (p.variants || []).every((v) => v.available === false));
+    r.soldOutInList = out.length;
+    r.soldOutCheck = [];
+    const host = store.split("/")[0];
+    for (const p of out.slice(0, 6)) {
+      const j2 = await fetch(`https://${host}/products/${p.handle}.js`, { headers: { "User-Agent": UA, Accept: "application/json" }, signal: AbortSignal.timeout(10000) }).then((x) => (x.ok ? x.json() : { status: x.status })).catch((e) => ({ error: String(e) }));
+      r.soldOutCheck.push(p.title + ": page says available=" + j2.available + " (" + ((j2.variants || []).filter((v) => v.available).length) + "/" + ((j2.variants || []).length) + " sizes)" + (j2.status ? " HTTP " + j2.status : ""));
+    }
   } catch (e) { r.error = String((e && e.message) || e); r.ms = Date.now() - t0; }
   return r;
 }
 if (process.env.MODE === "catalog") {
   const results = await Promise.all(STORES.map(probeCatalog));
   fs.writeFileSync(path.join(OUT, "catalog-probe.json"), JSON.stringify({ at: new Date().toISOString(), results }, null, 2));
-  const md = [`# Catalog probe — ${new Date().toISOString()}`, ""].concat(results.map((r) => `- ${r.store}: ${r.error ? "ERROR " + r.error : r.status + " " + r.ms + "ms, " + (r.count || 0) + " products (" + (r.mens || 0) + " not women's)" + (r.notJson ? " NOT JSON: " + r.notJson : "")}${r.meta ? " — " + r.meta.name + ", " + r.meta.currency + ", ships to IL: " + r.meta.il : ""}${r.types && r.types.length ? " — types: " + r.types.join(", ") : ""}${r.sample && r.sample.length ? " — e.g. " + r.sample.join(" | ") : ""}`));
+  const md = [`# Catalog probe — ${new Date().toISOString()}`, ""].concat(results.map((r) => `- ${r.store}: ${r.error ? "ERROR " + r.error : r.status + " " + r.ms + "ms, " + (r.count || 0) + " products (" + (r.mens || 0) + " not women's)" + (r.notJson ? " NOT JSON: " + r.notJson : "")}${r.meta ? " — " + r.meta.name + ", " + r.meta.currency + ", ships to IL: " + r.meta.il : ""}${r.types && r.types.length ? " — types: " + r.types.join(", ") : ""}${r.sample && r.sample.length ? " — e.g. " + r.sample.join(" | ") : ""}${r.soldOutInList ? " — sold out in the list: " + r.soldOutInList + "; " + r.soldOutCheck.join("; ") : ""}`));
   fs.writeFileSync(path.join(OUT, "catalog-probe.md"), md.join("\n"));
   console.log(md.join("\n"));
   process.exit(0);
