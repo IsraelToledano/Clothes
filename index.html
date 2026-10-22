@@ -356,7 +356,7 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "1.5.0";
+const APP_VERSION = "1.5.1";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
 const SERVER_EXPECTED = "1.1.0"; // the worker/worker.js version this app was built with
 
@@ -834,11 +834,13 @@ const KIND_RULES = {
   "Jackets": [["Blazer", /blazer|sport ?coat|suit/], ["Bomber", /bomber|varsity/], ["Harrington", /harrington/], ["Field jacket", /field|m-?65|military/], ["Chore & work", /chore|work|cpo/], ["Denim & trucker", /denim|trucker/], ["Overcoat", /overcoat|topcoat|peacoat|coat/], ["Vest", /vest|gilet/], ["Suede & leather", /suede|leather/], ["Quilted & down", /quilt|down|puffer|parka/], ["Rain & shell", /rain|shell|anorak|windbreaker|cagoule/]],
   "Trousers": [["Chinos", /chino/], ["Pleated", /pleat/], ["Jeans", /jean|denim/], ["Corduroy", /cord/], ["Linen", /linen/], ["Cargo & fatigue", /cargo|fatigue|utility|carpenter/], ["Wool", /wool|flannel|tweed/], ["Drawstring", /drawstring|easy|camp/]],
   "Shorts": [["Chino shorts", /chino/], ["Swim", /swim|trunk|board/], ["Linen", /linen/], ["Cargo", /cargo|utility/], ["Denim", /denim|jean/], ["Terry & sweat", /terry|sweat|fleece/], ["Pleated", /pleat/]],
-  "Shoes": [["Loafers", /loafer|penny|tassel|horsebit/], ["Boat shoes", /boat shoe|deck shoe|\bboat\b/], ["Chukkas & desert boots", /chukka|desert boot|wallabee/], ["Chelsea boots", /chelsea/], ["Boots", /boot|hiker|engadin/], ["Court & canvas sneakers", /court|tennis|canvas|\bvans\b|converse|samba|gazelle|plimsoll|\bcvo\b|slip-on|leather sneaker|authentic/], ["Running sneakers", /new balance|asics|saucony|salomon|hoka|\bnike\b|reebok|\bon running\b|runner|running|gel-|trail|xt-6|991|990|993|1906|2002/], ["Sneakers", /sneaker|trainer/], ["Monk straps", /monk/], ["Brogues & wingtips", /brogue|wing ?tip|long ?wing/], ["Derbies", /derby|blucher|apron|gibson/], ["Oxfords", /oxford|balmoral/], ["Moccasins & drivers", /moccasin|\bmoc\b|driver|camp moc/], ["Sandals & slides", /sandal|slide|flip|thong/], ["Espadrilles", /espadrille/], ["Mules & clogs", /mule|clog|slipper/]],
+  "Shoes": [["Loafers", /loafer|penny|tassel|horsebit/], ["Boat shoes", /boat shoe|deck shoe|\bboat\b/], ["Chukkas & desert boots", /chukka|desert boot|wallabee/], ["Chelsea boots", /chelsea/], ["Boots", /\bboots?\b|hiker|engadin/], ["Court & canvas sneakers", /court|tennis|canvas|\bvans\b|converse|samba|gazelle|plimsoll|\bcvo\b|slip-on|leather sneaker|authentic/], ["Running sneakers", /new balance|asics|saucony|salomon|hoka|\bnike\b|reebok|\bon running\b|runner|running|gel-|trail|xt-6|991|990|993|1906|2002/], ["Sneakers", /sneaker|trainer/], ["Monk straps", /monk/], ["Brogues & wingtips", /brogue|wing ?tip|long ?wing/], ["Derbies", /derby|blucher|apron|gibson/], ["Oxfords", /oxford|balmoral/], ["Moccasins & drivers", /moccasin|\bmoc\b|driver|camp moc/], ["Sandals & slides", /sandal|slide|flip|thong/], ["Espadrilles", /espadrille/], ["Mules & clogs", /mule|clog|slipper/]],
   "Overshirts": [["Chore", /chore/], ["Quilted", /quilt/], ["Wool", /wool|flannel|melton/], ["Corduroy", /cord/], ["Denim", /denim|chambray/], ["Suede", /suede/]],
 };
 function kindOf(p){
-  const t = (p.title + " " + (p.ptype || "")).toLowerCase();
+  // The title first ("Paraboot Michael ... Derby Shoe" is a derby, whatever the store files it under).
+  const title = String(p.title || "").toLowerCase(), t = (title + " " + (p.ptype || "")).toLowerCase();
+  for (const [k, re] of KIND_RULES[p.type] || []) if (re.test(title)) return k;
   for (const [k, re] of KIND_RULES[p.type] || []) if (re.test(t)) return k;
   return p.fabric || p.type || "";
 }
