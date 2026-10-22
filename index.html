@@ -231,6 +231,7 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
 .icon-btn{position:relative}
 .badge{position:absolute;top:-3px;right:-3px;min-width:19px;height:19px;border-radius:10px;background:var(--accent);color:#fff;font-family:var(--mono);font-size:11px;font-weight:500;display:grid;place-items:center;padding:0 5px;border:2px solid var(--bg)}
 /* the details view: all the photos, the store's description, sizes, colours */
+.detail:focus{outline:none}
 .detail{position:fixed;inset:0;z-index:45;background:var(--card);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:manipulation}
 .dt{max-width:520px;margin:0 auto;padding-bottom:calc(112px + var(--safe-b));position:relative}
 .dt.nobar{padding-bottom:calc(28px + var(--safe-b))}
@@ -276,13 +277,13 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
 .zoom.zoomed .z-stage{cursor:grab}
 .z-img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;transform-origin:50% 50%;will-change:transform;-webkit-user-drag:none;pointer-events:none}
 .z-top{position:absolute;top:0;right:0;display:flex;padding:calc(10px + var(--safe-t)) 12px 0;z-index:2}
-.z-btn{width:46px;height:46px;border-radius:23px;border:0;background:rgba(255,255,255,.16);color:#fff;display:grid;place-items:center;padding:0}
+.z-btn{width:46px;height:46px;border-radius:23px;border:0;background:rgba(22,24,29,.62);color:#fff;display:grid;place-items:center;padding:0;box-shadow:0 0 0 1px rgba(255,255,255,.18)}
 .z-btn svg{width:22px;height:22px}
 .z-btn:disabled{opacity:.25}
 .z-foot{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;gap:18px;padding:0 12px calc(16px + var(--safe-b));z-index:2;pointer-events:none}
 .z-foot > *{pointer-events:auto}
-.z-count{font-family:var(--mono);font-size:13px;min-width:60px;text-align:center}
-.z-hint{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(76px + var(--safe-b));margin:0;font-size:13px;background:rgba(255,255,255,.16);padding:8px 13px;border-radius:999px;white-space:nowrap;pointer-events:none;transition:opacity .5s;z-index:2}
+.z-count{font-family:var(--mono);font-size:13px;min-width:64px;text-align:center;background:rgba(22,24,29,.62);border-radius:999px;padding:7px 10px}
+.z-hint{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(76px + var(--safe-b));margin:0;font-size:13px;background:rgba(22,24,29,.72);padding:8px 13px;border-radius:999px;white-space:nowrap;pointer-events:none;transition:opacity .5s;z-index:2}
 /* saved: a grid of photos */
 .sv-grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 12px}
 .sv-card{display:flex;flex-direction:column;gap:5px;width:100%;border:0;background:none;padding:0;text-align:left;color:var(--ink)}
@@ -316,7 +317,7 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "1.2.1";
+const APP_VERSION = "1.2.2";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
 const SERVER_EXPECTED = "1.1.0"; // the worker/worker.js version this app was built with
 
@@ -1151,7 +1152,8 @@ function moreHtml(i){
   for (const [name, values] of (m && m.o) || []) out.push(`<div class="dt-sec"><span class="mono-label">${esc(/colou?r/i.test(name) ? "Also comes in" : name)}</span><div class="szs">${values.map((x) => `<span class="sz">${esc(x)}</span>`).join("")}</div></div>`);
   if (m && m.d){
     const long = m.d.length > 300 || m.d.split("\n").length > 6;
-    out.push(`<div class="dt-sec"><span class="mono-label">From ${esc(i.store)}${m.v ? " · " + esc(m.v) : ""}</span><p class="dt-desc${long ? " clamp" : ""}" id="dtDesc">${esc(m.d)}</p>${long ? `<button type="button" class="link-btn" data-act="dt-more-toggle" style="align-self:flex-start;padding:0;min-height:32px">Read more</button>` : ""}</div>`);
+    const norm = (x) => String(x || "").toLowerCase().replace(/[^a-z]/g, ""), maker = m.v && !norm(m.v).includes(norm(i.store)) && !norm(i.store).includes(norm(m.v)) ? m.v : "";
+    out.push(`<div class="dt-sec"><span class="mono-label">From ${esc(i.store)}${maker ? " · by " + esc(maker) : ""}</span><p class="dt-desc${long ? " clamp" : ""}" id="dtDesc">${esc(m.d)}</p>${long ? `<button type="button" class="link-btn" data-act="dt-more-toggle" style="align-self:flex-start;padding:0;min-height:32px">Read more</button>` : ""}</div>`);
   }
   return out.join("");
 }
@@ -1163,7 +1165,7 @@ function renderDetail(){
   const pct = pr && i.was > i.price ? Math.round((1 - i.price / i.was) * 100) : 0;
   const specs = [["Colour", i.colour], ["Fabric", i.fabric], ["Fit", i.fit], ["Kind", i.kind && i.kind !== i.fabric && i.kind !== i.type ? i.kind : ""]].filter((x) => x[1]);
   const src = (u, w) => esc(pr ? sized(u, w) : u);
-  return `<div class="detail" id="detail" data-id="${esc(i.id)}" role="dialog" aria-modal="true" aria-labelledby="dt-t"><div class="dt${card ? "" : " nobar"}">
+  return `<div class="detail" id="detail" data-id="${esc(i.id)}" role="dialog" aria-modal="true" aria-labelledby="dt-t" tabindex="-1"><div class="dt${card ? "" : " nobar"}">
     <div class="dt-top"><button type="button" class="icon-btn" data-act="dt-close" aria-label="Back">${ICON.back}</button>${askBtn().replace(' id="askFab"', "")}</div>
     <div class="dt-gal">
       <div class="dt-photos" id="dtPhotos">${n ? photos.map((u, j) => `<button type="button" class="dt-ph" data-act="zoom" data-v="${j}" aria-label="Photo ${j + 1} of ${n}: open it full screen to zoom in"><img src="${src(u, 900)}" alt="" draggable="false"${j > 1 ? ' loading="lazy"' : ""}${pr ? "" : ' crossorigin="anonymous"'}></button>`).join("") : `<div class="dt-ph"><div class="ph">${ICON.image}<span class="mono-label">No photo</span></div></div>`}</div>
@@ -1188,7 +1190,7 @@ function openDetail(i, from){
   if (!i) return;
   S.detail = {item:i, from, ph:from === "card" ? curPh() : 0};
   pushLayer("detail");
-  S.focus = "#detail .dt-top .icon-btn";
+  S.focus = "#detail";
   render();
   if (isProduct(i) && S.more[i.id] === undefined) moreOf(i).then((m) => {
     S.more[i.id] = m;
