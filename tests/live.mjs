@@ -159,6 +159,16 @@ try {
       g.flipMs = await page.waitForFunction(() => { const i = document.querySelector("#card img.prod"); return curPh() === 1 && i && i.complete && i.naturalWidth > 0 && i.src === photoAt(S.current, 1, 900); }, null, { timeout: 15000 }).then(() => Date.now() - t).catch(() => null);
       g.tapVoted = await page.evaluate(() => TASTE.votes.length) !== a0votes();
       await page.screenshot({ path: path.join(OUT, "gallery-photo-2.png") });
+      // The middle of the card's photo opens it full screen (sharp copy), on the same photo.
+      t = Date.now();
+      await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height * 0.45);
+      await page.waitForSelector("#zoom", { timeout: 5000 });
+      g.cardZoom = { opened: true, photo: await page.evaluate(() => Z.k + 1) };
+      g.cardZoom.sharpMs = await page.waitForFunction(() => { const i = document.getElementById("zImg"); return i && /width=2000/.test(i.src) && i.complete && i.naturalWidth > 0; }, null, { timeout: 20000 }).then(() => Date.now() - t).catch(() => null);
+      await page.waitForTimeout(400);
+      await page.screenshot({ path: path.join(OUT, "card-zoom.png") });
+      await page.keyboard.press("Escape"); await page.waitForTimeout(500);
+      g.cardZoom.closed = await page.evaluate(() => !document.getElementById("zoom") && !!document.getElementById("card"));
       t = Date.now();
       await page.click("#card .idea-title");
       await page.waitForSelector("#detail", { timeout: 5000 });

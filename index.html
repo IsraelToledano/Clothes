@@ -220,7 +220,9 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
 .bars i{flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.6);box-shadow:0 0 0 .5px rgba(22,24,29,.3)}
 .bars i.on{background:var(--ink);box-shadow:0 0 0 1px rgba(255,255,255,.75)}
 .bars ~ .tag{top:22px}
-.photo-hint{bottom:56px}
+.photo-hint{bottom:56px;white-space:normal;width:max-content;max-width:calc(100% - 24px);text-align:center}
+.card-zoom{position:absolute;z-index:3;top:20px;right:12px;width:44px;height:44px;border-radius:22px;border:0;background:#fff;color:var(--ink);display:grid;place-items:center;padding:0;box-shadow:0 0 0 1px rgba(22,24,29,.08),0 2px 10px rgba(0,0,0,.12)}
+.card-zoom svg{width:22px;height:22px}
 .idea-body.row{flex-direction:row;align-items:center;gap:10px;cursor:pointer}
 .idea-body.row .idea-head{flex:1;min-width:0}
 .idea .idea-title{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -323,7 +325,7 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "1.3.1";
+const APP_VERSION = "1.3.2";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
 const SERVER_EXPECTED = "1.1.0"; // the worker/worker.js version this app was built with
 
@@ -996,16 +998,23 @@ function converge(i){
   const pick = [], stores = {};
   const titles = new Set([pieceKey(i)].concat(S.round.votes.map(seenKey), S.queue.slice(0, ON_DECK).map(pieceKey)));
   for (const [p] of close){ if ((stores[p.store] || 0) >= 2 || titles.has(pieceKey(p))) continue; stores[p.store] = (stores[p.store] || 0) + 1; titles.add(pieceKey(p)); pick.push(Object.assign(p, {_boost:10, why:"More like: " + i.title.slice(0, 34)})); if (pick.length >= 3) break; }
-  // Never the same store twice in a row, in the variations too.
-  const order = [], rest = pick.slice();
-  let prev = S.queue[ON_DECK - 1] || S.current;
-  while (rest.length){ let k = rest.findIndex((p) => !prev || p.store !== prev.store); if (k < 0) k = 0; prev = rest.splice(k, 1)[0]; order.push(prev); }
-  const pickIds = new Set(order.map((p) => p.id));
-  S.queue = S.queue.slice(0, ON_DECK).concat(order, S.queue.slice(ON_DECK).filter((p) => !pickIds.has(p.id)));
+  const pickIds = new Set(pick.map((p) => p.id));
+  S.queue = S.queue.slice(0, ON_DECK).concat(pick, S.queue.slice(ON_DECK).filter((p) => !pickIds.has(p.id)));
+  noStoreTwice(S.queue, ON_DECK);
   preloadAhead();
   if (aiRound()) aiKeywords(i, S.gen);
 }
 function runHunt(){}
+// Never the same store twice in a row: where it happens (say, where the variations meet the rest), the
+// nearest piece from another store moves up. Everything else keeps its place.
+function noStoreTwice(q, from){
+  for (let k = Math.max(1, from); k < q.length; k++){
+    if (q[k].store !== q[k - 1].store) continue;
+    const j = q.findIndex((x, n) => n > k && x.store !== q[k - 1].store);
+    if (j > k) q.splice(k, 0, q.splice(j, 1)[0]);
+  }
+  return q;
+}
 
 // After four "not now" in a row, start over from different kinds and stores.
 function maybeRedirect(){
@@ -1215,9 +1224,10 @@ function renderExplore(){
         <span class="tag">${isProduct(i) ? esc(i.brand && i.brand !== i.store ? i.brand + " · " + i.store : i.store) : (isAI(i) ? "AI idea" : "Sample idea") + " · not a real product"}</span>
         ${ideaImage(i)}
         ${insight ? `<div class="insight" role="status">${ICON.sliders}<span>${esc(insight)}</span></div>` : ""}
+        ${isProduct(i) || photosOf(i).length ? `<button type="button" class="card-zoom" data-act="card-zoom" aria-label="See this photo full screen and zoom in">${ICON.zoom}</button>` : ""}
         <span class="stamp no" aria-hidden="true">${ICON.close}Not now</span><span class="stamp yes" aria-hidden="true">${ICON.heart}Closer</span>
         ${S.round.votes.length < 3 ? `<span class="swipe-hint" aria-hidden="true">← Not now · Getting closer →</span>` : ""}
-        ${S.round.votes.length < 2 && np > 1 ? `<span class="swipe-hint photo-hint" aria-hidden="true">Tap the photo's sides for more photos</span>` : ""}
+        ${S.round.votes.length < 2 ? `<span class="swipe-hint photo-hint" aria-hidden="true">${np > 1 ? "Tap a side: more photos · the middle: zoom" : "Tap the photo to zoom in"}</span>` : ""}
       </div>
       <div class="idea-body row">
         <div class="idea-head">${b ? `<span class="because">${esc(b)}</span>` : ""}<h1 id="idea-t" class="idea-title">${esc(i.title)}</h1>${isProduct(i) ? `<p class="idea-desc">${priceHtml(i)} · ${esc(i.store)}</p>` : `<p class="idea-desc">${esc(i.desc)}</p>`}</div>
@@ -1374,7 +1384,15 @@ function zoomClose(fromHistory){
   const el = document.getElementById("zoom");
   if (el) el.remove();
   document.body.classList.toggle("lock", !!(S.sheet || S.modal || S.detail));
-  // The details view stays on the photo you were looking at.
+  // The card, or the details view, stays on the photo you were looking at.
+  if (!S.detail && S.current && Z.item && Z.item.id === S.current.id && Z.k !== curPh()){
+    S.phFor = S.current.id; S.ph = Z.k;
+    const img = document.querySelector("#card img.prod");
+    if (img) img.src = photoAt(S.current, Z.k, 900);
+    document.querySelectorAll("#card .bars i").forEach((b, j) => b.classList.toggle("on", j === Z.k));
+  }
+  const back = !S.detail && document.querySelector("#card .card-zoom");
+  if (back) back.focus({preventScroll:true});
   if (S.detail){
     S.detail.ph = Z.k;
     const box = document.getElementById("dtPhotos");
@@ -1867,6 +1885,7 @@ const ACTIONS = {
   "dt-save"(){ if (S.detail) toggleSave(S.detail.item); render(); },
   "dt-photo"(el){ const box = document.getElementById("dtPhotos"); if (box) box.scrollTo({left:+el.dataset.v * box.clientWidth, behavior:matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"}); },
   zoom(el){ if (S.detail) zoomOpen(S.detail.item, +el.dataset.v || 0); },
+  "card-zoom"(){ if (S.current) zoomOpen(S.current, curPh()); },
   "dt-more-toggle"(el){ const d = document.getElementById("dtDesc"); if (!d) return; const open = d.classList.toggle("clamp"); el.textContent = open ? "Read more" : "Show less"; },
   "dt-similar"(){
     const i = S.detail && S.detail.item;
@@ -1976,7 +1995,11 @@ function bindSwipe(){
       // A tap: on the photo, its left or right side flips to the previous or next photo; on the text, the details open.
       back();
       const img = downEl && downEl.closest(".idea-img");
-      if (img){ const r = img.getBoundingClientRect(); flipPhoto(sx < r.left + r.width / 2 ? -1 : 1); }
+      if (img){
+        const r = img.getBoundingClientRect(), x = (sx - r.left) / r.width;
+        if (photosOf(S.current).length < 2 || (x > 1 / 3 && x < 2 / 3)) zoomOpen(S.current, curPh());
+        else flipPhoto(x <= 1 / 3 ? -1 : 1);
+      }
       else if (downEl && downEl.closest(".idea-body")) openDetail(S.current, "card");
       return;
     }
