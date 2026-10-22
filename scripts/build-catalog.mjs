@@ -20,7 +20,7 @@ const STORES = [
   { d: "taylorstitch.com", name: "Taylor Stitch", tags: ["workwear", "classic", "relaxed", "vintage"] },
   { d: "noahny.com", name: "Noah", tags: ["preppy", "streetwear", "youthful"] },
   { d: "percivalclo.com", name: "Percival", tags: ["smart", "minimal", "youthful", "relaxed"] },
-  { d: "portugueseflannel.com", name: "Portuguese Flannel", tags: ["relaxed", "classic", "minimal"] },
+  { d: "portugueseflannel.com", name: "Portuguese Flannel", tags: ["relaxed", "classic", "minimal"], def: "Shirts" }, // a shirt maker: untyped pieces are shirts
   { d: "oliverspencer.co.uk", name: "Oliver Spencer", tags: ["smart", "minimal", "relaxed"] },
   { d: "universalworks.co.uk", name: "Universal Works", tags: ["workwear", "relaxed", "vintage"] },
   { d: "kith.com", name: "Kith", tags: ["streetwear", "youthful", "preppy"] },
@@ -31,7 +31,7 @@ const STORES = [
   { d: "knickerbocker.nyc", name: "Knickerbocker", tags: ["vintage", "workwear", "classic"] },
   { d: "ironandresin.com", name: "Iron & Resin", tags: ["workwear", "vintage", "rugged"] },
   // Added in 1.3 for briefs like "Ralph Lauren, Club Monaco, J.Crew" (all ship to Israel, checked with the store probe).
-  { d: "clubmonaco.com", name: "Club Monaco", tags: ["smart", "minimal", "classic", "tailored"] },
+  { d: "clubmonaco.com", name: "Club Monaco", tags: ["smart", "minimal", "classic", "tailored"], path: "/collections/mens" }, // its full list is mostly women's and old pieces
   { d: "jpressonline.com", name: "J.Press", tags: ["preppy", "classic", "tailored", "vintage"] },
   { d: "grayers.com", name: "Grayers", tags: ["preppy", "classic", "relaxed"] },
   { d: "kamakurashirts.com", name: "Kamakura Shirts", tags: ["classic", "smart", "tailored"] },
@@ -40,27 +40,28 @@ const STORES = [
   { d: "colhays.com", name: "Colhay's", tags: ["luxe", "classic", "minimal"] },
 ];
 
-const NOT_HIS = /\b(women|womens|women's|women’s|woman|ladies|girls?|kids?|boys?|baby|toddler|skirts?|blouses?|bralettes?|bikinis?|leggings?|camisoles?|bodysuits?|jumpsuits?|rompers?|maternity|corsets?|bras?|halter|crop tops?|scarf tank|wrap top)\b|\bdress(es)?\b(?!\s*shirts?)/i;
+const NOT_HIS = /\b(women|womens|women's|women’s|woman|ladies|girls?|kids?|boys?|baby(?!\s*(cashmere|alpaca|merino|cord))|toddler|skirts?|blouses?|bralettes?|bikinis?|leggings?|camisoles?|bodysuits?|jumpsuits?|rompers?|maternity|corsets?|bras?|halter|crop tops?|scarf tank|wrap top)\b|\bdress(es)?\b(?!\s*shirts?)/i;
 // Not clothes (or not one piece of clothing). Careful with colours and details: "Cream Oxford", "Floral Print
 // Shirt", "Patch Pocket" and "Tie-Dye" are clothes (before 1.3 those words dropped them).
-const NOT_CLOTHES = /\b(accessor(y|ies)|underwear|boxers?|boxer briefs?|briefs|pyjamas?|pajamas?|robes?|bow ?ties?|neckties?|ties?(?![- ]?dye)|socks?|hats?|caps?|beanies?|scarf|scarves|belts?|bags?|totes?|backpacks?|wallets?|card ?holders?|gloves?|sunglasses|glasses|jewel(le)?ry|bracelets?|necklaces?|rings?|cufflinks?|pocket squares?|bandanas?|keyrings?|watch(es)?|watch straps?|laces|shoe care|shoe cream|polish|shoe brush|hangers?|face ?masks?|face covering|gift ?cards?|e-?gift|candles?|mugs?|posters?|stickers?|books?|magazines?|keychains?|key rings?|umbrellas?|towels?|blankets?|fragrances?|perfumes?|cologne|incense|art prints?|enamel pins?|lapel pins?|patches|swatch(es)?|fabric samples?|samples?|bundles?|insurance|shipping|donations?|cushions?|pillows?|rugs?|ornaments?|playing cards|dog|leash|collar for|mtm|made to measure)\b/i;
+const NOT_CLOTHES = /\b(accessor(y|ies)|underwear|boxers?|boxer briefs?|briefs|pyjamas?|pajamas?|robes?|bow ?ties?|neckties?|ties?(?![- ]?dye)|socks?|hats?|caps?|beanies?|scarf|scarves|belts?|bags?|totes?|backpacks?|wallets?|card ?holders?|gloves?|sunglasses|glasses|jewel(le)?ry|bracelets?|necklaces?|rings?|cufflinks?|pocket squares?|bandanas?|keyrings?|watch(es)?|watch straps?|laces|shoe care|shoe cream|polish|shoe brush|hangers?|face ?masks?|face covering|gift ?cards?|e-?gift|candles?|mugs?|posters?|stickers?|books?|magazines?|keychains?|key rings?|umbrellas?|towels?|blankets?|fragrances?|perfumes?|cologne|incense|art prints?|enamel pins?|lapel pins?|patches|swatch(es)?|fabric samples?|samples?|bundles?|insurance|shipping|donations?|cushions?|pillows?|rugs?|ornaments?|playing cards|dog|leash|collar for|mtm|made to measure|undershirts?|cummerbunds?|braces|eyewear|earrings?|ear cuffs?|snapbacks?|strapbacks?|hair|styling paste|publications?|print material|gicl[ée]e|helmets?|sacoches?|pouch(es)?|plates?|masks?)\b/i;
 const SKU_TITLE = /^[A-Z]{1,2}\d{3}[A-Z0-9]{3,}\b/; // "M993C0370Q - Original Fabrics": a fabric for made-to-measure, not a piece
 
 // The app's types. First match wins, so the more specific ones come first.
 const TYPE_RULES = [
   ["Shoes", /\b(footwear|sneakers?|trainers?|shoes?|boots?|loafers?|sandals?|derbys?|derbies|moccasins?|mules?|slides|espadrilles?|clogs?|slippers?|oxfords? (shoes?|sneakers?)|tennis oxfords?)\b/i],
   ["Shorts", /\b(shorts|short)\b(?!\s*-?\s*sleeve)|\bswim ?trunks?\b|\bboardshorts?\b/i],
-  ["Trousers", /\b(pants?|trousers?|chinos?|jeans|denim pant|slacks|joggers?|sweatpants)\b/i],
-  ["Overshirts", /\b(overshirts?|over-shirts?|shirt jackets?|shirt-jackets?|shackets?|chore (coats?|jackets?))\b/i],
-  ["Jackets", /\b(jackets?|blazers?|coats?|parkas?|bombers?|anoraks?|gilets?|vests?|waistcoats?|cagoules?|windbreakers?|sport ?coats?|overcoats?|peacoats?|suits?|suit outfit|tuxedos?(?! shirt))\b/i],
-  ["T-shirts", /\b(t-?shirts?|tees?|henleys?|ringer|tank tops?)\b/i],
-  ["Knitwear", /\b(sweaters?|cardigans?|jumpers?|knits?|knitted|crewnecks?|quarter[- ]zip|half[- ]zip|turtlenecks?|mock ?necks?|pullovers?|cashmere|merino|fair isle|cable)\b/i],
-  ["Shirts", /\b(shirts?|oxfords?|popovers?|button[- ]downs?|polos?|rugbys?|camp collar|flannels?|chambray|overshirts?)\b/i],
+  ["Trousers", /\b(pants?|trousers?|chinos?|jeans?|denim pant|slacks|joggers?|sweatpants?|overalls|5 pockets?|five pockets?)\b/i],
+  ["Overshirts", /\b(overshirts?|over-shirts?|shirt jackets?|shirt-jackets?|shackets?|chore (coats?|jackets?)|cpo)\b/i],
+  ["Jackets", /\b(puffers?|topcoats?|raincoats?|trench(coats?)?|balmacaans?|chesterfields?|sherpas?|truckers?|jackets?|blazers?|coats?|parkas?|bombers?|anoraks?|gilets?|vests?|waistcoats?|cagoules?|windbreakers?|sport ?coats?|overcoats?|peacoats?|suits?|suit outfit|tuxedos?(?! shirt))\b/i],
+  ["T-shirts", /\b(t-?shirts?|tees?|henleys?|ringer|tank tops?|thermals?)\b/i],
+  ["Knitwear", /\b(knitwear|sweatshirts?|hoodies?|hooded|loopback|lambswool|roll ?necks?|rollnecks?|sweaters?|cardigans?|jumpers?|knits?|knitted|crewnecks?|quarter[- ]zip|half[- ]zip|turtlenecks?|mock ?necks?|pullovers?|cashmere|merino|fair isle|cable)\b/i],
+  ["Shirts", /\b(wovens?|spread|shirts?|oxfords?|popovers?|button[- ]downs?|polos?|rugbys?|camp collar|flannels?|chambray|overshirts?)\b/i],
 ];
 function typeOf(p) {
   const hay = [p.title, p.product_type].join(" ");
   for (const [t, re] of TYPE_RULES) if (re.test(p.product_type || "") ) return t;
   for (const [t, re] of TYPE_RULES) if (re.test(hay)) return t;
+  if (/outerwear/i.test(p.product_type || "")) return "Jackets"; // only when the title didn't say (an "Outerwear" overshirt is an overshirt)
   return "";
 }
 const FABRICS = ["oxford", "poplin", "linen", "seersucker", "chambray", "denim", "flannel", "madras", "gingham", "corduroy", "twill", "jersey", "pique", "terry", "cashmere", "merino", "wool", "silk", "suede", "leather", "canvas", "cotton", "fleece", "nylon", "herringbone", "tweed", "mohair", "boucle", "waffle", "velvet"];
@@ -114,19 +115,19 @@ for (const [si, s] of STORES.entries()) {
     s.cur = (meta && meta.currency) || "USD";
     s.il = meta && Array.isArray(meta.ships_to_countries) ? meta.ships_to_countries.includes("IL") : null;
     for (let page = 1; page <= 12; page++) {
-      const j = await getJSON(`https://${s.d}/products.json?limit=250&page=${page}`);
+      const j = await getJSON(`https://${s.d}${s.path || ""}/products.json?limit=250&page=${page}`);
       const list = (j && j.products) || [];
       rep.pages = page; rep.raw += list.length;
       for (const p of list) {
         const title = clean(p.title), ptype = clean(p.product_type), tags = (Array.isArray(p.tags) ? p.tags : String(p.tags || "").split(",")).map((x) => clean(x).toLowerCase()).filter(Boolean);
         const hay = [title, ptype, tags.join(" ")].join(" ");
-        if (NOT_HIS.test(hay)) { drop("notHis", title + " [" + ptype + "]"); continue; }
+        if (NOT_HIS.test(hay)) { drop("notHis", title + " [" + ptype + "] <" + NOT_HIS.exec(hay)[0] + ">"); continue; }
         if (NOT_CLOTHES.test(title + " " + ptype) || SKU_TITLE.test(title)) { drop("notClothes", title); continue; }
         const all = p.variants || [], variants = all.filter((v) => v.available !== false);
         if (!variants.length) { drop("soldOut", title); continue; }
         const imgs = [...new Set((p.images || []).map((im) => im && im.src).filter(Boolean).map(imgUrl))];
         if (!imgs.length) { drop("noPhoto", title); continue; }
-        const type = typeOf({ title, product_type: ptype });
+        const type = typeOf({ title, product_type: ptype }) || s.def || "";
         if (!type) { drop("noType", title + " [" + ptype + "]"); continue; }
         // The cheapest piece in stock, and its full price when it's on sale.
         const cheap = variants.reduce((a, v) => ((Number(v.price) || Infinity) < (Number(a.price) || Infinity) ? v : a), variants[0]);
