@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-23T07:35:41.466Z",
+ "updated": "2026-10-24T07:20:19.036Z",
  "format": 2,
  "chunks": 128,
  "stores": [
@@ -314,39 +314,39 @@
   }
  ],
  "counts": {
-  "Shirts": 2922,
-  "Jackets": 2252,
-  "Trousers": 1659,
-  "Knitwear": 2446,
+  "Knitwear": 2450,
+  "Shirts": 2927,
+  "Jackets": 2257,
+  "Trousers": 1665,
   "T-shirts": 1065,
-  "Shorts": 472,
-  "Overshirts": 231,
-  "Shoes": 857
+  "Shorts": 473,
+  "Overshirts": 229,
+  "Shoes": 878
  },
  "report": [
   {
    "store": "rowingblazers.com",
    "pages": 4,
-   "raw": 835,
-   "kept": 444,
+   "raw": 838,
+   "kept": 442,
    "drop": {
-    "notHis": 248,
+    "notHis": 250,
     "notClothes": 111,
-    "soldOut": 32,
+    "soldOut": 35,
     "noPhoto": 0,
     "noType": 0
    },
    "samples": {
     "notHis": [
+     "Women's Cotton Poplin Plaid Asymmetrical Button Down Pink Plaid [Button Downs] <Women>",
+     "Women's Cotton Poplin Pleated Plaid Skirt Pink Plaid [Skirts] <Women>",
      "Cotton Croquet Stripe Lounge Set [Pajamas & Lounge Sets] <women>",
      "Women's Button Down Pleated Shirt Dress White [Dresses] <Women>",
-     "Oversized Wool Sheep Sweater Brown [Sweaters] <women>",
-     "Warm & Wonderful Fitted \"Diana Edition\" Cotton Sheep Sweater Lavender [Sweaters] <women>",
-     "Women's Cotton Blend Cable Dress Camel [Dresses] <Women>"
+     "Oversized Wool Sheep Sweater Brown [Sweaters] <women>"
     ],
     "noType": []
    },
-   "ms": 3208
+   "ms": 3153
   },
   {
    "store": "alexmill.com",
@@ -362,29 +362,29 @@
    },
    "samples": {
     "notHis": [
-     "Bea Fairisle Sweater in Alpaca [Women's Sweaters] <Women>",
-     "Bea Fairisle Sweater in Alpaca [Women's Sweaters] <Women>",
-     "Bea Fairisle Sweater in Alpaca [Women's Sweaters] <Women>",
-     "The Perfect Weekday Tote [Unisex Accessories] <women>",
+     "The Collector's Painted Weekend Tote Double Decker Bus [Unisex Accessories] <women>",
+     "Bea Fair Isle Sweater in Alpaca [Women's Sweaters] <Women>",
+     "Bea Fair Isle Sweater in Alpaca [Women's Sweaters] <Women>",
+     "Bea Fair Isle Sweater in Alpaca [Women's Sweaters] <Women>",
      "The Perfect Weekday Tote [Unisex Accessories] <women>"
     ],
     "noType": [
      "Alex Mill Gift Wrapping []"
     ]
    },
-   "ms": 4887
+   "ms": 4126
   },
   {
    "store": "toddsnyder.com",
    "pages": 12,
    "raw": 3000,
-   "kept": 1702,
+   "kept": 1709,
    "drop": {
     "notHis": 9,
-    "notClothes": 729,
-    "soldOut": 521,
+    "notClothes": 731,
+    "soldOut": 513,
     "noPhoto": 0,
-    "noType": 39
+    "noType": 38
    },
    "samples": {
     "notHis": [
@@ -402,35 +402,35 @@
      "Mykonos Swim Brief [TS SWIM]"
     ]
    },
-   "ms": 17403
+   "ms": 16159
   },
   {
    "store": "drakes.com",
    "pages": 9,
-   "raw": 2063,
+   "raw": 2062,
    "kept": 924,
    "drop": {
     "notHis": 0,
     "notClothes": 1038,
     "soldOut": 100,
-    "noPhoto": 1,
+    "noPhoto": 0,
     "noType": 0
    },
    "samples": {
     "notHis": [],
     "noType": []
    },
-   "ms": 12567
+   "ms": 13057
   },
   {
    "store": "aimeleondore.com",
    "pages": 4,
    "raw": 900,
-   "kept": 462,
+   "kept": 461,
    "drop": {
     "notHis": 28,
     "notClothes": 318,
-    "soldOut": 31,
+    "soldOut": 32,
     "noPhoto": 0,
     "noType": 61
    },
@@ -450,17 +450,17 @@
      "Café Leon Dore Cappuccino Cup & Saucer (Set of 6) [Lifestyle]"
     ]
    },
-   "ms": 3694
+   "ms": 4026
   },
   {
    "store": "taylorstitch.com",
    "pages": 12,
    "raw": 3000,
-   "kept": 472,
+   "kept": 477,
    "drop": {
     "notHis": 50,
     "notClothes": 573,
-    "soldOut": 1903,
+    "soldOut": 1898,
     "noPhoto": 2,
     "noType": 0
    },
@@ -474,17 +474,17 @@
     ],
     "noType": []
    },
-   "ms": 13814
+   "ms": 11490
   },
   {
    "store": "noahny.com",
    "pages": 3,
-   "raw": 555,
-   "kept": 258,
+   "raw": 548,
+   "kept": 256,
    "drop": {
     "notHis": 5,
     "notClothes": 138,
-    "soldOut": 148,
+    "soldOut": 143,
     "noPhoto": 0,
     "noType": 6
    },
@@ -504,17 +504,17 @@
      "Oysterman Wetsuit [Clothing]"
     ]
    },
-   "ms": 2181
+   "ms": 2648
   },
   {
    "store": "percivalclo.com",
    "pages": 4,
    "raw": 910,
-   "kept": 551,
+   "kept": 552,
    "drop": {
     "notHis": 3,
     "notClothes": 163,
-    "soldOut": 185,
+    "soldOut": 184,
     "noPhoto": 0,
     "noType": 8
    },
@@ -532,17 +532,17 @@
      "PCVL Performance Top | Rust [Jersey]"
     ]
    },
-   "ms": 5832
+   "ms": 4411
   },
   {
    "store": "portugueseflannel.com",
    "pages": 1,
-   "raw": 211,
-   "kept": 194,
+   "raw": 215,
+   "kept": 197,
    "drop": {
     "notHis": 0,
     "notClothes": 14,
-    "soldOut": 3,
+    "soldOut": 4,
     "noPhoto": 0,
     "noType": 0
    },
@@ -550,15 +550,15 @@
     "notHis": [],
     "noType": []
    },
-   "ms": 657
+   "ms": 621
   },
   {
    "store": "oliverspencer.co.uk",
    "pages": 3,
-   "raw": 511,
-   "kept": 319,
+   "raw": 515,
+   "kept": 322,
    "drop": {
-    "notHis": 7,
+    "notHis": 8,
     "notClothes": 174,
     "soldOut": 4,
     "noPhoto": 0,
@@ -566,11 +566,11 @@
    },
    "samples": {
     "notHis": [
+     "Blenheim Crew Neck Jumper Rosen Burgundy [Knitwear-Winter 26] <baby>",
      "Blenheim Crew Neck Jumper Rosen Mushroom Grey [Knitwear-Winter 26] <baby>",
      "Blenheim Crew Neck Jumper Rosen Forest Green [Knitwear-Winter 26] <baby>",
      "Soane Scarf Rosen Burgundy [Scarves-Winter 26] <baby>",
-     "Soane Scarf Rosen Forest Green [Scarves-Winter 26] <baby>",
-     "Soane Scarf Rosen Mushroom Grey [Scarves-Winter 26] <baby>"
+     "Soane Scarf Rosen Forest Green [Scarves-Winter 26] <baby>"
     ],
     "noType": [
      "Niwaki Sentei Ikebana Scissors Black [Home & Garden-Rollover]",
@@ -580,17 +580,17 @@
      "Attirecare Garment Spray Aureum 250ml [Home & Garden-Rollover]"
     ]
    },
-   "ms": 2844
+   "ms": 2166
   },
   {
    "store": "universalworks.co.uk",
    "pages": 6,
-   "raw": 1352,
-   "kept": 981,
+   "raw": 1358,
+   "kept": 982,
    "drop": {
     "notHis": 0,
     "notClothes": 334,
-    "soldOut": 10,
+    "soldOut": 15,
     "noPhoto": 0,
     "noType": 27
    },
@@ -604,27 +604,27 @@
      "F/CE.® Black 420 re/cor Daytrip BP 2.0 [F/CE]"
     ]
    },
-   "ms": 6541
+   "ms": 6300
   },
   {
    "store": "kith.com",
    "pages": 12,
    "raw": 3000,
-   "kept": 1299,
+   "kept": 1312,
    "drop": {
-    "notHis": 1228,
-    "notClothes": 333,
-    "soldOut": 117,
+    "notHis": 1211,
+    "notClothes": 328,
+    "soldOut": 126,
     "noPhoto": 0,
     "noType": 23
    },
    "samples": {
     "notHis": [
-     "Nike WMNS Moon Shoe OG - University Red / Black [Low Top Sneakers] <WMNS>",
-     "Nike WMNS Caitlin 1 - Yellow Zest / Soft Yellow / Racer Blue [Low Top Sneakers] <WMNS>",
-     "Nike PS Kobe 8 - Red Plum / Pink Flash / Electric Green [Low Top Sneakers] <Nike PS>",
-     "NikeSKIMS Sherpa Oversized Quarter Zip Jacket - Boulder / Obsidian [Jackets] <wmns>",
-     "NikeSKIMS Performance Cotton Blend Short Sleeve V Neck Crop Top - University Red [Short Sleeve Tees] <Crop Top>"
+     "Timberland WMNS Premium 6-Inch - Brown [Boots] <WMNS>",
+     "Timberland WMNS Premium 6-Inch Waterproof - Brown [Boots] <WMNS>",
+     "Nike TD Little Posite Pro Premium - Summit White / Black [High Top Sneakers] <Nike TD>",
+     "Nike PS Little Posite Pro Premium - Summit White / Black [High Top Sneakers] <Nike PS>",
+     "Jordan TD Jordan 5 Retro - Black / Picante Red / Glow In The Dark / Multi Color [High Top Sneakers] <Jordan TD>"
     ],
     "noType": [
      "Rick Owens Portable Ashtray - Palladio [Lifestyle]",
@@ -634,51 +634,51 @@
      "Kith Ivy for Wilson Striped Wristbands - Magma [Wristbands]"
     ]
    },
-   "ms": 16303
+   "ms": 16367
   },
   {
    "store": "corridornyc.com",
    "pages": 2,
-   "raw": 486,
-   "kept": 196,
+   "raw": 494,
+   "kept": 204,
    "drop": {
     "notHis": 0,
     "notClothes": 80,
-    "soldOut": 191,
+    "soldOut": 190,
     "noPhoto": 0,
-    "noType": 19
+    "noType": 20
    },
    "samples": {
     "notHis": [],
     "noType": [
+     "Herringbone Raglan - Charcoal [Raglan]",
      "Mirabelle LS [LS w/ 1 Chest Pocket]",
      "Herringbone LS [LS w/ 1 Chest Pocket]",
      "Shadow Check LS - Green [LS w/ 1 Chest Pocket]",
-     "Homestead LS [LS w/ 1 Chest Pocket]",
-     "Red Rocks LS [LS w/ 1 Chest Pocket]"
+     "Homestead LS [LS w/ 1 Chest Pocket]"
     ]
    },
-   "ms": 2577
+   "ms": 2055
   },
   {
    "store": "outerknown.com",
    "pages": 5,
-   "raw": 1008,
-   "kept": 258,
+   "raw": 1034,
+   "kept": 265,
    "drop": {
-    "notHis": 415,
-    "notClothes": 121,
-    "soldOut": 134,
+    "notHis": 438,
+    "notClothes": 123,
+    "soldOut": 127,
     "noPhoto": 3,
-    "noType": 77
+    "noType": 78
    },
    "samples": {
     "notHis": [
-     "The Northwood Puffer [Outerwear] <womens>",
-     "Station Jumpsuit - Outerworn [Jumpsuits] <Jumpsuit>",
-     "Solstice Slip Dress - Outerworn [Dresses] <womens>",
-     "SUNNY SLEEVES SWEATER - Outerworn [Sweaters] <womens>",
-     "Cloud Weave Shirt Jacket - Outerworn [Outerwear] <womens>"
+     "Roma Sweater - Outerworn [Sweaters] <womens>",
+     "Women's Hightide Crew - Outerworn [Sweatshirts] <Women>",
+     "Generation Slim Selvedge - Outerworn [Denim Bottoms] <womens>",
+     "S.E.A. Stretch Jogger Pants - Outerworn [Pants] <womens>",
+     "S.E.A. Stretch Jogger Pants - Outerworn [Pants] <womens>"
     ],
     "noType": [
      "Outbound Stretch Volley - Outerworn [Active Bottoms]",
@@ -688,17 +688,17 @@
      "Lowtide Crew - Outerworn [Loungewear Tops]"
     ]
    },
-   "ms": 5909
+   "ms": 5445
   },
   {
    "store": "howlerbros.com",
    "pages": 4,
    "raw": 855,
-   "kept": 460,
+   "kept": 459,
    "drop": {
     "notHis": 0,
     "notClothes": 242,
-    "soldOut": 109,
+    "soldOut": 110,
     "noPhoto": 0,
     "noType": 44
    },
@@ -712,17 +712,17 @@
      "H Bar B Snapshirt - Grampa’s Curtains : Antique Black []"
     ]
    },
-   "ms": 5274
+   "ms": 5183
   },
   {
    "store": "ledbury.com",
    "pages": 3,
    "raw": 713,
-   "kept": 314,
+   "kept": 312,
    "drop": {
     "notHis": 2,
     "notClothes": 134,
-    "soldOut": 258,
+    "soldOut": 260,
     "noPhoto": 5,
     "noType": 0
    },
@@ -733,7 +733,7 @@
     ],
     "noType": []
    },
-   "ms": 2233
+   "ms": 2110
   },
   {
    "store": "knickerbocker.nyc",
@@ -751,13 +751,13 @@
     "notHis": [],
     "noType": []
    },
-   "ms": 860
+   "ms": 706
   },
   {
    "store": "ironandresin.com",
    "pages": 3,
-   "raw": 704,
-   "kept": 295,
+   "raw": 705,
+   "kept": 296,
    "drop": {
     "notHis": 21,
     "notClothes": 164,
@@ -781,7 +781,7 @@
      "Wilderness X INR Jersey []"
     ]
    },
-   "ms": 4147
+   "ms": 3080
   },
   {
    "store": "clubmonaco.com",
@@ -801,17 +801,17 @@
     ],
     "noType": []
    },
-   "ms": 691
+   "ms": 641
   },
   {
    "store": "jpressonline.com",
    "pages": 12,
-   "raw": 2937,
-   "kept": 1127,
+   "raw": 2936,
+   "kept": 1125,
    "drop": {
     "notHis": 103,
     "notClothes": 1241,
-    "soldOut": 145,
+    "soldOut": 146,
     "noPhoto": 0,
     "noType": 321
    },
@@ -831,7 +831,7 @@
      "Vintage Nantucket Island Framed Needlepoint Map 17.5 x 22.5 in. [Vintage]"
     ]
    },
-   "ms": 10616
+   "ms": 10623
   },
   {
    "store": "grayers.com",
@@ -861,7 +861,7 @@
      "Edward Stretch Straight Fit Denim - Vintage Wash [Bottom]"
     ]
    },
-   "ms": 2262
+   "ms": 2351
   },
   {
    "store": "kamakurashirts.com",
@@ -885,17 +885,17 @@
      "TOKYO SLIM FIT - Cutaway Panama Mesh J-TECH EASY CARE [Men Easy Care]"
     ]
    },
-   "ms": 5332
+   "ms": 5668
   },
   {
    "store": "sunspel.com",
    "pages": 5,
-   "raw": 1057,
-   "kept": 664,
+   "raw": 1061,
+   "kept": 666,
    "drop": {
     "notHis": 120,
     "notClothes": 232,
-    "soldOut": 40,
+    "soldOut": 42,
     "noPhoto": 0,
     "noType": 1
    },
@@ -911,17 +911,17 @@
      "Gift Box [Gift Box]"
     ]
    },
-   "ms": 5314
+   "ms": 5094
   },
   {
    "store": "privatewhitevc.com",
    "pages": 1,
-   "raw": 238,
+   "raw": 239,
    "kept": 92,
    "drop": {
     "notHis": 0,
     "notClothes": 38,
-    "soldOut": 107,
+    "soldOut": 108,
     "noPhoto": 0,
     "noType": 1
    },
@@ -931,17 +931,17 @@
      "The Lifeline - Charcoal [Jersey]"
     ]
    },
-   "ms": 1707
+   "ms": 412
   },
   {
    "store": "colhays.com",
    "pages": 1,
    "raw": 84,
-   "kept": 75,
+   "kept": 74,
    "drop": {
     "notHis": 0,
     "notClothes": 0,
-    "soldOut": 9,
+    "soldOut": 10,
     "noPhoto": 0,
     "noType": 0
    },
@@ -949,7 +949,7 @@
     "notHis": [],
     "noType": []
    },
-   "ms": 984
+   "ms": 1038
   }
  ]
 }
