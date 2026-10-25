@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-24T07:20:19.036Z",
+ "updated": "2026-10-25T07:39:18.319Z",
  "format": 2,
  "chunks": 128,
  "stores": [
@@ -237,7 +237,7 @@
    ],
    "cur": "USD",
    "il": true,
-   "ip": "https://cdn.shopify.com/s/files/1/0570/2719/9048/files/"
+   "ip": ""
   },
   {
    "d": "jpressonline.com",
@@ -314,25 +314,25 @@
   }
  ],
  "counts": {
-  "Knitwear": 2450,
-  "Shirts": 2927,
-  "Jackets": 2257,
-  "Trousers": 1665,
-  "T-shirts": 1065,
-  "Shorts": 473,
-  "Overshirts": 229,
-  "Shoes": 878
+  "Knitwear": 2447,
+  "Shirts": 2922,
+  "Jackets": 2254,
+  "Trousers": 1652,
+  "T-shirts": 1059,
+  "Shorts": 467,
+  "Overshirts": 230,
+  "Shoes": 875
  },
  "report": [
   {
    "store": "rowingblazers.com",
    "pages": 4,
-   "raw": 838,
-   "kept": 442,
+   "raw": 836,
+   "kept": 438,
    "drop": {
     "notHis": 250,
     "notClothes": 111,
-    "soldOut": 35,
+    "soldOut": 37,
     "noPhoto": 0,
     "noType": 0
    },
@@ -346,17 +346,17 @@
     ],
     "noType": []
    },
-   "ms": 3153
+   "ms": 6519
   },
   {
    "store": "alexmill.com",
    "pages": 4,
-   "raw": 907,
-   "kept": 191,
+   "raw": 905,
+   "kept": 192,
    "drop": {
     "notHis": 618,
-    "notClothes": 76,
-    "soldOut": 20,
+    "notClothes": 74,
+    "soldOut": 19,
     "noPhoto": 1,
     "noType": 1
    },
@@ -372,17 +372,17 @@
      "Alex Mill Gift Wrapping []"
     ]
    },
-   "ms": 4126
+   "ms": 6369
   },
   {
    "store": "toddsnyder.com",
    "pages": 12,
    "raw": 3000,
-   "kept": 1709,
+   "kept": 1710,
    "drop": {
     "notHis": 9,
     "notClothes": 731,
-    "soldOut": 513,
+    "soldOut": 512,
     "noPhoto": 0,
     "noType": 38
    },
@@ -402,7 +402,7 @@
      "Mykonos Swim Brief [TS SWIM]"
     ]
    },
-   "ms": 16159
+   "ms": 21209
   },
   {
    "store": "drakes.com",
@@ -420,17 +420,17 @@
     "notHis": [],
     "noType": []
    },
-   "ms": 13057
+   "ms": 16144
   },
   {
    "store": "aimeleondore.com",
    "pages": 4,
    "raw": 900,
-   "kept": 461,
+   "kept": 463,
    "drop": {
     "notHis": 28,
     "notClothes": 318,
-    "soldOut": 32,
+    "soldOut": 30,
     "noPhoto": 0,
     "noType": 61
    },
@@ -450,17 +450,17 @@
      "Café Leon Dore Cappuccino Cup & Saucer (Set of 6) [Lifestyle]"
     ]
    },
-   "ms": 4026
+   "ms": 5270
   },
   {
    "store": "taylorstitch.com",
    "pages": 12,
    "raw": 3000,
-   "kept": 477,
+   "kept": 479,
    "drop": {
     "notHis": 50,
     "notClothes": 573,
-    "soldOut": 1898,
+    "soldOut": 1896,
     "noPhoto": 2,
     "noType": 0
    },
@@ -474,47 +474,43 @@
     ],
     "noType": []
    },
-   "ms": 11490
+   "ms": 19325
   },
   {
    "store": "noahny.com",
-   "pages": 3,
-   "raw": 548,
-   "kept": 256,
+   "pages": 2,
+   "raw": 496,
+   "kept": 260,
    "drop": {
-    "notHis": 5,
-    "notClothes": 138,
-    "soldOut": 143,
+    "notHis": 4,
+    "notClothes": 128,
+    "soldOut": 102,
     "noPhoto": 0,
-    "noType": 6
+    "noType": 2
    },
    "samples": {
     "notHis": [
      "Pleated Wool Jumpsuit [] <Jumpsuit>",
      "Pleated Wool Skirt [] <Skirt>",
      "Long Sleeve Dress [] <women>",
-     "Modern Boy Long Sleeve Tee [T-Shirts] <Boy>",
-     "Shell Girl Surfboard [Clothing] <Girl>"
+     "Modern Boy Long Sleeve Tee [T-Shirts] <Boy>"
     ],
     "noType": [
      "Florist Wetsuit [Surf]",
-     "Bluefish Wetsuit [Surf]",
-     "Tulips Wetsuit [Clothing]",
-     "St. Michael Wetsuit [Clothing]",
-     "Oysterman Wetsuit [Clothing]"
+     "Bluefish Wetsuit [Surf]"
     ]
    },
-   "ms": 2648
+   "ms": 4510
   },
   {
    "store": "percivalclo.com",
    "pages": 4,
    "raw": 910,
-   "kept": 552,
+   "kept": 547,
    "drop": {
     "notHis": 3,
     "notClothes": 163,
-    "soldOut": 184,
+    "soldOut": 189,
     "noPhoto": 0,
     "noType": 8
    },
@@ -532,7 +528,7 @@
      "PCVL Performance Top | Rust [Jersey]"
     ]
    },
-   "ms": 4411
+   "ms": 7245
   },
   {
    "store": "portugueseflannel.com",
@@ -550,7 +546,7 @@
     "notHis": [],
     "noType": []
    },
-   "ms": 621
+   "ms": 1693
   },
   {
    "store": "oliverspencer.co.uk",
@@ -580,17 +576,17 @@
      "Attirecare Garment Spray Aureum 250ml [Home & Garden-Rollover]"
     ]
    },
-   "ms": 2166
+   "ms": 4797
   },
   {
    "store": "universalworks.co.uk",
    "pages": 6,
    "raw": 1358,
-   "kept": 982,
+   "kept": 980,
    "drop": {
     "notHis": 0,
     "notClothes": 334,
-    "soldOut": 15,
+    "soldOut": 17,
     "noPhoto": 0,
     "noType": 27
    },
@@ -604,17 +600,17 @@
      "F/CE.® Black 420 re/cor Daytrip BP 2.0 [F/CE]"
     ]
    },
-   "ms": 6300
+   "ms": 10635
   },
   {
    "store": "kith.com",
    "pages": 12,
    "raw": 3000,
-   "kept": 1312,
+   "kept": 1304,
    "drop": {
     "notHis": 1211,
     "notClothes": 328,
-    "soldOut": 126,
+    "soldOut": 134,
     "noPhoto": 0,
     "noType": 23
    },
@@ -634,17 +630,17 @@
      "Kith Ivy for Wilson Striped Wristbands - Magma [Wristbands]"
     ]
    },
-   "ms": 16367
+   "ms": 21188
   },
   {
    "store": "corridornyc.com",
    "pages": 2,
    "raw": 494,
-   "kept": 204,
+   "kept": 203,
    "drop": {
     "notHis": 0,
     "notClothes": 80,
-    "soldOut": 190,
+    "soldOut": 191,
     "noPhoto": 0,
     "noType": 20
    },
@@ -658,17 +654,17 @@
      "Homestead LS [LS w/ 1 Chest Pocket]"
     ]
    },
-   "ms": 2055
+   "ms": 3742
   },
   {
    "store": "outerknown.com",
    "pages": 5,
-   "raw": 1034,
-   "kept": 265,
+   "raw": 1031,
+   "kept": 264,
    "drop": {
     "notHis": 438,
-    "notClothes": 123,
-    "soldOut": 127,
+    "notClothes": 122,
+    "soldOut": 126,
     "noPhoto": 3,
     "noType": 78
    },
@@ -688,7 +684,7 @@
      "Lowtide Crew - Outerworn [Loungewear Tops]"
     ]
    },
-   "ms": 5445
+   "ms": 9833
   },
   {
    "store": "howlerbros.com",
@@ -712,7 +708,7 @@
      "H Bar B Snapshirt - Grampa’s Curtains : Antique Black []"
     ]
    },
-   "ms": 5183
+   "ms": 6452
   },
   {
    "store": "ledbury.com",
@@ -733,7 +729,7 @@
     ],
     "noType": []
    },
-   "ms": 2110
+   "ms": 3873
   },
   {
    "store": "knickerbocker.nyc",
@@ -751,7 +747,7 @@
     "notHis": [],
     "noType": []
    },
-   "ms": 706
+   "ms": 1463
   },
   {
    "store": "ironandresin.com",
@@ -781,18 +777,18 @@
      "Wilderness X INR Jersey []"
     ]
    },
-   "ms": 3080
+   "ms": 5669
   },
   {
    "store": "clubmonaco.com",
    "pages": 1,
-   "raw": 140,
-   "kept": 25,
+   "raw": 139,
+   "kept": 0,
    "drop": {
     "notHis": 1,
-    "notClothes": 14,
-    "soldOut": 99,
-    "noPhoto": 1,
+    "notClothes": 13,
+    "soldOut": 125,
+    "noPhoto": 0,
     "noType": 0
    },
    "samples": {
@@ -801,17 +797,17 @@
     ],
     "noType": []
    },
-   "ms": 641
+   "ms": 1944
   },
   {
    "store": "jpressonline.com",
    "pages": 12,
    "raw": 2936,
-   "kept": 1125,
+   "kept": 1124,
    "drop": {
     "notHis": 103,
     "notClothes": 1241,
-    "soldOut": 146,
+    "soldOut": 147,
     "noPhoto": 0,
     "noType": 321
    },
@@ -831,16 +827,16 @@
      "Vintage Nantucket Island Framed Needlepoint Map 17.5 x 22.5 in. [Vintage]"
     ]
    },
-   "ms": 10623
+   "ms": 17490
   },
   {
    "store": "grayers.com",
    "pages": 2,
-   "raw": 445,
+   "raw": 444,
    "kept": 371,
    "drop": {
     "notHis": 35,
-    "notClothes": 32,
+    "notClothes": 31,
     "soldOut": 2,
     "noPhoto": 0,
     "noType": 5
@@ -861,7 +857,7 @@
      "Edward Stretch Straight Fit Denim - Vintage Wash [Bottom]"
     ]
    },
-   "ms": 2351
+   "ms": 3940
   },
   {
    "store": "kamakurashirts.com",
@@ -885,7 +881,7 @@
      "TOKYO SLIM FIT - Cutaway Panama Mesh J-TECH EASY CARE [Men Easy Care]"
     ]
    },
-   "ms": 5668
+   "ms": 8903
   },
   {
    "store": "sunspel.com",
@@ -911,7 +907,7 @@
      "Gift Box [Gift Box]"
     ]
    },
-   "ms": 5094
+   "ms": 7697
   },
   {
    "store": "privatewhitevc.com",
@@ -931,17 +927,17 @@
      "The Lifeline - Charcoal [Jersey]"
     ]
    },
-   "ms": 412
+   "ms": 3080
   },
   {
    "store": "colhays.com",
    "pages": 1,
    "raw": 84,
-   "kept": 74,
+   "kept": 73,
    "drop": {
     "notHis": 0,
     "notClothes": 0,
-    "soldOut": 10,
+    "soldOut": 11,
     "noPhoto": 0,
     "noType": 0
    },
@@ -949,7 +945,7 @@
     "notHis": [],
     "noType": []
    },
-   "ms": 1038
+   "ms": 1773
   }
  ]
 }
