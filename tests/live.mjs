@@ -223,6 +223,19 @@ try {
       log("shoes", R.app.shoes);
     } catch (e) { R.app.shoes = { error: String((e && e.message) || e) }; }
   }
+  /* ---------- 5. About you: short and slim, looking for jackets ---------- */
+  if (first) {
+    try {
+      const run = async (me) => {
+        await page.evaluate((m) => { PREFS.me = m; save("prefs", PREFS); Q.type = "Jackets"; Q.styles = []; Q.text = ""; save("query", Q); startRound(); }, me);
+        await page.waitForSelector("#card", { timeout: 20000 }); await page.waitForTimeout(800);
+        return page.evaluate(() => { const l = [S.current].concat(S.queue).slice(0, 20); return { long: l.filter((i) => (i.ct || "").includes("L") || LONGISH.test(i.title.toLowerCase())).length, suitYou: l.filter((i) => fitForMe(i).s > 0).length, first: l.slice(0, 6).map((i) => i.store + " | " + i.title + " | " + i.why) }; });
+      };
+      R.app.aboutYou = { notSet: await run({ height: "", build: "", fit: "" }), shortSlim: await run({ height: "short", build: "slim", fit: "" }) };
+      await page.screenshot({ path: path.join(OUT, "about-you-jackets.png") });
+      log("about you", R.app.aboutYou);
+    } catch (e) { R.app.aboutYou = { error: String((e && e.message) || e) }; }
+  }
   R.app.report = await page.evaluate(() => askSnapshot()).catch((e) => "report failed: " + e.message);
   fs.writeFileSync(path.join(OUT, "report.txt"), R.app.report);
   await page.screenshot({ path: path.join(OUT, "final.png") });
@@ -251,6 +264,7 @@ const md = [
   `Cards that show what in your words they match: ${(a.cards || []).filter((c) => /^(Like |You asked|You named|From your words)/.test(c.why || "")).length} of ${(a.cards || []).length}`,
   `Gallery, details, zoom, saved: ${JSON.stringify(a.gallery || null)}`,
   `Shoes (first 20): ${a.shoes ? (a.shoes.error || a.shoes.kinds + " kinds; most from one maker: " + JSON.stringify(a.shoes.topMaker) + "; same model twice: " + (a.shoes.sameModel.length ? a.shoes.sameModel.join("; ") : "never")) : "-"}`,
+  `About you (jackets, first 20): ${a.aboutYou ? (a.aboutYou.error || "not set: " + a.aboutYou.notSet.long + " long; short + slim: " + a.aboutYou.shortSlim.long + " long, " + a.aboutYou.shortSlim.suitYou + " that suit you — " + a.aboutYou.shortSlim.first.join(" / ")) : "-"}`,
   `Errors: ${(a.errors || []).join(" | ") || "none"}`,
   a.stuck ? `STUCK at start: ${JSON.stringify(a.stuck)}` : "",
   a.stuckAfter ? `STUCK after card ${a.stuckAfter.n}: ${JSON.stringify(a.stuckAfter)}` : "",

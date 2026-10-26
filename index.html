@@ -235,6 +235,11 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
 .card-meta .mono-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .card-price{font-size:17px;white-space:nowrap;flex:none}
 .card-info .because{margin-top:2px}
+.about-line{margin:-8px 0 0;font-size:14px;color:var(--muted)}
+.about-line .link-btn{min-height:32px;padding:0;font-size:14px}
+.fit-note{margin:0 6px;display:flex;gap:8px;align-items:center;font-size:13px;font-weight:600;color:#1E7A46}
+.fit-note.bad{color:var(--danger)}
+.fit-note svg{width:15px;height:15px;flex:none}
 .insight-line{margin:0 6px;display:flex;gap:8px;align-items:center;font-size:13px;color:var(--muted)}
 .insight-line svg{width:15px;height:15px;flex:none}
 .card-more{background:var(--card);border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:16px;margin-bottom:8px}
@@ -356,7 +361,7 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "1.5.1";
+const APP_VERSION = "1.6.0";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
 const SERVER_EXPECTED = "1.1.0"; // the worker/worker.js version this app was built with
 
@@ -468,6 +473,13 @@ const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({"&":"
 let Q = load("query", {type:"", styles:[], text:""});
 let TASTE = load("taste", {w:{}, votes:[]});
 let PREFS = load("prefs", {budget:"any", size:"M", shoe:"43", shipIL:true});
+if (!PREFS.me) PREFS.me = {height:"", build:"", fit:""}; // About you (taste profile): what flatters you
+const ME_OPTS = {
+  height:[["short", "Under 170 cm"], ["average", "170–182 cm"], ["tall", "Over 182 cm"]],
+  build:[["slim", "Slim"], ["average", "Average"], ["athletic", "Athletic"], ["broad", "Broad"]],
+  fit:[["slim", "Slimmer"], ["regular", "Regular"], ["relaxed", "Relaxed"]],
+};
+const meLabel = (k) => { const v = PREFS.me[k], o = (ME_OPTS[k] || []).find((x) => x[0] === v); return o ? o[1] : ""; };
 let PICKS = load("picks", []);
 let SAVED = load("saved", []); // pieces you kept: full idea + when
 let LIKED = load("liked", null); // real pieces you swiped right on (newest first), so they can be shown again
@@ -788,10 +800,14 @@ function orderQueue(){
 function preloadAhead(){ S.queue.slice(0, PRELOAD_N).forEach(preload); if (S.queue[0] && isProduct(S.queue[0])) moreOf(S.queue[0]).catch(() => {}); }
 function loadCardMore(i){
   if (!isProduct(i) || S.more[i.id] !== undefined) return;
+  const n0 = photosOf(i).length;
   moreOf(i).then((m) => {
     S.more[i.id] = m;
+    if (!S.current || S.current.id !== i.id) return;
+    // More photos arrived: draw the card again (bars, thumbnails), unless you're in the middle of a swipe.
+    if (photosOf(i).length !== n0 && !S.dragging && S.screen === "explore" && !S.detail && !Z.open){ render(); return; }
     const el = document.getElementById("card-more-in");
-    if (el && S.current && S.current.id === i.id) el.innerHTML = moreHtml(i);
+    if (el) el.innerHTML = moreHtml(i);
   }).catch(() => {});
 }
 
@@ -853,7 +869,7 @@ function fromCat(x, type){
   // Catalog format 2 saves photos without the store's common folder ("ip"); format 1 has full addresses.
   const abs = (u) => (/^https?:\/\//.test(u) ? u : u.startsWith("//") ? "https:" + u : (st.ip || "") + u);
   const ims = (x.im || []).map(abs);
-  const p = {id:x.id, store:st.name, domain:st.d, brand:st.name, title:x.t, price:x.p, was:x.cp || 0, currency:st.cur, url:"https://" + st.d + "/products/" + x.h, image:sized(ims[0], 900), images:ims, type, ptype:x.pt || "", fabric:x.f || "", colour:x.c || "", fit:x.ft || "", tags:x.tg || [], sizes:x.sz || [], ships:st.il, storeTags:st.tags || [], date:x.d || ""};
+  const p = {id:x.id, store:st.name, domain:st.d, brand:st.name, title:x.t, price:x.p, was:x.cp || 0, currency:st.cur, url:"https://" + st.d + "/products/" + x.h, image:sized(ims[0], 900), images:ims, type, ptype:x.pt || "", fabric:x.f || "", colour:x.c || "", fit:x.ft || "", tags:x.tg || [], sizes:x.sz || [], ct:x.ct || "", is:x.is || 0, ships:st.il, storeTags:st.tags || [], date:x.d || ""};
   p.kind = kindOf(p);
   return prepProduct(p);
 }
@@ -870,7 +886,14 @@ async function moreOf(i){
   if (!st || st.format !== 2) return null;
   const n = hashStr(i.id) % (st.chunks || 128);
   if (!MORE[n]) MORE[n] = fetch("catalog/details/" + String(n).padStart(3, "0") + ".json").then((r) => (r.ok ? r.json() : {})).catch(() => { delete MORE[n]; return {}; });
-  return (await MORE[n])[i.id] || null;
+  const m = (await MORE[n])[i.id] || null;
+  // Photos 4 to 8 live in the details file: add them to the piece (once), with the store's folder.
+  if (m && m.mi && !m._abs){
+    const s0 = st.stores.find((x) => x.d === i.domain) || {};
+    m.mi = m.mi.map((u) => (/^https?:\/\//.test(u) ? u : (s0.ip || "") + u)); m._abs = true;
+  }
+  if (m && m.mi && i.images && !m.mi.some((u) => i.images.includes(u))) i.images = i.images.concat(m.mi);
+  return m;
 }
 async function loadCatalog(){
   const want = Q.type && Q.type !== "Surprise me" ? [Q.type] : CAT_TYPES;
@@ -934,6 +957,40 @@ const titleWords = (p) => new Set(String(p.title).toLowerCase().replace(/[^a-z\s
 
 // How well a piece fits: the stores that match the brief, words from your text and from the AI, your swipes
 // so far, a bit of freshness, and a little per-search randomness so two searches don't look the same.
+// How a piece suits you (About you): its length for your height, its cut for your build and the fit you like,
+// and whether your size is in stock. From the title, the store's fit tag and the catalog's reading of the
+// store's description ("ct": L long, C cropped, O oversized/boxy, T slim/trim; "is": shorts inseam).
+const LONGISH = /\b(longline|long[- ]line|long coat|long-length|overcoat|topcoat|duster|maxi|chesterfield|trench|greatcoat|great coat|balmacaan)\b/;
+const CROPPY = /\b(cropped|crop)\b/;
+const SHORT_JACKETS = new Set(["Bomber", "Harrington", "Denim & trucker", "Suede & leather"]);
+const BIGGISH = /\b(oversized|boxy|baggy|wide[- ]leg|wide fit|big shirt|loose|drop[- ]shoulder|balloon)\b/;
+const TRIMMISH = /\b(slim|trim|tailored|tapered|fitted|skinny)\b/;
+function fitForMe(p){
+  const me = PREFS.me || {}, out = {s:0, good:"", bad:""};
+  if (!isProduct(p)) return out;
+  const t = (p.title + " " + (p.fit || "") + " " + (p.tags || []).join(" ")).toLowerCase(), ct = p.ct || "";
+  const coat = p.type === "Jackets" || p.type === "Overshirts" || p.type === "Knitwear";
+  const long = coat && (ct.includes("L") || LONGISH.test(t)), cropped = ct.includes("C") || CROPPY.test(t) || (p.type === "Jackets" && SHORT_JACKETS.has(p.kind));
+  const big = ct.includes("O") || BIGGISH.test(t), trim = ct.includes("T") || TRIMMISH.test(t), relaxed = /\brelaxed\b/.test(t);
+  const add = (n, why) => { out.s += n; if (n > 0 && !out.good) out.good = why; if (n < 0 && !out.bad) out.bad = why; };
+  if (me.height === "short"){
+    if (long) add(-4, "long for your height");
+    else if (cropped && coat) add(1.5, "cropped, good for your height");
+    if (big && (p.type === "Trousers" || p.type === "Jackets" || p.type === "Knitwear")) add(-1.5, "a lot of fabric for your height");
+    if (p.type === "Shorts" && p.is) add(p.is >= 8 ? -1.5 : p.is <= 7 ? 1 : 0, p.is >= 8 ? "long shorts for your height" : "a shorter inseam suits your height");
+  }
+  if (me.height === "tall"){ if (cropped && coat) add(-1.5, "cropped, short on you"); else if (long) add(1, "a long cut suits your height"); }
+  if (me.build === "slim"){ if (big) add(-3, "oversized on a slim build"); else if (trim) add(1.5, "a slimmer cut for your build"); else if (relaxed) add(-0.5, ""); }
+  if (me.build === "broad"){ if (/\bskinny\b/.test(t) || ct.includes("T") && p.type === "Trousers") add(-2, "a narrow cut for your build"); else if (relaxed) add(1, "a relaxed cut for your build"); }
+  if (me.build === "athletic" && /\bskinny\b/.test(t)) add(-1, "skinny");
+  if (me.fit === "slim"){ if (trim) add(1.5, "the slimmer fit you like"); else if (big) add(-2, "looser than you like"); }
+  if (me.fit === "relaxed"){ if (relaxed || big) add(1, "the relaxed fit you like"); else if (/\bskinny\b/.test(t)) add(-1.5, "tighter than you like"); }
+  if (me.fit === "regular" && big) add(-1, "looser than you like");
+  // Your size: letter sizes in stock (S, M, L...) without yours count against a piece; it can't be bought.
+  const mine = String(p.type === "Shoes" || !PREFS.sizeSet ? "" : PREFS.size || "").toUpperCase(), sz = (p.sizes || []).map((x) => String(x).toUpperCase());
+  if (mine && sz.length && sz.some((x) => /^(XXS|XS|S|M|L|XL|XXL|XXXL|2XL|3XL)$/.test(x)) && !sz.includes(mine)) add(-3, "not in your size (" + mine + ")");
+  return out;
+}
 function fitScore(p, ctx){
   if (PREFS.shipIL && p.ships === false) return -Infinity;
   const b = BUDGETS_ILS[PREFS.budget];
@@ -952,6 +1009,7 @@ function fitScore(p, ctx){
   for (const w of S.aiAvoid || []) if (hay.includes(w)) s -= 3;
   if ((S.aiStores || []).includes(p.store)) s += 2;
   s += score(p, ctx.sig, true);
+  const me = fitForMe(p); s += me.s; p._me = me.s > 0 ? me.good : "";
   if (p.date && p.date >= ctx.recent) s += 0.6;
   return s + (hashStr(S.roundId + p.id) % 1000) / 1000 * 2.5;
 }
@@ -1012,6 +1070,7 @@ function refill(){
     if (bs) return "Like " + bs.name + " · " + p.kind;
     const fromAi = ai.filter((w) => hay.includes(w)).slice(0, 2);
     if (fromAi.length && Q.text) return "From your words: " + fromAi.join(", ");
+    if (p._me) return p._me[0].toUpperCase() + p._me.slice(1);
     return p.kind;
   };
   S.queue = noStoreTwice(keep.concat(out.map((p) => Object.assign(p, {_boost:0, why:reason(p)}))), 1);
@@ -1041,9 +1100,17 @@ function failIdeas(e, gen){
   if (!S.current && S.screen === "explore") render();
 }
 // The AI's reading of your brief (or of a heart): words to look for and to avoid, and the stores that fit.
+function meNote(){
+  const m = PREFS.me || {}, parts = [];
+  if (m.height === "short") parts.push("he is short (under 170 cm): avoid long coats, longline and oversized pieces, prefer cropped jackets and slimmer cuts");
+  if (m.height === "tall") parts.push("he is tall (over 182 cm)");
+  if (m.build) parts.push("his build is " + m.build + (m.build === "slim" ? ": avoid oversized, boxy and wide cuts" : ""));
+  if (m.fit) parts.push("he likes a " + m.fit + " fit");
+  return parts.join("; ");
+}
 function aiKeywords(prod, gen){
   const titles = (v) => S.round.votes.filter((x) => x.v === v).map((x) => x.title).slice(-8);
-  return aiCall("/keywords", {query:{type:Q.type || "Surprise me", styles:Q.styles, text:Q.text}, product:prod && {title:prod.title, store:prod.store, kind:prod.kind, colour:prod.colour, fabric:prod.fabric, price:prod.price}, liked:titles("like"), passed:titles("later")}).then((r) => {
+  return aiCall("/keywords", {query:{type:Q.type || "Surprise me", styles:Q.styles, text:[Q.text, meNote()].filter(Boolean).join(". ")}, product:prod && {title:prod.title, store:prod.store, kind:prod.kind, colour:prod.colour, fabric:prod.fabric, price:prod.price}, liked:titles("like"), passed:titles("later")}).then((r) => {
     if (gen !== S.gen || !r) return;
     if (r.model) S.textModel = r.model;
     const clean = (a) => (Array.isArray(a) ? a : []).map((w) => String(w).toLowerCase().trim()).filter((w) => w.length > 2).slice(0, 12);
@@ -1193,6 +1260,7 @@ function renderStart(){
     <fieldset><legend class="label">Type of clothing</legend><div class="chips">${TYPES.map((t) => `<button type="button" class="chip" data-act="type" data-v="${esc(t)}" aria-pressed="${Q.type === t}">${esc(t)}</button>`).join("")}</div></fieldset>
     <fieldset><legend class="label">Style <span class="hint">· pick any</span></legend><div class="chips">${STYLES.map((s) => { const on = Q.styles.includes(s); return `<button type="button" class="chip" data-act="style" data-v="${esc(s)}" aria-pressed="${on}">${on ? ICON.check : ""}${esc(s)}</button>`; }).join("")}</div></fieldset>
     <div><label class="label" for="txt">In your own words <span class="hint">· optional</span></label><textarea id="txt" rows="3" placeholder="e.g. something light to throw over a tee on summer evenings, nothing too sporty">${esc(Q.text)}</textarea></div>
+    <p class="about-line">${PREFS.me.height || PREFS.me.build || PREFS.me.fit ? `About you: ${esc([meLabel("height"), meLabel("build"), meLabel("fit") && meLabel("fit") + " fit", PREFS.sizeSet ? "size " + PREFS.size : ""].filter(Boolean).join(" · "))} · <button type="button" class="link-btn" data-act="about">Change</button>` : `<button type="button" class="link-btn" data-act="about">Add your height and build</button> so suggestions suit you`}</p>
     <div class="bottom sticky"><button type="button" class="cta" data-act="go">Show me ideas ${ICON.arrow}</button>
       ${SAVED.length ? `<button type="button" class="link-btn" data-act="saved">Saved pieces · ${SAVED.length}</button>` : ""}
       ${aiOn() ? "" : `<p class="small-note" style="margin-top:6px">Sample ideas for now · <button type="button" class="link-btn" data-act="profile">turn on AI</button></p>`}</div>
@@ -1319,6 +1387,7 @@ function renderExplore(){
     <div class="acts three"><button type="button" class="outline-btn back-btn" data-act="prev"${prevVote() ? "" : " disabled"} aria-label="Back to the previous piece">${ICON.prev}</button><button type="button" class="outline-btn save-btn${isSaved(i.id) ? " on" : ""}" data-act="save" aria-pressed="${isSaved(i.id)}">${isSaved(i.id) ? ICON.marked + "Saved" : ICON.mark + "Save"}</button><button type="button" class="outline-btn" data-act="pick">${ICON.bag}This is it</button></div>
     ${S.round.votes.length < 3 ? `<p class="hint-line">Swipe the photo: ← not now · getting closer →. Tap its sides for more photos, its middle to zoom. Scroll down for details.</p>` : ""}
     ${insight ? `<p class="insight-line">${ICON.sliders}<span>${esc(insight)}</span></p>` : ""}
+    ${(() => { const f = fitForMe(i); return f.bad ? `<p class="fit-note bad">${ICON.sliders}<span>${esc(f.bad[0].toUpperCase() + f.bad.slice(1))}</span></p>` : f.good ? `<p class="fit-note">${ICON.check}<span>${esc(f.good[0].toUpperCase() + f.good.slice(1))}</span></p>` : ""; })()}
     <section class="card-more" aria-label="More about it">
       ${np > 1 ? `<div class="dt-sec"><span class="mono-label">All ${np} photos</span><div class="dt-thumbs flat" role="group" aria-label="All photos">${photosOf(i).map((u, j) => `<button type="button" class="dt-thumb" data-act="card-photo" data-v="${j}" aria-label="Show photo ${j + 1}" aria-current="${j === k}"><img src="${esc(pr ? sized(u, 160) : u)}" alt="" loading="lazy"></button>`).join("")}</div></div>` : ""}
       ${specs.length ? `<dl class="specs">${specs.map(([x, y]) => `<div><dt>${x}</dt><dd>${esc(y)}</dd></div>`).join("")}</dl>` : ""}
@@ -1393,8 +1462,10 @@ function openDetail(i, from){
   pushLayer("detail");
   S.focus = "#detail";
   render();
+  const n0 = photosOf(i).length;
   if (isProduct(i) && S.more[i.id] === undefined) moreOf(i).then((m) => {
     S.more[i.id] = m;
+    if (photosOf(i).length !== n0 && S.detail && S.detail.item.id === i.id){ render(); return; }
     const el = document.getElementById("dt-more");
     if (el && S.detail && S.detail.item.id === i.id) el.innerHTML = moreHtml(i);
   });
@@ -1760,6 +1831,25 @@ function ago(t){
   const m = Math.round((Date.now() - t) / 60000);
   if (m < 1) return "now"; if (m < 60) return m + "m"; const h = Math.round(m / 60); if (h < 24) return h + "h"; return Math.round(h / 24) + "d";
 }
+function aboutCard(){
+  const chips = (k) => ME_OPTS[k].map(([v, l]) => `<button type="button" class="chip" data-act="me" data-k="${k}" data-v="${v}" aria-pressed="${PREFS.me[k] === v}">${esc(l)}</button>`).join("");
+  const m = PREFS.me, eff = [];
+  if (m.height === "short") eff.push("fewer long coats and wide trousers, more cropped jackets and shorter shorts");
+  if (m.height === "tall") eff.push("fewer cropped jackets");
+  if (m.build === "slim") eff.push("fewer oversized and boxy pieces, more slim and tailored cuts");
+  if (m.build === "broad") eff.push("fewer skinny cuts, more relaxed ones");
+  if (m.fit) eff.push("leaning " + (m.fit === "slim" ? "slimmer" : m.fit));
+  return `<section class="card" id="about" aria-labelledby="about-h">
+    <h2 id="about-h">About you</h2>
+    <p>So Drape suggests what suits you. Only on this phone.</p>
+    <fieldset><legend class="mono-label" style="margin-bottom:8px">Height</legend><div class="chips">${chips("height")}</div></fieldset>
+    <fieldset><legend class="mono-label" style="margin-bottom:8px">Build</legend><div class="chips">${chips("build")}</div></fieldset>
+    <fieldset><legend class="mono-label" style="margin-bottom:8px">Fit you like</legend><div class="chips">${chips("fit")}</div></fieldset>
+    <fieldset><legend class="mono-label" style="margin-bottom:8px">Your size</legend><div class="chips">${["XS", "S", "M", "L", "XL", "XXL"].map((v) => `<button type="button" class="chip" data-act="me-size" data-v="${v}" aria-pressed="${!!PREFS.sizeSet && PREFS.size === v}">${v}</button>`).join("")}</div></fieldset>
+    <fieldset><legend class="mono-label" style="margin-bottom:8px">Shoe size (EU)</legend><div class="chips">${SHOE_SIZES.map((v) => `<button type="button" class="chip" data-act="me-shoe" data-v="${v}" aria-pressed="${PREFS.shoe === v}">${v}</button>`).join("")}</div></fieldset>
+    ${eff.length ? `<p style="color:var(--ink)"><b>What changes:</b> ${esc(eff.join("; "))}. Pieces not in your size come last.</p>` : `<p>Pick what fits you; pieces not in your size come last.</p>`}
+  </section>`;
+}
 function renderProfile(){
   const {pos, neg} = tasteLists();
   const votes = TASTE.votes.slice(-12).reverse();
@@ -1767,6 +1857,7 @@ function renderProfile(){
   return `<main class="screen">
     <header class="top"><button type="button" class="icon-btn" data-act="profile-back" aria-label="Back">${ICON.back}</button><span class="meta">Your taste</span>${hbtns(false)}</header>
     <div style="display:flex;flex-direction:column;gap:6px"><h1 class="h1" style="font-size:32px">Your taste so far</h1><span class="mono-label">${TASTE.votes.length} vote${TASTE.votes.length === 1 ? "" : "s"} · ${SAVED.length} saved · ${PICKS.length} pick${PICKS.length === 1 ? "" : "s"}</span></div>
+    ${aboutCard()}
     <section class="card" aria-label="What you like and dislike">
       ${pos.length || neg.length ? `
         ${pos.length ? `<div style="display:flex;flex-direction:column;gap:8px"><span class="mono-label">More of</span><div class="tchips">${pos.map((k) => `<span class="tchip plus">+ ${esc(chipLabel(k))}</span>`).join("")}</div></div>` : ""}
@@ -2024,6 +2115,10 @@ const ACTIONS = {
   "dt-photo"(el){ const box = document.getElementById("dtPhotos"); if (box) box.scrollTo({left:+el.dataset.v * box.clientWidth, behavior:matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"}); },
   zoom(el){ if (S.detail) zoomOpen(S.detail.item, +el.dataset.v || 0); },
   prev(){ goBack(); },
+  me(el){ const k = el.dataset.k, v = el.dataset.v; PREFS.me[k] = PREFS.me[k] === v ? "" : v; save("prefs", PREFS); if (S.pool) refill(); render(); },
+  "me-size"(el){ PREFS.size = el.dataset.v; PREFS.sizeSet = true; save("prefs", PREFS); if (S.pool) refill(); render(); },
+  "me-shoe"(el){ PREFS.shoe = el.dataset.v; save("prefs", PREFS); render(); },
+  "about"(){ openScreen("profile"); setTimeout(() => { const a = document.getElementById("about"); if (a) a.scrollIntoView({block:"start"}); }, 30); },
   "card-zoom"(){ if (S.current) zoomOpen(S.current, curPh()); },
   "card-photo"(el){ const k = +el.dataset.v || 0; if (!S.current) return; flipPhoto(k - curPh()); document.querySelectorAll(".card-more .dt-thumb").forEach((t, j) => t.setAttribute("aria-current", String(j === k))); window.scrollTo({top:0, behavior:matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"}); },
   "card-similar"(){ if (S.current){ S.shopFrom = null; toShop(); } },
@@ -2060,7 +2155,7 @@ const ACTIONS = {
   scrim(el, e){ if (e.target !== el) return; if (S.modal){ S.modal = null; } else S.sheet = false; render(); },
   "sheet-close"(){ S.sheet = false; render(); },
   budget(el){ PREFS.budget = el.dataset.v; save("prefs", PREFS); render(); },
-  size(el){ if (S.current && S.current.type === "Shoes") PREFS.shoe = el.dataset.v; else PREFS.size = el.dataset.v; save("prefs", PREFS); render(); },
+  size(el){ if (S.current && S.current.type === "Shoes") PREFS.shoe = el.dataset.v; else { PREFS.size = el.dataset.v; PREFS.sizeSet = true; } save("prefs", PREFS); render(); },
   shop(){ toShop(); },
   "back-explore"(){ if (S.shopFrom && S.shopFrom !== "explore" && S.shopFrom !== "shop"){ const f = S.shopFrom; S.shopFrom = null; go(f); return; } S.current = S.picked || S.current; go("explore"); },
   "edit-prefs"(){ S.current = S.picked; S.sheet = true; S.screen = "explore"; render(); },
@@ -2116,7 +2211,7 @@ function bindSwipe(){
   let x0 = null, y0 = 0, dx = 0, dy = 0, pid = null, t0 = 0, downEl = null;
   card.addEventListener("pointerdown", (e) => {
     if (S.busy || e.button > 0 || e.target.closest("button, a")) return; // the details button is a plain tap
-    x0 = e.clientX; y0 = e.clientY; dx = dy = 0; pid = e.pointerId; t0 = Date.now(); downEl = e.target;
+    x0 = e.clientX; y0 = e.clientY; dx = dy = 0; pid = e.pointerId; t0 = Date.now(); downEl = e.target; S.dragging = true;
     try{ card.setPointerCapture(pid); }catch(err){}
     card.style.transition = "none";
   });
@@ -2129,6 +2224,7 @@ function bindSwipe(){
   });
   const back = () => { card.style.transition = "transform .18s ease"; card.style.transform = ""; card.style.setProperty("--yes", 0); card.style.setProperty("--no", 0); };
   const end = (e) => {
+    S.dragging = false;
     if (x0 === null) return;
     const sx = x0;
     x0 = null;
@@ -2241,6 +2337,7 @@ function askSnapshot(){
   try{ const b = briefRead(); L.push(`YOUR WORDS READ AS: brands ${b.brands.join(", ") || "-"}; look for ${b.words.join(", ") || "-"}; avoid ${b.avoid.join(", ") || "-"}; store styles +${Object.keys(b.tags).join("/") || "-"} -${Object.keys(b.notTags).join("/") || "-"}; stores ${Object.keys(b.stores).join(", ") || "-"}`); }catch(e){}
   L.push(`LIKED: ${likedList().slice(0, 8).map((x) => x.title).join("; ") || "-"}`);
   L.push(`PREFS: ${JSON.stringify(PREFS)}`);
+  if (S.current && isProduct(S.current)){ const f = fitForMe(S.current); L.push(`FOR YOU: ${f.s ? (f.s > 0 ? "+" : "") + f.s + " " + (f.good || f.bad) : "neutral"}   cut: ${S.current.ct || "-"}${S.current.is ? "   inseam " + S.current.is + '"' : ""}`); }
   L.push(`\nON SCREEN: ${row(S.current)}`);
   if (S.current) L.push(`  why: "${S.current.why || ""}"   search: "${S.current.search || ""}"   photo ${curPh() + 1} of ${photosOf(S.current).length}`);
   if (S.current && S.current.image_prompt) L.push(`  photo prompt: ${S.current.image_prompt}`);

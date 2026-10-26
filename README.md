@@ -59,10 +59,14 @@ On the phone, tap the version badge next to the logo (or **Update app** in the t
 
 AI-drawn photos on the free plan were too generic and too slow, so Drape shows real products: real photos, prices and links.
 
-- **Catalog** (`catalog/`, rebuilt daily by `.github/workflows/catalog.yml` → `scripts/build-catalog.mjs`): the current menswear of about 18 Shopify stores (Rowing Blazers, Alex Mill, Todd Snyder, Drake's, Aimé Leon Dore, Taylor Stitch, Noah, Percival, Portuguese Flannel, Oliver Spencer, Universal Works, Kith, Corridor, Outerknown and more), from each store's public `/products.json`. Women's and kids' pieces, accessories and sold-out items are left out; each piece gets a type (Shirts, Knitwear...), colour and fabric. About 8,000 pieces, one JSON file per type, served by GitHub Pages with the app.
+- **Catalog** (`catalog/`, rebuilt daily by `.github/workflows/catalog.yml` → `scripts/build-catalog.mjs`): the current menswear of about 18 Shopify stores (Rowing Blazers, Alex Mill, Todd Snyder, Drake's, Aimé Leon Dore, Taylor Stitch, Noah, Percival, Portuguese Flannel, Oliver Spencer, Universal Works, Kith, Corridor, Outerknown and more), from each store's public `/products.json`. Women's and kids' pieces, accessories and sold-out items are left out; each piece gets a type (Shirts, Knitwear...), colour and fabric. About 19,000 pieces from 44 stores, one JSON file per type (the first 3 photos of each; photos 4–8 come with the details), served by GitHub Pages with the app.
 - **Searching** happens on the phone: the stores that fit the brief (each store has style tags; chips, brands and words in your text map to them), words from your text, your swipes, and a little per-search randomness. Never the same store or kind of piece twice in a row, and never the same piece twice in a search. Instant, and the stores never see a burst of requests (live searches from the worker got rate-limited by Shopify).
 - **AI** (Gemma, `POST /keywords`): reads the brief, and each heart, as words to look for (e.g. "oxford", "madras", "rugby stripe") and the stores that fit. A heart also puts the closest pieces right after the next card.
 - Settings in the pick sheet still apply: "Only stores that ship to Israel" (from each store's settings) and the budget.
+
+### About you (since 1.6)
+
+In the taste profile (or "Add your height and build" on the start screen): height (under 170 / 170–182 / over 182 cm), build (slim, average, athletic, broad), the fit you like, your size and shoe size. They change what comes first: for a short build, fewer long coats (overcoats, topcoats, trench, longline: from the title and the store's description, read by the catalog as "ct") and wide trousers, more cropped jackets (bomber, Harrington, trucker...) and shorter shorts (inseam "is"); for a slim build, fewer oversized/boxy pieces and more slim, tapered and tailored cuts; letter sizes in stock without yours come last. The card says why ("Cropped, good for your height") or warns ("Long for your height"), and the AI's reading of your brief gets it too.
 
 ### The card (since 1.5)
 
