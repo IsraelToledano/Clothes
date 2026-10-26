@@ -38,26 +38,46 @@ const STORES = [
   { d: "sunspel.com", name: "Sunspel", tags: ["minimal", "classic", "luxe"] },
   { d: "privatewhitevc.com", name: "Private White V.C.", tags: ["smart", "luxe", "rugged"] },
   { d: "colhays.com", name: "Colhay's", tags: ["luxe", "classic", "minimal"] },
+  // Added in 1.6 (store probe of 55 candidates: these read and ship to Israel).
+  { d: "norseprojects.com", name: "Norse Projects", tags: ["minimal", "smart", "relaxed"] },
+  { d: "billyreid.com", name: "Billy Reid", tags: ["classic", "preppy", "relaxed"] },
+  { d: "orlebarbrown.com", name: "Orlebar Brown", tags: ["luxe", "smart", "relaxed"] },
+  { d: "debonnefacture.fr", name: "De Bonne Facture", tags: ["minimal", "luxe", "workwear"] },
+  { d: "akindofguise.com", name: "A Kind of Guise", tags: ["relaxed", "vintage", "minimal"] },
+  { d: "albamclothing.com", name: "Albam", tags: ["minimal", "workwear", "relaxed"] },
+  { d: "folkclothing.com", name: "Folk", tags: ["minimal", "relaxed"] },
+  { d: "waxlondon.com", name: "Wax London", tags: ["relaxed", "workwear", "vintage"] },
+  { d: "youmustcreate.com", name: "YMC", tags: ["relaxed", "vintage", "minimal"] },
+  { d: "kestin.co", name: "Kestin", tags: ["minimal", "workwear", "classic"] },
+  { d: "mackweldon.com", name: "Mack Weldon", tags: ["sporty", "minimal"] },
+  { d: "reigningchamp.com", name: "Reigning Champ", tags: ["sporty", "minimal", "streetwear"] },
+  { d: "rancourtandcompany.com", name: "Rancourt & Co.", tags: ["classic", "preppy", "workwear"] },
+  { d: "quoddy.com", name: "Quoddy", tags: ["classic", "workwear", "rugged"] },
+  { d: "paulevansny.com", name: "Paul Evans", tags: ["classic", "smart", "tailored"] },
+  { d: "thursdayboots.com", name: "Thursday Boots", tags: ["rugged", "workwear", "classic"] },
+  { d: "armorlux.com", name: "Armor-Lux", tags: ["classic", "relaxed", "vintage"] },
+  { d: "uskees.com", name: "Uskees", tags: ["workwear", "relaxed", "vintage"] },
+  { d: "stoffa.co", name: "Stoffa", tags: ["luxe", "minimal", "tailored"] },
 ];
 
-const NOT_HIS = /\b(wmns|nike (ps|gs|td)|jordan (ps|gs|td)|little kids?|big kids?|women|womens|women's|women’s|woman|ladies|girls?|kids?|boys?|baby(?![\s-]*(cashmere|alpaca|merino|cord))|toddler|skirts?|blouses?|bralettes?|bikinis?|leggings?|camisoles?|bodysuits?|jumpsuits?|rompers?|maternity|corsets?|bras?|halter|crop tops?|scarf tank|wrap top)\b/i;
+const NOT_HIS = /\b(femme|wmn'?s|wmns|nike (ps|gs|td)|jordan (ps|gs|td)|little kids?|big kids?|women|womens|women's|women’s|woman|ladies|girls?|kids?|boys?|baby(?![\s-]*(cashmere|alpaca|merino|cord))|toddler|skirts?|blouses?|bralettes?|bikinis?|leggings?|camisoles?|bodysuits?|jumpsuits?|rompers?|maternity|corsets?|bras?|halter|crop tops?|scarf tank|wrap top)\b/i;
 // "Dress" is a women's piece only in the title or type, and not as in dress shirt, dress trouser or dress socks.
 const A_DRESS = /\bdress(es)?\b(?!\s*(shirts?|trousers?|pants?|socks?|shoes?|boots?|chinos?|code|gordon))/i;
 // Not clothes (or not one piece of clothing). Careful with colours and details: "Cream Oxford", "Floral Print
 // Shirt", "Patch Pocket" and "Tie-Dye" are clothes (before 1.3 those words dropped them).
-const NOT_CLOTHES = /\b(accessor(y|ies)|underwear|boxers?|boxer briefs?|briefs|pyjamas?|pajamas?|robes?|bow ?ties?|neckties?|ties?(?![- ]?dye)|socks?|hats?|caps?|beanies?|scarf|scarves|belts?|bags?|totes?|backpacks?|wallets?|card ?holders?|gloves?|sunglasses|glasses|jewel(le)?ry|bracelets?|necklaces?|rings?|cufflinks?|pocket squares?|bandanas?|keyrings?|watch(es)?|watch straps?|laces|shoe care|shoe cream|polish|shoe brush|hangers?|face ?masks?|face covering|gift ?cards?|e-?gift|candles?|mugs?|posters?|stickers?|books?|magazines?|keychains?|key rings?|umbrellas?|towels?|blankets?|fragrances?|perfumes?|cologne|incense|art prints?|enamel pins?|lapel pins?|patches|swatch(es)?|fabric samples?|samples?|bundles?|insurance|shipping|donations?|cushions?|pillows?|rugs?|ornaments?|playing cards|dog|leash|collar for|mtm|made to measure|spacer|undershirts?|cummerbunds?|braces|eyewear|earrings?|ear cuffs?|snapbacks?|strapbacks?|hair|styling paste|publications?|print material|gicl[ée]e|helmets?|sacoches?|pouch(es)?|plates?|masks?)\b/i;
+const NOT_CLOTHES = /\b(accessor(y|ies)|underwear|boxers?|boxer briefs?|briefs|pyjamas?|pajamas?|robes?|bow ?ties?|neckties?|ties?(?![- ]?dye)|socks?|hats?|caps?|beanies?|scarf|scarves|belts?|bags?|totes?|backpacks?|wallets?|card ?holders?|gloves?|sunglasses|glasses|jewel(le)?ry|bracelets?|necklaces?|rings?|cufflinks?|pocket squares?|bandanas?|keyrings?|watch(es)?|watch straps?|laces|shoe care|shoe cream|polish|shoe brush|hangers?|face ?masks?|face covering|gift ?cards?|e-?gift|candles?|mugs?|posters?|stickers?|books?|magazines?|keychains?|key rings?|umbrellas?|towels?|blankets?|fragrances?|perfumes?|cologne|incense|art prints?|enamel pins?|lapel pins?|patches|swatch(es)?|fabric samples?|samples?|bundles?|insurance|shipping|donations?|cushions?|pillows?|rugs?|ornaments?|playing cards|dog|leash|collar for|mtm|made to measure|spacer|wine|undershirts?|cummerbunds?|braces|eyewear|earrings?|ear cuffs?|snapbacks?|strapbacks?|hair|styling paste|publications?|print material|gicl[ée]e|helmets?|sacoches?|pouch(es)?|plates?|masks?)\b/i;
 const SKU_TITLE = /^[A-Z]{1,2}\d{3}[A-Z0-9]{3,}\b/; // "M993C0370Q - Original Fabrics": a fabric for made-to-measure, not a piece
 
 // The app's types. First match wins, so the more specific ones come first.
 const TYPE_RULES = [
   ["Shoes", /\b(footwear|sneakers?|trainers?|shoes?|boots?|loafers?|sandals?|derbys?|derbies|moccasins?|mules?|slides|espadrilles?|clogs?|slippers?|oxfords? (shoes?|sneakers?)|tennis oxfords?)\b/i],
-  ["Shorts", /\b(shorts|short)\b(?!\s*-?\s*sleeve)|\bswim ?trunks?\b|\bboardshorts?\b/i],
-  ["Trousers", /\b(pants?|trousers?|chinos?|jeans?|denim pant|slacks|joggers?|sweatpants?|overalls|5 pockets?|five pockets?)\b/i],
+  ["Shorts", /\b(bermudas?|shorts|short)\b(?!\s*-?\s*sleeve)|\bswim ?trunks?\b|\bboardshorts?\b/i],
+  ["Trousers", /\b(pantalons?|pants?|trousers?|chinos?|jeans?|denim pant|slacks|joggers?|sweatpants?|overalls|5 pockets?|five pockets?)\b/i],
   ["Overshirts", /\b(overshirts?|over-shirts?|shirt jackets?|shirt-jackets?|shackets?|chore (coats?|jackets?)|cpo)\b/i],
-  ["Jackets", /\b(puffers?|topcoats?|raincoats?|trench(coats?)?|balmacaans?|chesterfields?|sherpas?|truckers?|jackets?|blazers?|coats?|parkas?|bombers?|anoraks?|gilets?|vests?|waistcoats?|cagoules?|windbreakers?|sport ?coats?|overcoats?|peacoats?|suits?|suit outfit|tuxedos?(?! shirt))\b/i],
-  ["T-shirts", /\b(t-?shirts?|tees?|henleys?|ringer|tank tops?|thermals?)\b/i],
-  ["Knitwear", /\b(knitwear|sweatshirts?|hoodies?|hooded|loopback|lambswool|roll ?necks?|rollnecks?|sweaters?|cardigans?|jumpers?|knits?|knitted|crewnecks?|quarter[- ]zip|half[- ]zip|turtlenecks?|mock ?necks?|pullovers?|cashmere|merino|fair isle|cable)\b/i],
-  ["Shirts", /\b(wovens?|spread|shirts?|oxfords?|popovers?|button[- ]downs?|polos?|rugbys?|camp collar|flannels?|chambray|overshirts?)\b/i],
+  ["Jackets", /\b(vestes?|manteaux?|cabans?|blousons?|cirés?|puffers?|topcoats?|raincoats?|trench(coats?)?|balmacaans?|chesterfields?|sherpas?|truckers?|jackets?|blazers?|coats?|parkas?|bombers?|anoraks?|gilets?|vests?|waistcoats?|cagoules?|windbreakers?|sport ?coats?|overcoats?|peacoats?|suits?|suit outfit|tuxedos?(?! shirt))\b/i],
+  ["T-shirts", /\b(marini[eè]res?|tee-shirts?|t-?shirts?|tees?|henleys?|ringer|tank tops?|thermals?)\b/i],
+  ["Knitwear", /\b(pulls?|pull-overs?|knitwear|sweatshirts?|hoodies?|hooded|loopback|lambswool|roll ?necks?|rollnecks?|sweaters?|cardigans?|jumpers?|knits?|knitted|crewnecks?|quarter[- ]zip|half[- ]zip|turtlenecks?|mock ?necks?|pullovers?|cashmere|merino|fair isle|cable)\b/i],
+  ["Shirts", /\b(chemises?|wovens?|spread|shirts?|oxfords?|popovers?|button[- ]downs?|polos?|rugbys?|camp collar|flannels?|chambray|overshirts?)\b/i],
 ];
 function typeOf(p) {
   const hay = [p.title, p.product_type].join(" ");
@@ -98,6 +118,24 @@ function textOf(html){
 }
 // The same hash as the app's hashStr: which details file a piece's details are in.
 const hashStr = (x) => { let h = 2166136261; for (const c of String(x)) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return h >>> 0; };
+// How a piece is cut, in the store's own words: long (knee length, mid-thigh, longline, overcoats) or cropped;
+// oversized/boxy/wide or slim/trim. The app uses it with your height and build ("About you").
+const CUT_LONG = /\b(knee[- ]length|below the knee|to the knee|mid[- ]thigh|longline|long[- ]line|longer length|long length|full[- ]length|ankle[- ]length|maxi|duster|overcoat|topcoat|great ?coat|chesterfield|trench ?coat|balmacaan)\b/i;
+const CUT_CROP = /\b(cropped|waist[- ]length|hip[- ]length|hits at the (hip|waist)|shorter length|short length|shorter body)\b/i;
+const CUT_BIG = /\b(oversized|over-sized|boxy|roomy|generous fit|loose fit|loose-fitting|wide[- ]leg|wide fit|baggy|dropped shoulders?|drop[- ]shoulders?)\b/i;
+const CUT_TRIM = /\b(slim fit|slim-fit|trim fit|slim cut|tapered|close[- ]fitting|tailored fit|skinny)\b/i;
+function cutOf(text){
+  let c = "";
+  if (CUT_LONG.test(text)) c += "L"; else if (CUT_CROP.test(text)) c += "C";
+  if (CUT_BIG.test(text)) c += "O"; else if (CUT_TRIM.test(text)) c += "T";
+  return c;
+}
+// Shorts: the inseam in inches ('5" inseam', '7-inch', 'Inseam: 9"').
+function inseamOf(text){
+  const m = /(\d{1,2}(?:\.\d)?)\s?(?:"|”|''|-inch|\s?inch(?:es)?)(?=[^a-z]|$)/i.exec(text) || /inseam[^.\d]{0,24}(\d{1,2}(?:\.\d)?)/i.exec(text);
+  const n = m ? parseFloat(m[1]) : 0;
+  return n >= 3 && n <= 13 ? n : 0;
+}
 const tagValue = (tags, re) => { for (const t of tags){ const m = re.exec(t); if (m) return clean(m[1]); } return ""; };
 
 async function getJSON(url) {
@@ -162,11 +200,15 @@ for (const [si, s] of STORES.entries()) {
           sz: sizes.slice(0, 16), d: String(p.published_at || p.created_at || "").slice(0, 10),
         };
         if (was > price) item.cp = was;
+        const descText = textOf(p.body_html);
+        const cut = cutOf([title, tags.join(" "), descText].join(" "));
+        if (cut) item.ct = cut;
+        if (type === "Shorts"){ const ins = inseamOf(title) || inseamOf(descText); if (ins) item.is = ins; }
         if (fit && fit.length <= 20) item.ft = cap(fit);
         (byType[type] = byType[type] || []).push(item);
         mine.push(item);
         // The longer details (opened from a card) go in small files the app loads only when you open one.
-        const more = { d: textOf(p.body_html) };
+        const more = { d: descText };
         const other = opts.filter((o) => o !== sizeOpt && o.values.length > 1 && !/^title$/i.test(o.name)).map((o) => [o.name, o.values.slice(0, 12)]);
         if (other.length) more.o = other;
         if (soldOut.length) more.so = soldOut.slice(0, 16);
