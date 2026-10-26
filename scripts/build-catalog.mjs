@@ -65,19 +65,19 @@ const NOT_HIS = /\b(femme|wmn'?s|wmns|nike (ps|gs|td)|jordan (ps|gs|td)|little k
 const A_DRESS = /\bdress(es)?\b(?!\s*(shirts?|trousers?|pants?|socks?|shoes?|boots?|chinos?|code|gordon))/i;
 // Not clothes (or not one piece of clothing). Careful with colours and details: "Cream Oxford", "Floral Print
 // Shirt", "Patch Pocket" and "Tie-Dye" are clothes (before 1.3 those words dropped them).
-const NOT_CLOTHES = /\b(accessor(y|ies)|underwear|boxers?|boxer briefs?|briefs|pyjamas?|pajamas?|robes?|bow ?ties?|neckties?|ties?(?![- ]?dye)|socks?|hats?|caps?|beanies?|scarf|scarves|belts?|bags?|totes?|backpacks?|wallets?|card ?holders?|gloves?|sunglasses|glasses|jewel(le)?ry|bracelets?|necklaces?|rings?|cufflinks?|pocket squares?|bandanas?|keyrings?|watch(es)?|watch straps?|laces|shoe care|shoe cream|polish|shoe brush|hangers?|face ?masks?|face covering|gift ?cards?|e-?gift|candles?|mugs?|posters?|stickers?|books?|magazines?|keychains?|key rings?|umbrellas?|towels?|blankets?|fragrances?|perfumes?|cologne|incense|art prints?|enamel pins?|lapel pins?|patches|swatch(es)?|fabric samples?|samples?|bundles?|insurance|shipping|donations?|cushions?|pillows?|rugs?|ornaments?|playing cards|dog|leash|collar for|mtm|made to measure|spacer|wine|undershirts?|cummerbunds?|braces|eyewear|earrings?|ear cuffs?|snapbacks?|strapbacks?|hair|styling paste|publications?|print material|gicl[ée]e|helmets?|sacoches?|pouch(es)?|plates?|masks?)\b/i;
+const NOT_CLOTHES = /\b(accessor(y|ies)|underwear|boxers?|boxer briefs?|briefs|pyjamas?|pajamas?|robes?|bow ?ties?|neckties?|ties?(?![- ]?dye)|socks?|hats?|caps?|beanies?|scarf|scarves|belts?|bags?|totes?|backpacks?|wallets?|card ?holders?|gloves?|sunglasses|glasses|jewel(le)?ry|bracelets?|necklaces?|rings?|cufflinks?|pocket squares?|bandanas?|keyrings?|watch(es)?|watch straps?|laces|shoe care|shoe cream|polish|shoe brush|hangers?|face ?masks?|face covering|gift ?cards?|e-?gift|candles?|mugs?|posters?|stickers?|books?|magazines?|keychains?|key rings?|umbrellas?|towels?|blankets?|fragrances?|perfumes?|cologne|incense|art prints?|enamel pins?|lapel pins?|patches|swatch(es)?|fabric samples?|samples?|bundles?|insurance|shipping|donations?|cushions?|pillows?|rugs?|ornaments?|playing cards|dog|leash|collar for|mtm|made to measure|spacer|wine|resoles?|refurbishment|insoles?|footbeds?|protection|lunchbox|washbags?|notebooks?|glass(es)? set|undershirts?|cummerbunds?|braces|eyewear|earrings?|ear cuffs?|snapbacks?|strapbacks?|hair|styling paste|publications?|print material|gicl[ée]e|helmets?|sacoches?|pouch(es)?|plates?|masks?)\b/i;
 const SKU_TITLE = /^[A-Z]{1,2}\d{3}[A-Z0-9]{3,}\b/; // "M993C0370Q - Original Fabrics": a fabric for made-to-measure, not a piece
 
 // The app's types. First match wins, so the more specific ones come first.
 const TYPE_RULES = [
   ["Shoes", /\b(footwear|sneakers?|trainers?|shoes?|boots?|loafers?|sandals?|derbys?|derbies|moccasins?|mules?|slides|espadrilles?|clogs?|slippers?|oxfords? (shoes?|sneakers?)|tennis oxfords?)\b/i],
-  ["Shorts", /\b(bermudas?|shorts|short)\b(?!\s*-?\s*sleeve)|\bswim ?trunks?\b|\bboardshorts?\b/i],
+  ["Shorts", /\b(bermudas?|sweatshorts?|shorts|short)\b(?!\s*-?\s*sleeve)|\bswim ?trunks?\b|\bboardshorts?\b/i],
   ["Trousers", /\b(pantalons?|pants?|trousers?|chinos?|jeans?|denim pant|slacks|joggers?|sweatpants?|overalls|5 pockets?|five pockets?)\b/i],
   ["Overshirts", /\b(overshirts?|over-shirts?|shirt jackets?|shirt-jackets?|shackets?|chore (coats?|jackets?)|cpo)\b/i],
-  ["Jackets", /\b(vestes?|manteaux?|cabans?|blousons?|cirés?|puffers?|topcoats?|raincoats?|trench(coats?)?|balmacaans?|chesterfields?|sherpas?|truckers?|jackets?|blazers?|coats?|parkas?|bombers?|anoraks?|gilets?|vests?|waistcoats?|cagoules?|windbreakers?|sport ?coats?|overcoats?|peacoats?|suits?|suit outfit|tuxedos?(?! shirt))\b/i],
-  ["T-shirts", /\b(marini[eè]res?|tee-shirts?|t-?shirts?|tees?|henleys?|ringer|tank tops?|thermals?)\b/i],
+  ["Jackets", /\b(doudounes?|vestes?|manteaux?|cabans?|blousons?|cirés?|puffers?|topcoats?|raincoats?|trench(coats?)?|balmacaans?|chesterfields?|sherpas?|truckers?|jackets?|blazers?|coats?|parkas?|bombers?|anoraks?|gilets?|vests?|waistcoats?|cagoules?|windbreakers?|sport ?coats?|overcoats?|peacoats?|suits?|suit outfit|tuxedos?(?! shirt))\b/i],
+  ["T-shirts", /\b(d[ée]bardeurs?|longsleeves?|marini[eè]res?|tee-shirts?|t-?shirts?|tees?|henleys?|ringer|tank tops?|thermals?)\b/i],
   ["Knitwear", /\b(pulls?|pull-overs?|knitwear|sweatshirts?|hoodies?|hooded|loopback|lambswool|roll ?necks?|rollnecks?|sweaters?|cardigans?|jumpers?|knits?|knitted|crewnecks?|quarter[- ]zip|half[- ]zip|turtlenecks?|mock ?necks?|pullovers?|cashmere|merino|fair isle|cable)\b/i],
-  ["Shirts", /\b(chemises?|wovens?|spread|shirts?|oxfords?|popovers?|button[- ]downs?|polos?|rugbys?|camp collar|flannels?|chambray|overshirts?)\b/i],
+  ["Shirts", /\b(button[- ]ups?|chemises?|wovens?|spread|shirts?|oxfords?|popovers?|button[- ]downs?|polos?|rugbys?|camp collar|flannels?|chambray|overshirts?)\b/i],
 ];
 function typeOf(p) {
   const hay = [p.title, p.product_type].join(" ");
@@ -93,7 +93,7 @@ const COLOURS = ["navy", "light blue", "sky blue", "blue", "white", "ecru", "cre
 const findWord = (list, s) => { const t = String(s).toLowerCase(); for (const w of list) if (new RegExp("\\b" + w + "\\b").test(t)) return w; return ""; };
 const cap = (s) => (s ? s.replace(/\b\w/g, (c) => c.toUpperCase()) : "");
 const clean = (s) => String(s || "").replace(/\s+/g, " ").trim();
-const MAX_IMG = 8, DETAIL_CHUNKS = 128;
+const MAX_IMG = 8, CORE_IMG = 3, DETAIL_CHUNKS = 128;
 // A store's photo address without the size (the app asks for the size it needs).
 const imgUrl = (u) => { u = String(u || ""); if (u.startsWith("//")) u = "https:" + u; return u.replace(/([?&])width=\d+&?/, "$1").replace(/[?&]$/, ""); };
 // The folder most of a store's photos live in; each photo is saved without it (it's in stores.json once).
@@ -194,7 +194,8 @@ for (const [si, s] of STORES.entries()) {
         const item = {
           id, s: si, t: title, pt: ptype,
           h: p.handle, p: price,
-          im: imgs.slice(0, MAX_IMG),
+          im: imgs.slice(0, CORE_IMG), // the first photos; the rest (up to 8) are in the details file
+          ...(imgs.length > CORE_IMG ? { pn: Math.min(MAX_IMG, imgs.length) } : {}),
           c: cap(colour.length <= 24 ? colour : ""), f: cap(findWord(FABRICS, title + " " + ptype + " " + tags.join(" "))),
           tg: tags.filter((x) => x.length <= 24 && !/^(sale|new|yotpo|size|_|filter|price|gid:)/.test(x)).slice(0, 12),
           sz: sizes.slice(0, 16), d: String(p.published_at || p.created_at || "").slice(0, 10),
@@ -209,6 +210,7 @@ for (const [si, s] of STORES.entries()) {
         mine.push(item);
         // The longer details (opened from a card) go in small files the app loads only when you open one.
         const more = { d: descText };
+        if (imgs.length > CORE_IMG) more.mi = imgs.slice(CORE_IMG, MAX_IMG);
         const other = opts.filter((o) => o !== sizeOpt && o.values.length > 1 && !/^title$/i.test(o.name)).map((o) => [o.name, o.values.slice(0, 12)]);
         if (other.length) more.o = other;
         if (soldOut.length) more.so = soldOut.slice(0, 16);
@@ -223,6 +225,7 @@ for (const [si, s] of STORES.entries()) {
   // Save each photo without the store's common folder.
   s.ip = prefixOf(mine.flatMap((x) => x.im));
   if (s.ip) for (const x of mine) x.im = x.im.map((u) => (u.startsWith(s.ip) ? u.slice(s.ip.length) : u));
+  if (s.ip) for (const x of mine){ const m = details[hashStr(x.id) % DETAIL_CHUNKS][x.id]; if (m && m.mi) m.mi = m.mi.map((u) => (u.startsWith(s.ip) ? u.slice(s.ip.length) : u)); }
   rep.ms = Date.now() - t0;
   report.push(rep);
   console.log(JSON.stringify(rep));
@@ -238,6 +241,7 @@ for (const [t, list] of Object.entries(byType)) {
 }
 fs.mkdirSync(path.join(OUT, "details"), { recursive: true });
 details.forEach((d, n) => fs.writeFileSync(path.join(OUT, "details", String(n).padStart(3, "0") + ".json"), JSON.stringify(d)));
-// format 2: photos relative to each store's "ip", up to 8 of them; details in details/NNN.json (hashStr(id) mod 128)
+// format 2: photos relative to each store's "ip"; the first 3 in the type file ("pn" = how many in all), photos
+// 4-8 ("mi") and the longer details in details/NNN.json (hashStr(id) mod 128)
 fs.writeFileSync(path.join(OUT, "stores.json"), JSON.stringify({ updated: new Date().toISOString(), format: 2, chunks: DETAIL_CHUNKS, stores, counts, report }, null, 1));
 console.log("counts", counts);
