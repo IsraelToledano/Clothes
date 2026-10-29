@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-28T08:38:42.785Z",
+ "updated": "2026-10-29T08:33:41.020Z",
  "format": 2,
  "chunks": 128,
  "stores": [
@@ -540,25 +540,25 @@
   }
  ],
  "counts": {
-  "Knitwear": 3703,
-  "Jackets": 3252,
-  "Shirts": 4250,
-  "Trousers": 2585,
-  "T-shirts": 1909,
+  "Knitwear": 3663,
+  "Jackets": 3257,
+  "Shirts": 4224,
+  "Trousers": 2567,
+  "T-shirts": 1952,
   "Shorts": 960,
-  "Overshirts": 369,
-  "Shoes": 2024
+  "Overshirts": 371,
+  "Shoes": 2023
  },
  "report": [
   {
    "store": "rowingblazers.com",
    "pages": 4,
-   "raw": 839,
-   "kept": 429,
+   "raw": 798,
+   "kept": 425,
    "drop": {
-    "notHis": 250,
-    "notClothes": 113,
-    "soldOut": 47,
+    "notHis": 242,
+    "notClothes": 107,
+    "soldOut": 24,
     "noPhoto": 0,
     "noType": 0
    },
@@ -572,27 +572,27 @@
     ],
     "noType": []
    },
-   "ms": 4345
+   "ms": 3885
   },
   {
    "store": "alexmill.com",
-   "pages": 4,
-   "raw": 991,
-   "kept": 206,
+   "pages": 1,
+   "raw": 248,
+   "kept": 51,
    "drop": {
-    "notHis": 705,
-    "notClothes": 63,
-    "soldOut": 3,
-    "noPhoto": 1,
-    "noType": 13
+    "notHis": 172,
+    "notClothes": 12,
+    "soldOut": 1,
+    "noPhoto": 0,
+    "noType": 12
    },
    "samples": {
     "notHis": [
-     "Beanie In Brushed Cashmere [Unisex Accessories] <women>",
-     "Beanie In Brushed Cashmere [Unisex Accessories] <women>",
-     "Beanie In Brushed Cashmere [Unisex Accessories] <women>",
-     "Beanie In Brushed Cashmere [Unisex Accessories] <women>",
-     "Fracap Magnifico Boot [Unisex Shoes] <women>"
+     "Neil Pant in Herringbone [Women's Pants] <Women>",
+     "The Perfect Weekday Tote [Unisex Accessories] <women>",
+     "The Perfect Weekday Tote [Unisex Accessories] <women>",
+     "Fracap Magnifico Boot [Unisex Shoes] <women>",
+     "Alex Mill x Owen Barry Gloves [Unisex Accessories] <women>"
     ],
     "noType": [
      "Alphabet Charm in Leather []",
@@ -602,19 +602,19 @@
      "Alphabet Charm in Leather []"
     ]
    },
-   "ms": 5167
+   "ms": 403
   },
   {
    "store": "toddsnyder.com",
    "pages": 12,
    "raw": 3000,
-   "kept": 1701,
+   "kept": 1703,
    "drop": {
     "notHis": 9,
     "notClothes": 737,
-    "soldOut": 517,
+    "soldOut": 504,
     "noPhoto": 0,
-    "noType": 36
+    "noType": 47
    },
    "samples": {
     "notHis": [
@@ -632,17 +632,17 @@
      "Mykonos Swim Brief [TS SWIM]"
     ]
    },
-   "ms": 17444
+   "ms": 17691
   },
   {
    "store": "drakes.com",
    "pages": 9,
    "raw": 2066,
-   "kept": 928,
+   "kept": 926,
    "drop": {
     "notHis": 0,
     "notClothes": 1039,
-    "soldOut": 99,
+    "soldOut": 101,
     "noPhoto": 0,
     "noType": 0
    },
@@ -650,19 +650,19 @@
     "notHis": [],
     "noType": []
    },
-   "ms": 15810
+   "ms": 10215
   },
   {
    "store": "aimeleondore.com",
    "pages": 4,
    "raw": 900,
-   "kept": 460,
+   "kept": 464,
    "drop": {
     "notHis": 28,
     "notClothes": 319,
-    "soldOut": 34,
+    "soldOut": 28,
     "noPhoto": 0,
-    "noType": 59
+    "noType": 61
    },
    "samples": {
     "notHis": [
@@ -680,7 +680,7 @@
      "Café Leon Dore Cappuccino Cup & Saucer (Set of 6) [Lifestyle]"
     ]
    },
-   "ms": 4242
+   "ms": 3775
   },
   {
    "store": "taylorstitch.com",
@@ -690,8 +690,8 @@
    "drop": {
     "notHis": 50,
     "notClothes": 579,
-    "soldOut": 1880,
-    "noPhoto": 2,
+    "soldOut": 1879,
+    "noPhoto": 3,
     "noType": 0
    },
    "samples": {
@@ -704,13 +704,13 @@
     ],
     "noType": []
    },
-   "ms": 18623
+   "ms": 13755
   },
   {
    "store": "noahny.com",
    "pages": 2,
-   "raw": 425,
-   "kept": 243,
+   "raw": 424,
+   "kept": 242,
    "drop": {
     "notHis": 1,
     "notClothes": 109,
@@ -728,17 +728,17 @@
      "Noah Surf Wax [Surf]"
     ]
    },
-   "ms": 2657
+   "ms": 1442
   },
   {
    "store": "percivalclo.com",
    "pages": 4,
    "raw": 910,
-   "kept": 546,
+   "kept": 540,
    "drop": {
     "notHis": 3,
     "notClothes": 167,
-    "soldOut": 186,
+    "soldOut": 192,
     "noPhoto": 0,
     "noType": 8
    },
@@ -756,7 +756,7 @@
      "PCVL Performance Top | Rust [Jersey]"
     ]
    },
-   "ms": 9843
+   "ms": 6927
   },
   {
    "store": "portugueseflannel.com",
@@ -774,7 +774,7 @@
     "notHis": [],
     "noType": []
    },
-   "ms": 1167
+   "ms": 1092
   },
   {
    "store": "oliverspencer.co.uk",
@@ -804,17 +804,17 @@
      "Attirecare Garment Spray Aureum 250ml [Home & Garden-Rollover]"
     ]
    },
-   "ms": 3182
+   "ms": 2771
   },
   {
    "store": "universalworks.co.uk",
    "pages": 6,
-   "raw": 1376,
+   "raw": 1382,
    "kept": 991,
    "drop": {
     "notHis": 0,
-    "notClothes": 336,
-    "soldOut": 22,
+    "notClothes": 337,
+    "soldOut": 27,
     "noPhoto": 0,
     "noType": 27
    },
@@ -828,17 +828,17 @@
      "F/CE.® Black 420 re/cor Daytrip BP 2.0 [F/CE]"
     ]
    },
-   "ms": 10014
+   "ms": 8919
   },
   {
    "store": "kith.com",
    "pages": 12,
    "raw": 3000,
-   "kept": 1264,
+   "kept": 1262,
    "drop": {
     "notHis": 1201,
     "notClothes": 378,
-    "soldOut": 134,
+    "soldOut": 136,
     "noPhoto": 0,
     "noType": 23
    },
@@ -858,17 +858,17 @@
      "Kith Ivy for Wilson Striped Wristbands - Magma [Wristbands]"
     ]
    },
-   "ms": 16318
+   "ms": 17665
   },
   {
    "store": "corridornyc.com",
    "pages": 2,
    "raw": 492,
-   "kept": 195,
+   "kept": 194,
    "drop": {
     "notHis": 0,
     "notClothes": 83,
-    "soldOut": 195,
+    "soldOut": 196,
     "noPhoto": 0,
     "noType": 19
    },
@@ -882,37 +882,37 @@
      "Homestead LS [LS w/ 1 Chest Pocket]"
     ]
    },
-   "ms": 3059
+   "ms": 2327
   },
   {
    "store": "outerknown.com",
    "pages": 5,
-   "raw": 1048,
-   "kept": 281,
+   "raw": 1058,
+   "kept": 277,
    "drop": {
-    "notHis": 441,
-    "notClothes": 123,
-    "soldOut": 127,
+    "notHis": 442,
+    "notClothes": 129,
+    "soldOut": 133,
     "noPhoto": 3,
-    "noType": 73
+    "noType": 74
    },
    "samples": {
     "notHis": [
+     "Women's California Sweatshirt - Outerworn [Loungewear Tops] <Women>",
+     "Ronan Velour Crew - Outerworn [Sweatshirts] <womens>",
+     "The Woolaroo Shirt Jacket - Outerworn [Outerwear] <womens>",
      "Women's Chroma Blanket Shirt - Outerworn [Shirts] <Women>",
-     "Women's Blanket Shirt - Outerworn [Woven Shirts] <Women>",
-     "Women's Blanket Shirt - Outerworn [Woven Shirts] <Women>",
-     "Blanket Shirt - Outerworn [Shirts] <womens>",
-     "Station Jumpsuit - Outerworn [Jumpsuits] <Jumpsuit>"
+     "Women's Blanket Shirt - Outerworn [Woven Shirts] <Women>"
     ],
     "noType": [
-     "Tony's Test Item Nothing to See Here [DENIM BOTTOMS]",
+     "Drifter Tapered Fit - FINAL SALE - Outerworn [Denim Bottoms]",
+     "All Time Stretch Volley - Outerworn [Swim Bottoms]",
      "Outbound Stretch Volley - Outerworn [Active Bottoms]",
      "Apex Trunks by Kelly Slater - Outerworn [Swim Bottoms]",
-     "Nomadic Volley - Outerworn [Swim Bottoms]",
-     "Drifter Tapered Fit - Outerworn [Denim Bottoms]"
+     "Nomadic Volley - Outerworn [Swim Bottoms]"
     ]
    },
-   "ms": 4434
+   "ms": 6854
   },
   {
    "store": "howlerbros.com",
@@ -936,17 +936,17 @@
      "H Bar B Snapshirt - Grampa’s Curtains : Antique Black []"
     ]
    },
-   "ms": 4696
+   "ms": 5213
   },
   {
    "store": "ledbury.com",
    "pages": 3,
-   "raw": 706,
+   "raw": 707,
    "kept": 316,
    "drop": {
     "notHis": 2,
     "notClothes": 133,
-    "soldOut": 253,
+    "soldOut": 254,
     "noPhoto": 2,
     "noType": 0
    },
@@ -957,7 +957,7 @@
     ],
     "noType": []
    },
-   "ms": 4006
+   "ms": 4109
   },
   {
    "store": "knickerbocker.nyc",
@@ -975,17 +975,17 @@
     "notHis": [],
     "noType": []
    },
-   "ms": 1245
+   "ms": 253
   },
   {
    "store": "ironandresin.com",
    "pages": 3,
    "raw": 704,
-   "kept": 299,
+   "kept": 298,
    "drop": {
     "notHis": 21,
     "notClothes": 164,
-    "soldOut": 199,
+    "soldOut": 200,
     "noPhoto": 1,
     "noType": 20
    },
@@ -1005,7 +1005,7 @@
      "Wilderness X INR Jersey []"
     ]
    },
-   "ms": 4287
+   "ms": 4008
   },
   {
    "store": "clubmonaco.com",
@@ -1025,17 +1025,17 @@
     ],
     "noType": []
    },
-   "ms": 851
+   "ms": 733
   },
   {
    "store": "jpressonline.com",
    "pages": 12,
-   "raw": 2949,
-   "kept": 1135,
+   "raw": 2957,
+   "kept": 1138,
    "drop": {
     "notHis": 103,
-    "notClothes": 1242,
-    "soldOut": 148,
+    "notClothes": 1250,
+    "soldOut": 145,
     "noPhoto": 0,
     "noType": 321
    },
@@ -1055,16 +1055,16 @@
      "Vintage Nantucket Island Framed Needlepoint Map 17.5 x 22.5 in. [Vintage]"
     ]
    },
-   "ms": 29909
+   "ms": 12339
   },
   {
    "store": "grayers.com",
    "pages": 2,
-   "raw": 461,
-   "kept": 387,
+   "raw": 470,
+   "kept": 395,
    "drop": {
     "notHis": 35,
-    "notClothes": 32,
+    "notClothes": 33,
     "soldOut": 2,
     "noPhoto": 0,
     "noType": 5
@@ -1085,17 +1085,17 @@
      "Edward Stretch Straight Fit Denim - Vintage Wash [Bottom]"
     ]
    },
-   "ms": 2583
+   "ms": 2739
   },
   {
    "store": "kamakurashirts.com",
    "pages": 4,
    "raw": 999,
-   "kept": 151,
+   "kept": 155,
    "drop": {
     "notHis": 0,
-    "notClothes": 827,
-    "soldOut": 9,
+    "notClothes": 824,
+    "soldOut": 8,
     "noPhoto": 3,
     "noType": 9
    },
@@ -1109,17 +1109,17 @@
      "TOKYO SLIM FIT - Cutaway Panama Mesh J-TECH EASY CARE [Men Easy Care]"
     ]
    },
-   "ms": 9532
+   "ms": 5324
   },
   {
    "store": "sunspel.com",
    "pages": 5,
-   "raw": 1061,
-   "kept": 674,
+   "raw": 1064,
+   "kept": 679,
    "drop": {
     "notHis": 120,
     "notClothes": 232,
-    "soldOut": 34,
+    "soldOut": 32,
     "noPhoto": 0,
     "noType": 1
    },
@@ -1135,7 +1135,7 @@
      "Gift Box [Gift Box]"
     ]
    },
-   "ms": 7416
+   "ms": 6299
   },
   {
    "store": "privatewhitevc.com",
@@ -1155,7 +1155,7 @@
      "The Lifeline - Charcoal [Jersey]"
     ]
    },
-   "ms": 813
+   "ms": 2277
   },
   {
    "store": "colhays.com",
@@ -1173,7 +1173,7 @@
     "notHis": [],
     "noType": []
    },
-   "ms": 734
+   "ms": 452
   },
   {
    "store": "norseprojects.com",
@@ -1191,13 +1191,13 @@
     "notHis": [],
     "noType": []
    },
-   "ms": 3322
+   "ms": 2976
   },
   {
    "store": "billyreid.com",
    "pages": 2,
-   "raw": 390,
-   "kept": 328,
+   "raw": 404,
+   "kept": 342,
    "drop": {
     "notHis": 4,
     "notClothes": 46,
@@ -1218,7 +1218,7 @@
      "Billy Reid x Williams Sonoma Julep Strainer [HOME/GIFTS]"
     ]
    },
-   "ms": 2879
+   "ms": 1292
   },
   {
    "store": "orlebarbrown.com",
@@ -1248,17 +1248,17 @@
      "Russell []"
     ]
    },
-   "ms": 6182
+   "ms": 7150
   },
   {
    "store": "debonnefacture.fr",
    "pages": 1,
-   "raw": 101,
+   "raw": 103,
    "kept": 84,
    "drop": {
     "notHis": 0,
     "notClothes": 13,
-    "soldOut": 4,
+    "soldOut": 6,
     "noPhoto": 0,
     "noType": 0
    },
@@ -1266,7 +1266,7 @@
     "notHis": [],
     "noType": []
    },
-   "ms": 594
+   "ms": 885
   },
   {
    "store": "akindofguise.com",
@@ -1296,7 +1296,7 @@
      "DUMA PLEATED DENIM [Clothing]"
     ]
    },
-   "ms": 3542
+   "ms": 1315
   },
   {
    "store": "albamclothing.com",
@@ -1314,7 +1314,7 @@
     "notHis": [],
     "noType": []
    },
-   "ms": 536
+   "ms": 400
   },
   {
    "store": "folkclothing.com",
@@ -1338,17 +1338,17 @@
     ],
     "noType": []
    },
-   "ms": 11277
+   "ms": 10818
   },
   {
    "store": "waxlondon.com",
    "pages": 3,
-   "raw": 724,
-   "kept": 495,
+   "raw": 720,
+   "kept": 496,
    "drop": {
     "notHis": 0,
     "notClothes": 96,
-    "soldOut": 133,
+    "soldOut": 128,
     "noPhoto": 0,
     "noType": 0
    },
@@ -1356,15 +1356,15 @@
     "notHis": [],
     "noType": []
    },
-   "ms": 5006
+   "ms": 4648
   },
   {
    "store": "youmustcreate.com",
    "pages": 2,
-   "raw": 414,
-   "kept": 133,
+   "raw": 438,
+   "kept": 142,
    "drop": {
-    "notHis": 274,
+    "notHis": 289,
     "notClothes": 1,
     "soldOut": 6,
     "noPhoto": 0,
@@ -1372,15 +1372,15 @@
    },
    "samples": {
     "notHis": [
-     "Atomic Cardigan [Cardigans] <womens>",
-     "Studio Sweatshirt [Sweatshirts] <womens>",
-     "Slot Scarf [Scarves] <womens>",
-     "Slot Scarf [Scarves] <womens>",
-     "Beanie [Beanies] <womens>"
+     "Needle Trouser [Trousers] <womens>",
+     "Deadbeat Trouser [Trousers] <womens>",
+     "Like A Trouser [Trousers] <womens>",
+     "PJ Overshirt [Shirts] <womens>",
+     "Needle Jacket [Jackets] <womens>"
     ],
     "noType": []
    },
-   "ms": 2872
+   "ms": 2073
   },
   {
    "store": "kestin.co",
@@ -1403,16 +1403,16 @@
      "Dreghorn Fleece in Navy Ribbed Wool Blend [AW26 SEASONAL - FLEECE]"
     ]
    },
-   "ms": 975
+   "ms": 666
   },
   {
    "store": "mackweldon.com",
    "pages": 3,
-   "raw": 577,
+   "raw": 584,
    "kept": 175,
    "drop": {
     "notHis": 1,
-    "notClothes": 364,
+    "notClothes": 371,
     "soldOut": 19,
     "noPhoto": 0,
     "noType": 18
@@ -1429,17 +1429,17 @@
      "WARMKNIT Waffle Neck Gaiter [Final Sale]"
     ]
    },
-   "ms": 8992
+   "ms": 8081
   },
   {
    "store": "reigningchamp.com",
    "pages": 4,
-   "raw": 797,
-   "kept": 655,
+   "raw": 772,
+   "kept": 654,
    "drop": {
     "notHis": 1,
-    "notClothes": 96,
-    "soldOut": 14,
+    "notClothes": 86,
+    "soldOut": 0,
     "noPhoto": 0,
     "noType": 31
    },
@@ -1455,7 +1455,7 @@
      "Midweight Jersey Standard Long Sleeve [MENS]"
     ]
    },
-   "ms": 4456
+   "ms": 3117
   },
   {
    "store": "rancourtandcompany.com",
@@ -1485,17 +1485,17 @@
      "Leather Conditioner - Armstrong's Brooklyn Leather Conditioner - Neutral [Leather Care]"
     ]
    },
-   "ms": 3094
+   "ms": 362
   },
   {
    "store": "quoddy.com",
    "pages": 3,
-   "raw": 654,
-   "kept": 339,
+   "raw": 650,
+   "kept": 338,
    "drop": {
     "notHis": 119,
     "notClothes": 57,
-    "soldOut": 115,
+    "soldOut": 112,
     "noPhoto": 2,
     "noType": 22
    },
@@ -1515,7 +1515,7 @@
      "Men’s Nubuck Chuck LE Chukka: Midnight [Chukkas]"
     ]
    },
-   "ms": 6741
+   "ms": 2280
   },
   {
    "store": "paulevansny.com",
@@ -1533,61 +1533,61 @@
     "notHis": [],
     "noType": []
    },
-   "ms": 913
+   "ms": 988
   },
   {
    "store": "thursdayboots.com",
    "pages": 7,
-   "raw": 1703,
-   "kept": 694,
+   "raw": 1707,
+   "kept": 697,
    "drop": {
     "notHis": 694,
     "notClothes": 286,
-    "soldOut": 28,
+    "soldOut": 29,
     "noPhoto": 1,
     "noType": 0
    },
    "samples": {
     "notHis": [
+     "Camino Jacket | Black Coffee [Jackets] <women>",
      "Women's Vista | Frost [Sneakers] <Women>",
      "Arden | Brown [boots] <women>",
      "Arden | Saddle [boots] <women>",
-     "Arden | Black [boots] <women>",
-     "High Heel Penny | Sequoia Suede [Shoes] <women>"
+     "Arden | Black [boots] <women>"
     ],
     "noType": []
    },
-   "ms": 14755
+   "ms": 12051
   },
   {
    "store": "armorlux.com",
    "pages": 12,
    "raw": 3000,
-   "kept": 1158,
+   "kept": 1248,
    "drop": {
-    "notHis": 1446,
+    "notHis": 1392,
     "notClothes": 54,
-    "soldOut": 15,
+    "soldOut": 13,
     "noPhoto": 0,
-    "noType": 327
+    "noType": 293
    },
    "samples": {
     "notHis": [
-     "Chaussettes rayées Femme - coton [Femme|Chaussettes] <Femme>",
-     "Chaussettes rayées - du 39 au 46 [Femme|Chaussettes] <Femme>",
-     "Chaussettes rayées - du 35 au 42 [Femme|Chaussettes] <Femme>",
-     "Chaussettes rayées - du 35 au 42 [Femme|Chaussant] <Femme>",
-     "Chaussettes rayées - du 35 au 42 [Femme|Chaussant] <Femme>"
+     "Coupe-pluie HARMATTAN [Femme|GP-Blouson-Cire] <Femme>",
+     "Marinière Kids - coton épais [Enfant|Mariniere] <Kids>",
+     "Marinière Kids - coton léger [Enfant|Mariniere] <Kids>",
+     "Ensemble pyja-short Kids - coton [Enfant|Nuit] <Kids>",
+     "Ensemble pyjashort Kids- coton [Enfant|Nuit] <Kids>"
     ],
     "noType": [
+     "Polaire PAROA [Homme|Polaire-Softshell]",
      "Chaussettes rayées Homme - coton [Homme|Chaussant]",
      "Trousse zippée - jersey rayé [Homme|Accessoires]",
      "Pack de 2 masques barrières unisexe de catégorie 1 [Homme|Accessoires]",
-     "Casquette ORLEAN [Homme|Accessoires]",
-     "Pack de 10 masques barrière unisexe de catégorie 1 [Homme|Accessoires]"
+     "Casquette ORLEAN [Homme|Accessoires]"
     ]
    },
-   "ms": 24880
+   "ms": 25478
   },
   {
    "store": "uskees.com",
@@ -1614,7 +1614,7 @@
      "7015 Racquet Club track top - cream [TRACK_TOP_COTTON]"
     ]
    },
-   "ms": 1015
+   "ms": 564
   },
   {
    "store": "stoffa.co",
@@ -1639,7 +1639,7 @@
      "Justsmile Issue 6 (Eyes on the Prize) [Printed Goods]"
     ]
    },
-   "ms": 9582
+   "ms": 6426
   }
  ]
 }
