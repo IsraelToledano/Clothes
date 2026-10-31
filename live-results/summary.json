@@ -1,0 +1,607 @@
+{
+  "started": "2026-10-31T21:37:51.023Z",
+  "worker": "https://clothes.srul7022.workers.dev",
+  "log": [
+    "server version 1.1.0 (as expected)",
+    "health {\"ok\":true,\"ms\":313,\"status\":200,\"body\":{\"ok\":true,\"ideas\":true,\"images\":true,\"version\":\"1.1.0\",\"textModel\":\"gemma-4-26b-a4b-it\",\"imageModel\":\"schnell for the first cards, klein after\"}}",
+    "keywords (API) {\"ok\":true,\"ms\":2054,\"status\":200,\"body\":{\"keywords\":[\"oxford\",\"button down\",\"madras\",\"gingham\",\"chambray\",\"rugby stripe\",\"poplin\",\"linen\",\"navy\",\"garment-dyed\"],\"avoid\":[\"streetwear\",\"oversized\",\"technical\",\"minimalist\",\"avant-garde\",\"heavy\"],\"stores\":[\"Rowing Blazers\",\"Todd Snyder\",\"Drake's\",\"Alex Mill\",\"Percival\"],\"why\":\"targeting classic american prep style\",\"model\":\"gemma\"}}",
+    "first card 261ms",
+    "card 1 Long-Sleeve Wide Stripe Flannel Shirt | photo 296ms | swipe later",
+    "card 2 Italian Check Shirt | photo 66ms | swipe like",
+    "card 3 Made-in-USA Blue University Stripe Oxford Club Collar Dress Shirt - Classic Fit | photo 7ms | swipe later",
+    "card 4 Italian Linen Plaid Big Shirt | photo 67ms | swipe later",
+    "card 5 Yellow and Red Madras Check Cotton-Linen Button-Down Shirt | photo 6ms | swipe later",
+    "card 6 Linen Shirt SMP - Blue Gray Plaid | photo 6ms | swipe like",
+    "card 7 Rugby Striped Shirt in Cotton Jersey | photo 7ms | swipe later",
+    "card 8 Linen Plaid SS - Light Blue | photo 6ms | swipe later",
+    "gallery & details {\"card\":{\"title\":\"Hinsley Checked Boxy Shirt | Linen Cotton Blend | Light Blue\",\"store\":\"Percival\",\"photos\":8,\"onPhoto\":0,\"layout\":{\"photoBottom\":718,\"titleBottom\":808,\"screen\":844}},\"flipMs\":614,\"tapVoted\":false,\"cardZoom\":{\"opened\":true,\"photo\":2,\"opensAt\":{\"scale\":1.57,\"fill\":1.57,\"shown\":\"1\"},\"sharpMs\":1363,\"closed\":true},\"zoomScale\":2.2,\"moreMs\":1,\"details\":{\"thumbs\":8,\"desc\":\"Hinsey, our new cropped checked summer shirt: shorter hem, bigger breeze. Our bestselling shape, the Hinsley is crafted from an incredibly lightweight linen-cotton blend. It’s designed for those scorching summer days when you want to look sharp but feel like you're wearing next to nothing.\\nIf you lo\",\"sizes\":[\"XS (sold out)\",\"S (sold out)\",\"M (sold out)\",\"L (sold out)\",\"XL\",\"XXL\"],\"specs\":[\"COLOUR: Light Blue\",\"FABRIC: Linen\",\"KIND: Madras & check\"]},\"back\":{\"was\":\"Hinsley Checked Boxy Shirt | Linen Cotton Blend | Light Blue\",\"nowShowing\":\"Linen Plaid SS - Light Blue\",\"expected\":\"Linen Plaid SS - Light Blue\",\"ok\":true,\"thenNext\":\"Hinsley Checked Boxy Shirt | Linen Cotton Blend | Light Blue\"},\"saved\":{\"screen\":\"saved\",\"cards\":1,\"photos\":1},\"liked\":{\"cards\":[\"Linen Shirt SMP - Blue Gray Plaid\",\"Italian Check Shirt\"],\"hearted\":[\"Italian Check Shirt\",\"Linen Shirt SMP - Blue Gray Plaid\"]}}",
+    "shoes {\"cards\":[\"Drake's | Running sneakers | New Balance 'Summer Brights’ Green Banana Made in UK 991v2 Trainers\",\"Todd Snyder | Chelsea boots | Nomad Chelsea Boot\",\"Orlebar Brown | Sneakers | Somerled\",\"Quoddy | Mules & clogs | In Stock Men’s Quad ESQ Slipper: Linen Suede\",\"Drake's | Loafers | Black Suede Charles Mk II Goodyear Welted Penny Loafer\",\"Todd Snyder | Boots | CQP Forto Boot\",\"Paul Evans | Chelsea boots | The Wayne Low-Cut Chelsea Boot - Martora Suede\",\"Thursday Boots | Sneakers | Vista | Frost\",\"Drake's | Espadrilles | Sabah Walker St. Suede Shoes\",\"Todd Snyder | Court & canvas sneakers | Porto Low Court Sneaker\",\"Stoffa | Boots | Pleated Boot (Chocolate Suede)\",\"Paul Evans | Loafers | The Edward Penny Loafer - Light Brown Suede\",\"Drake's | Chukkas & desert boots | Clifford Desert Boot Tobacco Suede\",\"Todd Snyder | Boat shoes | Lug Sole Boat Shoe\",\"Orlebar Brown | Sandals & slides | Haston Stripe\",\"Stoffa | Mules & clogs | Slipper (Taupe Suede)\",\"Drake's | Chukkas & desert boots | Crosby Moc-Toe Chukka Boot Tobacco Suede\",\"Thursday Boots | Sneakers | [S] Premier Low Top | Camel\",\"Orlebar Brown | Sandals & slides | Muro\",\"Stoffa | Suede | Open Lace (Taupe Suede)\"],\"sameModel\":[],\"kinds\":12,\"topMaker\":[\"Orlebar Brown\",3]}",
+    "categories {\"Suits\":{\"pool\":238,\"first\":[\"Todd Snyder | Italian Linen Multi-Stripe Wythe Suit | Preppy: stripe\",\"J.Press | Made-in-USA Black Cotton Seersucker Tuxedo - Custom Make | Preppy: seersucker\",\"Oliver Spencer | Lowe Brown Stripe Westbury Suit | Preppy: stripe\",\"Aimé Leon Dore | Single-Breasted Wool Blend Suit Jacket | Wool\",\"Todd Snyder | Italian Linen Blend Madison Jacket | Linen\"]},\"Swimwear\":{\"pool\":422,\"first\":[\"Orlebar Brown | Bulldog | Preppy: seersucker, stripe\",\"Percival | Rowan Seersucker Swim Shorts | Cotton | Navy Stripe | Preppy: seersucker, stripe\",\"Todd Snyder | 5\\\" Seersucker Montauk Swim Trunk | Preppy: seersucker\",\"Drake's | Blue Stripe Print Nylon Drawstring Swim Shorts | Preppy: stripe\",\"Orlebar Brown | Bulldog Drawcord | Preppy: seersucker, stripe\"]},\"Coats\":{\"pool\":365,\"first\":[\"J.Press | Made-in-USA Camelhair Polo Coat | Preppy: polo\",\"Grayers | Wool Boucle Car Coat - Dark Chocolate | Car coat\",\"Todd Snyder | Italian Casentino Upland Coat | Wool\",\"Alex Mill | Theo Parka in Wool | Parka\",\"J.Press | Made-in-UK Tan Check Tweed Field Coat | Tweed\"]},\"Sneakers\":{\"pool\":557,\"first\":[\"Kith | Nike Zoom Hyperflight - Varsity Red / White / Black | Preppy: varsity\",\"Todd Snyder | Sperry x Todd Snyder x Mister Rogers’ Neighborhood CVO Sneaker | Court & canvas sneakers\",\"Thursday Boots | [S] Premier Low Top | Pebble | Sneakers\",\"Drake's | New Balance Neutral 'Elevated Essentials' Made in UK 991v2 Trainers | Running sneakers\",\"Kith | Jordan Air Jordan 1 Low OG - Black / Varsity Red / Summit White | Preppy: varsity\"]},\"Hats\":{\"pool\":1115,\"first\":[\"Todd Snyder | Selvedge Chino Dad Cap | Preppy: chino\",\"Aimé Leon Dore | Stripe Knit Beanie | Preppy: stripe\",\"Drake's | Red and Blue Stripe Geelongora Ribbed Knit Cap | Preppy: stripe\",\"Taylor Stitch | The Seafarer Beanie in Natural Donegal | Preppy: chino\",\"Todd Snyder | Seersucker Cap | Preppy: seersucker\"]}}",
+    "about you {\"notSet\":{\"long\":0,\"suitYou\":0,\"first\":[\"Percival | Bomber Jacket | Nylon | Forest | Bomber\",\"Grayers | Defender Melville Deck Jacket - Dark Earth | Jackets\",\"Universal Works | Olive Linen Slub Weave Two Button Jacket | Linen\",\"Todd Snyder | Barbour Wax Transport Jacket | Cotton\",\"Percival | Fletcher Utility Fleece Wax Jacket | Wool | Navy | Wool\",\"Grayers | Defender Terry CPO Jacket - Dark Slate | Chore & work\"]},\"shortSlim\":{\"long\":0,\"suitYou\":20,\"first\":[\"Percival | Marcel Cord Jacket | Cotton | Burgundy | Cropped, good for your height\",\"Private White V.C. | The Permanent Style Linen Harrington - Navy | Cropped, good for your height\",\"Todd Snyder | Denim Dylan Jacket | Cropped, good for your height\",\"Grayers | Burnham Boiled Wool Bomber - Tweedy Brown | Cropped, good for your height\",\"Percival | Hunter Field Jacket | Made In England | Forest | Cropped, good for your height\",\"J.Press | Made-in-England Racing Green Baracuta G9 Harrington Jacket | Cropped, good for your height\"]}}"
+  ],
+  "expectedServer": "1.1.0",
+  "deployed": "1.1.0",
+  "health": {
+    "ok": true,
+    "ms": 313,
+    "status": 200,
+    "body": {
+      "ok": true,
+      "ideas": true,
+      "images": true,
+      "version": "1.1.0",
+      "textModel": "gemma-4-26b-a4b-it",
+      "imageModel": "schnell for the first cards, klein after"
+    }
+  },
+  "catalog": {
+    "updated": "2026-10-31T21:36:14.554Z",
+    "counts": {
+      "Knitwear": 2194,
+      "Jackets": 2053,
+      "Accessories": 3696,
+      "Shirts": 3348,
+      "Blazers": 614,
+      "Trousers": 2261,
+      "Polos": 1259,
+      "Sweatshirts": 806,
+      "T-shirts": 2318,
+      "Coats": 365,
+      "Shorts": 611,
+      "Overshirts": 528,
+      "Jeans": 334,
+      "Shoes": 2061,
+      "Suits": 238,
+      "Swimwear": 422
+    },
+    "failedStores": [],
+    "format": 2,
+    "photosPerShirt": {
+      "median": 3,
+      "min": 1,
+      "max": 3,
+      "oneOnly": 71,
+      "of": 3348
+    },
+    "details": {
+      "files": 128,
+      "pieces": 23108,
+      "withDescription": 22574,
+      "withSoldOutSizes": 12021,
+      "onSale": "639 shirts"
+    }
+  },
+  "photosApi": [
+    {
+      "title": "The Jack in Crescent Plaid Oxford",
+      "store": "Taylor Stitch",
+      "width": 900,
+      "ok": true,
+      "ms": 414,
+      "status": 200,
+      "bytes": 190620
+    },
+    {
+      "title": "The Jack in Crescent Plaid Oxford",
+      "store": "Taylor Stitch",
+      "width": 2000,
+      "ok": true,
+      "ms": 336,
+      "status": 200,
+      "bytes": 375602
+    },
+    {
+      "title": "Ecru, Brown and Navy Check Cotton Two-Pocket Long Point Collar Work Shirt",
+      "store": "Drake's",
+      "width": 900,
+      "ok": true,
+      "ms": 251,
+      "status": 200,
+      "bytes": 151526
+    },
+    {
+      "title": "Ecru, Brown and Navy Check Cotton Two-Pocket Long Point Collar Work Shirt",
+      "store": "Drake's",
+      "width": 2000,
+      "ok": true,
+      "ms": 753,
+      "status": 200,
+      "bytes": 963643
+    },
+    {
+      "title": "Chemise ESTEBAN - velours côtelé",
+      "store": "Armor-Lux",
+      "width": 900,
+      "ok": true,
+      "ms": 227,
+      "status": 200,
+      "bytes": 108754
+    },
+    {
+      "title": "Chemise ESTEBAN - velours côtelé",
+      "store": "Armor-Lux",
+      "width": 2000,
+      "ok": true,
+      "ms": 269,
+      "status": 200,
+      "bytes": 161758
+    },
+    {
+      "title": "The Short Sleeve Jack in Burgundy Linen",
+      "store": "Taylor Stitch",
+      "width": 900,
+      "ok": true,
+      "ms": 207,
+      "status": 200,
+      "bytes": 120100
+    },
+    {
+      "title": "The Short Sleeve Jack in Burgundy Linen",
+      "store": "Taylor Stitch",
+      "width": 2000,
+      "ok": true,
+      "ms": 323,
+      "status": 200,
+      "bytes": 709000
+    },
+    {
+      "title": "BUTTON DOWN SHIRT",
+      "store": "A Kind of Guise",
+      "width": 900,
+      "ok": true,
+      "ms": 290,
+      "status": 200,
+      "bytes": 35709
+    },
+    {
+      "title": "BUTTON DOWN SHIRT",
+      "store": "A Kind of Guise",
+      "width": 2000,
+      "ok": true,
+      "ms": 522,
+      "status": 200,
+      "bytes": 681864
+    },
+    {
+      "title": "Birch LS",
+      "store": "Corridor",
+      "width": 900,
+      "ok": true,
+      "ms": 208,
+      "status": 200,
+      "bytes": 354651
+    },
+    {
+      "title": "Birch LS",
+      "store": "Corridor",
+      "width": 2000,
+      "ok": true,
+      "ms": 217,
+      "status": 200,
+      "bytes": 108908
+    }
+  ],
+  "keywordsApi": {
+    "ok": true,
+    "ms": 2054,
+    "status": 200,
+    "body": {
+      "keywords": [
+        "oxford",
+        "button down",
+        "madras",
+        "gingham",
+        "chambray",
+        "rugby stripe",
+        "poplin",
+        "linen",
+        "navy",
+        "garment-dyed"
+      ],
+      "avoid": [
+        "streetwear",
+        "oversized",
+        "technical",
+        "minimalist",
+        "avant-garde",
+        "heavy"
+      ],
+      "stores": [
+        "Rowing Blazers",
+        "Todd Snyder",
+        "Drake's",
+        "Alex Mill",
+        "Percival"
+      ],
+      "why": "targeting classic american prep style",
+      "model": "gemma"
+    }
+  },
+  "app": {
+    "requests": [
+      {
+        "kind": "/health",
+        "status": 200,
+        "ms": 355,
+        "at": 1793482679497
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 2586,
+        "at": 1793482682852
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 2441,
+        "at": 1793482687360
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 1364,
+        "at": 1793482695177
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 2484,
+        "at": 1793482713817
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 2775,
+        "at": 1793482715865
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 2215,
+        "at": 1793482716923
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 2475,
+        "at": 1793482718785
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 2416,
+        "at": 1793482720377
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 2130,
+        "at": 1793482721246
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 2172,
+        "at": 1793482722897
+      }
+    ],
+    "errors": [],
+    "cards": [
+      {
+        "n": 1,
+        "id": "p-clubmonaco-6935003955272",
+        "title": "Long-Sleeve Wide Stripe Flannel Shirt",
+        "why": "Like Ralph Lauren: stripe, flannel",
+        "colour": "",
+        "fabric": "Flannel",
+        "store": "Club Monaco",
+        "brand": "Club Monaco",
+        "price": 69,
+        "currency": "USD",
+        "url": "https://clubmonaco.com/products/long-sleeve-wide-stripe-flannel-shirt-795100468-110",
+        "boost": 0,
+        "waitedMs": 261,
+        "photoMs": 296,
+        "swipe": "later"
+      },
+      {
+        "n": 2,
+        "id": "p-toddsnyder-7394514698311",
+        "title": "Italian Check Shirt",
+        "why": "Like Ralph Lauren: madras, linen",
+        "colour": "Cream",
+        "fabric": "Linen",
+        "store": "Todd Snyder",
+        "brand": "Todd Snyder",
+        "price": 398,
+        "currency": "USD",
+        "url": "https://toddsnyder.com/products/ss-bold-check-linen-shirtcream",
+        "boost": 0,
+        "waitedMs": 510,
+        "photoMs": 66,
+        "swipe": "like"
+      },
+      {
+        "n": 3,
+        "id": "p-jpressonline-8321619525679",
+        "title": "Made-in-USA Blue University Stripe Oxford Club Collar Dress Shirt - Classic Fit",
+        "why": "Like Ralph Lauren: oxford, stripe",
+        "colour": "Blue",
+        "fabric": "Oxford",
+        "store": "J.Press",
+        "brand": "J.Press",
+        "price": 225,
+        "currency": "USD",
+        "url": "https://jpressonline.com/products/blue-university-stripe-oxford-club-collar-dress-shirt-classic-fit",
+        "boost": 0,
+        "waitedMs": 515,
+        "photoMs": 7,
+        "swipe": "later"
+      },
+      {
+        "n": 4,
+        "id": "p-toddsnyder-7389109092423",
+        "title": "Italian Linen Plaid Big Shirt",
+        "why": "More like: Italian Check Shirt",
+        "colour": "Cream",
+        "fabric": "Linen",
+        "store": "Todd Snyder",
+        "brand": "Todd Snyder",
+        "price": 279,
+        "currency": "USD",
+        "url": "https://toddsnyder.com/products/ls-check-linen-shirtcream",
+        "boost": 10,
+        "waitedMs": 503,
+        "photoMs": 67,
+        "swipe": "later"
+      },
+      {
+        "n": 5,
+        "id": "p-drakes-8846409236693",
+        "title": "Yellow and Red Madras Check Cotton-Linen Button-Down Shirt",
+        "why": "More like: Italian Check Shirt",
+        "colour": "Red",
+        "fabric": "Linen",
+        "store": "Drake's",
+        "brand": "Drake's",
+        "price": 245,
+        "currency": "GBP",
+        "url": "https://drakes.com/products/yellow-and-red-madras-check-cotton-linen-button-down-shirt",
+        "boost": 10,
+        "waitedMs": 511,
+        "photoMs": 6,
+        "swipe": "later"
+      },
+      {
+        "n": 6,
+        "id": "p-grayers-7706888634455",
+        "title": "Linen Shirt SMP - Blue Gray Plaid",
+        "why": "More like: Italian Check Shirt",
+        "colour": "Blue Gray Plaid",
+        "fabric": "Linen",
+        "store": "Grayers",
+        "brand": "Grayers",
+        "price": 43.99,
+        "currency": "USD",
+        "url": "https://grayers.com/products/linen-shirt-smp-blue-gray-plaid",
+        "boost": 10,
+        "waitedMs": 506,
+        "photoMs": 6,
+        "swipe": "like"
+      },
+      {
+        "n": 7,
+        "id": "p-alexmill-7699717783611",
+        "title": "Rugby Striped Shirt in Cotton Jersey",
+        "why": "Like Ralph Lauren: rugby, stripe",
+        "colour": "Dark Navy Stripe",
+        "fabric": "Jersey",
+        "store": "Alex Mill",
+        "brand": "Alex Mill",
+        "price": 148,
+        "currency": "USD",
+        "url": "https://alexmill.com/products/rugby-striped-in-cotton-jersey-in-dark-navy-stripe",
+        "boost": 0,
+        "waitedMs": 521,
+        "photoMs": 7,
+        "swipe": "later"
+      },
+      {
+        "n": 8,
+        "id": "p-corridornyc-14876890759531",
+        "title": "Linen Plaid SS - Light Blue",
+        "why": "More like: Linen Shirt SMP - Blue Gray Plaid",
+        "colour": "Light Blue",
+        "fabric": "Linen",
+        "store": "Corridor",
+        "brand": "Corridor",
+        "price": 170,
+        "currency": "USD",
+        "url": "https://corridornyc.com/products/linen-plaid-ss",
+        "boost": 10,
+        "waitedMs": 512,
+        "photoMs": 6,
+        "swipe": "later"
+      }
+    ],
+    "firstCardMs": 261,
+    "samePiece": [],
+    "gallery": {
+      "card": {
+        "title": "Hinsley Checked Boxy Shirt | Linen Cotton Blend | Light Blue",
+        "store": "Percival",
+        "photos": 8,
+        "onPhoto": 0,
+        "layout": {
+          "photoBottom": 718,
+          "titleBottom": 808,
+          "screen": 844
+        }
+      },
+      "flipMs": 614,
+      "tapVoted": false,
+      "cardZoom": {
+        "opened": true,
+        "photo": 2,
+        "opensAt": {
+          "scale": 1.57,
+          "fill": 1.57,
+          "shown": "1"
+        },
+        "sharpMs": 1363,
+        "closed": true
+      },
+      "zoomScale": 2.2,
+      "moreMs": 1,
+      "details": {
+        "thumbs": 8,
+        "desc": "Hinsey, our new cropped checked summer shirt: shorter hem, bigger breeze. Our bestselling shape, the Hinsley is crafted from an incredibly lightweight linen-cotton blend. It’s designed for those scorching summer days when you want to look sharp but feel like you're wearing next to nothing.\nIf you lo",
+        "sizes": [
+          "XS (sold out)",
+          "S (sold out)",
+          "M (sold out)",
+          "L (sold out)",
+          "XL",
+          "XXL"
+        ],
+        "specs": [
+          "COLOUR: Light Blue",
+          "FABRIC: Linen",
+          "KIND: Madras & check"
+        ]
+      },
+      "back": {
+        "was": "Hinsley Checked Boxy Shirt | Linen Cotton Blend | Light Blue",
+        "nowShowing": "Linen Plaid SS - Light Blue",
+        "expected": "Linen Plaid SS - Light Blue",
+        "ok": true,
+        "thenNext": "Hinsley Checked Boxy Shirt | Linen Cotton Blend | Light Blue"
+      },
+      "saved": {
+        "screen": "saved",
+        "cards": 1,
+        "photos": 1
+      },
+      "liked": {
+        "cards": [
+          "Linen Shirt SMP - Blue Gray Plaid",
+          "Italian Check Shirt"
+        ],
+        "hearted": [
+          "Italian Check Shirt",
+          "Linen Shirt SMP - Blue Gray Plaid"
+        ]
+      }
+    },
+    "shoes": {
+      "cards": [
+        "Drake's | Running sneakers | New Balance 'Summer Brights’ Green Banana Made in UK 991v2 Trainers",
+        "Todd Snyder | Chelsea boots | Nomad Chelsea Boot",
+        "Orlebar Brown | Sneakers | Somerled",
+        "Quoddy | Mules & clogs | In Stock Men’s Quad ESQ Slipper: Linen Suede",
+        "Drake's | Loafers | Black Suede Charles Mk II Goodyear Welted Penny Loafer",
+        "Todd Snyder | Boots | CQP Forto Boot",
+        "Paul Evans | Chelsea boots | The Wayne Low-Cut Chelsea Boot - Martora Suede",
+        "Thursday Boots | Sneakers | Vista | Frost",
+        "Drake's | Espadrilles | Sabah Walker St. Suede Shoes",
+        "Todd Snyder | Court & canvas sneakers | Porto Low Court Sneaker",
+        "Stoffa | Boots | Pleated Boot (Chocolate Suede)",
+        "Paul Evans | Loafers | The Edward Penny Loafer - Light Brown Suede",
+        "Drake's | Chukkas & desert boots | Clifford Desert Boot Tobacco Suede",
+        "Todd Snyder | Boat shoes | Lug Sole Boat Shoe",
+        "Orlebar Brown | Sandals & slides | Haston Stripe",
+        "Stoffa | Mules & clogs | Slipper (Taupe Suede)",
+        "Drake's | Chukkas & desert boots | Crosby Moc-Toe Chukka Boot Tobacco Suede",
+        "Thursday Boots | Sneakers | [S] Premier Low Top | Camel",
+        "Orlebar Brown | Sandals & slides | Muro",
+        "Stoffa | Suede | Open Lace (Taupe Suede)"
+      ],
+      "sameModel": [],
+      "kinds": 12,
+      "topMaker": [
+        "Orlebar Brown",
+        3
+      ]
+    },
+    "categories": {
+      "Suits": {
+        "pool": 238,
+        "first": [
+          "Todd Snyder | Italian Linen Multi-Stripe Wythe Suit | Preppy: stripe",
+          "J.Press | Made-in-USA Black Cotton Seersucker Tuxedo - Custom Make | Preppy: seersucker",
+          "Oliver Spencer | Lowe Brown Stripe Westbury Suit | Preppy: stripe",
+          "Aimé Leon Dore | Single-Breasted Wool Blend Suit Jacket | Wool",
+          "Todd Snyder | Italian Linen Blend Madison Jacket | Linen"
+        ]
+      },
+      "Swimwear": {
+        "pool": 422,
+        "first": [
+          "Orlebar Brown | Bulldog | Preppy: seersucker, stripe",
+          "Percival | Rowan Seersucker Swim Shorts | Cotton | Navy Stripe | Preppy: seersucker, stripe",
+          "Todd Snyder | 5\" Seersucker Montauk Swim Trunk | Preppy: seersucker",
+          "Drake's | Blue Stripe Print Nylon Drawstring Swim Shorts | Preppy: stripe",
+          "Orlebar Brown | Bulldog Drawcord | Preppy: seersucker, stripe"
+        ]
+      },
+      "Coats": {
+        "pool": 365,
+        "first": [
+          "J.Press | Made-in-USA Camelhair Polo Coat | Preppy: polo",
+          "Grayers | Wool Boucle Car Coat - Dark Chocolate | Car coat",
+          "Todd Snyder | Italian Casentino Upland Coat | Wool",
+          "Alex Mill | Theo Parka in Wool | Parka",
+          "J.Press | Made-in-UK Tan Check Tweed Field Coat | Tweed"
+        ]
+      },
+      "Sneakers": {
+        "pool": 557,
+        "first": [
+          "Kith | Nike Zoom Hyperflight - Varsity Red / White / Black | Preppy: varsity",
+          "Todd Snyder | Sperry x Todd Snyder x Mister Rogers’ Neighborhood CVO Sneaker | Court & canvas sneakers",
+          "Thursday Boots | [S] Premier Low Top | Pebble | Sneakers",
+          "Drake's | New Balance Neutral 'Elevated Essentials' Made in UK 991v2 Trainers | Running sneakers",
+          "Kith | Jordan Air Jordan 1 Low OG - Black / Varsity Red / Summit White | Preppy: varsity"
+        ]
+      },
+      "Hats": {
+        "pool": 1115,
+        "first": [
+          "Todd Snyder | Selvedge Chino Dad Cap | Preppy: chino",
+          "Aimé Leon Dore | Stripe Knit Beanie | Preppy: stripe",
+          "Drake's | Red and Blue Stripe Geelongora Ribbed Knit Cap | Preppy: stripe",
+          "Taylor Stitch | The Seafarer Beanie in Natural Donegal | Preppy: chino",
+          "Todd Snyder | Seersucker Cap | Preppy: seersucker"
+        ]
+      }
+    },
+    "aboutYou": {
+      "notSet": {
+        "long": 0,
+        "suitYou": 0,
+        "first": [
+          "Percival | Bomber Jacket | Nylon | Forest | Bomber",
+          "Grayers | Defender Melville Deck Jacket - Dark Earth | Jackets",
+          "Universal Works | Olive Linen Slub Weave Two Button Jacket | Linen",
+          "Todd Snyder | Barbour Wax Transport Jacket | Cotton",
+          "Percival | Fletcher Utility Fleece Wax Jacket | Wool | Navy | Wool",
+          "Grayers | Defender Terry CPO Jacket - Dark Slate | Chore & work"
+        ]
+      },
+      "shortSlim": {
+        "long": 0,
+        "suitYou": 20,
+        "first": [
+          "Percival | Marcel Cord Jacket | Cotton | Burgundy | Cropped, good for your height",
+          "Private White V.C. | The Permanent Style Linen Harrington - Navy | Cropped, good for your height",
+          "Todd Snyder | Denim Dylan Jacket | Cropped, good for your height",
+          "Grayers | Burnham Boiled Wool Bomber - Tweedy Brown | Cropped, good for your height",
+          "Percival | Hunter Field Jacket | Made In England | Forest | Cropped, good for your height",
+          "J.Press | Made-in-England Racing Green Baracuta G9 Harrington Jacket | Cropped, good for your height"
+        ]
+      }
+    },
+    "report": "app: 1.7.0   when: 2026-10-31T21:38:42.679Z\nscreen: explore\nua: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/130.0.6723.31 Safari/537.36\nai: on   server: https://clothes.srul7022.workers.dev   health: {\"ideas\":true,\"images\":true,\"version\":\"1.1.0\",\"textModel\":\"gemma-4-26b-a4b-it\",\"imageModel\":\"schnell for the first cards, klein after\"}\nai request: idle   last error: none   waiting ideas: 35\nserver version: 1.1.0   (app expects 1.1.0 or newer)\nidea model: gemma (last reply)   server says: gemma-4-26b-a4b-it\ncatalog: 44 stores, updated 2026-10-31T21:36:14.554Z, {\"Knitwear\":2194,\"Jackets\":2053,\"Accessories\":3696,\"Shirts\":3348,\"Blazers\":614,\"Trousers\":2261,\"Polos\":1259,\"Sweatshirts\":806,\"T-shirts\":2318,\"Coats\":365,\"Shorts\":611,\"Overshirts\":528,\"Jeans\":334,\"Shoes\":2061,\"Suits\":238,\"Swimwear\":422}   pool for this search: 2053   AI words: -\nlast photo error: none\n\nSEARCH: type=Jackets (Jackets)  styles=-  text=\"\"\nYOUR WORDS READ AS: brands -; styles -; look for -; avoid -; store styles +- --; stores -\nLIKED: Linen Shirt SMP - Blue Gray Plaid; Italian Check Shirt\nPREFS: {\"budget\":\"any\",\"size\":\"M\",\"shoe\":\"43\",\"shipIL\":true,\"me\":{\"height\":\"short\",\"build\":\"slim\",\"fit\":\"\"}}\nFOR YOU: +3 cropped, good for your height   cut: CT\n\nON SCREEN: Marcel Cord Jacket | Cotton | Burgundy — Percival at Percival, £270 [Burgundy, Cotton, Cotton] https://percivalclo.com/products/marcel-cord-jacket-burgundy\n  why: \"Cropped, good for your height\"   search: \"Marcel Cord Jacket | Cotton | Burgundy\"   photo 1 of 8\nNEXT UP: The Permanent Style Linen Harrington - Navy; Denim Dylan Jacket; Burnham Boiled Wool Bomber - Tweedy Brown; Hunter Field Jacket | Made In England | Forest; Made-in-England Racing Green Baracuta G9 Harrington Jacket\n\nTHIS ROUND (0 votes, oldest first):\n\nTASTE: more of: -   less of: -\nPICKS: -\nSAVED: Hinsley Checked Boxy Shirt | Linen Cotton Blend | Light Blue"
+  }
+}

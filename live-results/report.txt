@@ -1,0 +1,25 @@
+app: 1.7.0   when: 2026-10-31T21:38:42.679Z
+screen: explore
+ua: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/130.0.6723.31 Safari/537.36
+ai: on   server: https://clothes.srul7022.workers.dev   health: {"ideas":true,"images":true,"version":"1.1.0","textModel":"gemma-4-26b-a4b-it","imageModel":"schnell for the first cards, klein after"}
+ai request: idle   last error: none   waiting ideas: 35
+server version: 1.1.0   (app expects 1.1.0 or newer)
+idea model: gemma (last reply)   server says: gemma-4-26b-a4b-it
+catalog: 44 stores, updated 2026-10-31T21:36:14.554Z, {"Knitwear":2194,"Jackets":2053,"Accessories":3696,"Shirts":3348,"Blazers":614,"Trousers":2261,"Polos":1259,"Sweatshirts":806,"T-shirts":2318,"Coats":365,"Shorts":611,"Overshirts":528,"Jeans":334,"Shoes":2061,"Suits":238,"Swimwear":422}   pool for this search: 2053   AI words: -
+last photo error: none
+
+SEARCH: type=Jackets (Jackets)  styles=-  text=""
+YOUR WORDS READ AS: brands -; styles -; look for -; avoid -; store styles +- --; stores -
+LIKED: Linen Shirt SMP - Blue Gray Plaid; Italian Check Shirt
+PREFS: {"budget":"any","size":"M","shoe":"43","shipIL":true,"me":{"height":"short","build":"slim","fit":""}}
+FOR YOU: +3 cropped, good for your height   cut: CT
+
+ON SCREEN: Marcel Cord Jacket | Cotton | Burgundy — Percival at Percival, £270 [Burgundy, Cotton, Cotton] https://percivalclo.com/products/marcel-cord-jacket-burgundy
+  why: "Cropped, good for your height"   search: "Marcel Cord Jacket | Cotton | Burgundy"   photo 1 of 8
+NEXT UP: The Permanent Style Linen Harrington - Navy; Denim Dylan Jacket; Burnham Boiled Wool Bomber - Tweedy Brown; Hunter Field Jacket | Made In England | Forest; Made-in-England Racing Green Baracuta G9 Harrington Jacket
+
+THIS ROUND (0 votes, oldest first):
+
+TASTE: more of: -   less of: -
+PICKS: -
+SAVED: Hinsley Checked Boxy Shirt | Linen Cotton Blend | Light Blue
