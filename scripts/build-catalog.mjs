@@ -58,6 +58,75 @@ const STORES = [
   { d: "armorlux.com", name: "Armor-Lux", tags: ["classic", "relaxed", "vintage"] },
   { d: "uskees.com", name: "Uskees", tags: ["workwear", "relaxed", "vintage"] },
   { d: "stoffa.co", name: "Stoffa", tags: ["luxe", "minimal", "tailored"] },
+  // Added in 1.8, for finding a style (not only a shop): tailors, shirt makers, American and European makers,
+  // denim and shoes; many don't ship to Israel (the app shows them when you look for a style).
+  // Tailoring and shirt makers
+  { d: "pjohnson.com.au", name: "P Johnson", tags: ["tailored", "relaxed", "luxe", "minimal"] },
+  { d: "husbands-paris.com", name: "Husbands", tags: ["tailored", "vintage", "luxe"] },
+  { d: "huntsmansavilerow.com", name: "Huntsman", tags: ["tailored", "classic", "luxe"] },
+  { d: "richard-james.com", name: "Richard James", tags: ["tailored", "smart", "classic"] },
+  { d: "samanamel.com", name: "Saman Amel", tags: ["tailored", "minimal", "luxe"] },
+  { d: "angloitalian.com", name: "Anglo-Italian", tags: ["tailored", "relaxed", "classic", "luxe"] },
+  { d: "newandlingwood.com", name: "New & Lingwood", tags: ["classic", "luxe", "preppy"] },
+  { d: "cordings.co.uk", name: "Cordings", tags: ["classic", "rugged", "preppy"] },
+  { d: "oliverbrown.org.uk", name: "Oliver Brown", tags: ["classic", "tailored", "preppy"] },
+  { d: "peregrineclothing.co.uk", name: "Peregrine", tags: ["classic", "rugged"] },
+  { d: "turnbullandasser.com", name: "Turnbull & Asser", tags: ["classic", "luxe", "tailored"] },
+  { d: "buddshirts.co.uk", name: "Budd", tags: ["classic", "tailored", "smart"], def: "Shirts" },
+  { d: "emmawillis.com", name: "Emma Willis", tags: ["classic", "tailored", "luxe"], def: "Shirts" },
+  { d: "ascotchang.com", name: "Ascot Chang", tags: ["classic", "tailored", "smart"], def: "Shirts" },
+  { d: "gitman.com", name: "Gitman", tags: ["classic", "preppy"], def: "Shirts" },
+  { d: "officinegenerale.com", name: "Officine Générale", tags: ["smart", "minimal", "relaxed", "tailored"] },
+  { d: "bonobos.com", name: "Bonobos", tags: ["smart", "classic", "tailored"] },
+  { d: "woolandprince.com", name: "Wool&Prince", tags: ["smart", "minimal"] },
+  { d: "ministryofsupply.com", name: "Ministry of Supply", tags: ["smart", "minimal", "sporty"] },
+  // Made for shorter men (the app prefers them when About you says under 170 cm)
+  { d: "ashanderie.com", name: "Ash & Erie", tags: ["classic", "smart", "minimal", "short-fit"] },
+  { d: "petermanningnyc.com", name: "Peter Manning", tags: ["classic", "smart", "short-fit"] },
+  // American prep and the coast
+  { d: "haspel.com", name: "Haspel", tags: ["preppy", "classic", "tailored"] },
+  { d: "holdernessandbourne.com", name: "Holderness & Bourne", tags: ["preppy", "classic", "sporty"] },
+  { d: "criquetshirts.com", name: "Criquet", tags: ["preppy", "sporty", "vintage"] },
+  { d: "duckhead.com", name: "Duck Head", tags: ["preppy", "classic"] },
+  { d: "johnnie-o.com", name: "Johnnie-O", tags: ["preppy", "sporty"] },
+  { d: "southerntide.com", name: "Southern Tide", tags: ["preppy", "sporty"] },
+  { d: "castawaynantucket.com", name: "Castaway Nantucket", tags: ["preppy", "relaxed"] },
+  { d: "kieljamespatrick.com", name: "Kiel James Patrick", tags: ["preppy", "vintage"] },
+  { d: "chubbiesshorts.com", name: "Chubbies", tags: ["youthful", "sporty", "relaxed"] },
+  { d: "linksoul.com", name: "Linksoul", tags: ["relaxed", "surf", "sporty"] },
+  { d: "fairharborclothing.com", name: "Fair Harbor", tags: ["surf", "relaxed"] },
+  { d: "frescobolcarioca.com", name: "Frescobol Carioca", tags: ["surf", "luxe", "relaxed"] },
+  { d: "bather.com", name: "Bather", tags: ["surf", "relaxed"] },
+  { d: "saturdaysnyc.com", name: "Saturdays NYC", tags: ["surf", "minimal", "youthful"] },
+  // European and minimal
+  { d: "apc-us.com", name: "A.P.C.", tags: ["minimal", "smart"] },
+  { d: "sns-herning.com", name: "S.N.S. Herning", tags: ["minimal", "luxe", "rugged"] },
+  { d: "saint-james.com", name: "Saint James", tags: ["classic", "relaxed"] },
+  { d: "colorfulstandard.com", name: "Colorful Standard", tags: ["minimal", "relaxed", "youthful"] },
+  { d: "kotn.com", name: "Kotn", tags: ["minimal", "relaxed"] },
+  { d: "jungmaven.com", name: "Jungmaven", tags: ["relaxed", "minimal"] },
+  // Street and luxury casual
+  { d: "stussy.com", name: "Stüssy", tags: ["streetwear", "youthful"] },
+  { d: "johnelliott.com", name: "John Elliott", tags: ["streetwear", "minimal", "luxe"] },
+  { d: "fearofgod.com", name: "Fear of God", tags: ["streetwear", "luxe", "minimal"] },
+  { d: "leftfieldnyc.com", name: "Left Field", tags: ["vintage", "workwear"] },
+  // Denim and workwear
+  { d: "nakedandfamousdenim.com", name: "Naked & Famous", tags: ["workwear", "vintage"] },
+  { d: "imogeneandwillie.com", name: "imogene + willie", tags: ["workwear", "vintage", "relaxed"] },
+  { d: "3sixteen.com", name: "3sixteen", tags: ["workwear", "vintage", "rugged"] },
+  { d: "rogueterritory.com", name: "Rogue Territory", tags: ["workwear", "vintage", "rugged"] },
+  { d: "battenwear.com", name: "Battenwear", tags: ["vintage", "sporty", "relaxed"] },
+  { d: "ironheart.co.uk", name: "Iron Heart", tags: ["workwear", "rugged", "vintage"] },
+  { d: "stanray.com", name: "Stan Ray", tags: ["workwear", "relaxed", "vintage"] },
+  { d: "wythenewyork.com", name: "Wythe", tags: ["vintage", "workwear", "relaxed"] },
+  { d: "dehen1920.com", name: "Dehen 1920", tags: ["vintage", "workwear", "sporty"] },
+  // Shoes and sunglasses
+  { d: "beckettsimonon.com", name: "Beckett Simonon", tags: ["classic", "smart"] },
+  { d: "koio.co", name: "Koio", tags: ["minimal", "smart"] },
+  { d: "ghbass.com", name: "G.H. Bass", tags: ["preppy", "classic"] },
+  { d: "velasca.com", name: "Velasca", tags: ["classic", "smart", "tailored"] },
+  { d: "meermin.com", name: "Meermin", tags: ["classic", "tailored"] },
+  { d: "sundaysomewhere.com", name: "Sunday Somewhere", tags: ["minimal", "streetwear"], def: "Accessories" },
 ];
 
 const NOT_HIS = /\b(femme|wmn'?s|wmns|nike (ps|gs|td)|jordan (ps|gs|td)|little kids?|big kids?|women|womens|women's|women’s|woman|ladies|girls?|kids?|boys?|baby(?![\s-]*(cashmere|alpaca|merino|cord))|toddler|skirts?|blouses?|bralettes?|bikinis?|leggings?|camisoles?|bodysuits?|jumpsuits?|rompers?|maternity|corsets?|bras?|halter|crop tops?|scarf tank|wrap top)\b/i;
@@ -175,14 +244,16 @@ async function getJSON(url) {
 }
 
 const byType = {}, report = [], details = Array.from({ length: DETAIL_CHUNKS }, () => ({}));
-for (const [si, s] of STORES.entries()) {
-  const t0 = Date.now(), rep = { store: s.d, pages: 0, raw: 0, kept: 0, drop: { notHis: 0, notClothes: 0, soldOut: 0, noPhoto: 0, noType: 0 }, samples: { notHis: [], noType: [] } }, mine = [];
+const MAX_PAGES = 20, SOLD_OUT_YEARS = 4, soldOutSince = new Date(Date.now() - SOLD_OUT_YEARS * 365 * 864e5).toISOString().slice(0, 10);
+async function readStore(si) {
+  const s = STORES[si];
+  const t0 = Date.now(), rep = { store: s.d, pages: 0, raw: 0, kept: 0, soldOut: 0, drop: { notHis: 0, notClothes: 0, soldOut: 0, noPhoto: 0, noType: 0 }, samples: { notHis: [], noType: [] } }, mine = [];
   const drop = (why, title) => { rep.drop[why]++; if (rep.samples[why] && rep.samples[why].length < 5) rep.samples[why].push(title); };
   try {
     const meta = await getJSON(`https://${s.d}/meta.json`).catch(() => null);
     s.cur = (meta && meta.currency) || "USD";
     s.il = meta && Array.isArray(meta.ships_to_countries) ? meta.ships_to_countries.includes("IL") : null;
-    for (let page = 1; page <= 12; page++) {
+    for (let page = 1; page <= MAX_PAGES; page++) {
       const j = await getJSON(`https://${s.d}${s.path || ""}/products.json?limit=250&page=${page}`);
       const list = (j && j.products) || [];
       rep.pages = page; rep.raw += list.length;
@@ -191,8 +262,11 @@ for (const [si, s] of STORES.entries()) {
         const hay = [title, ptype, tags.join(" ")].join(" ");
         if (NOT_HIS.test(hay) || A_DRESS.test(title + " " + ptype)) { drop("notHis", title + " [" + ptype + "] <" + (NOT_HIS.exec(hay) || A_DRESS.exec(title + " " + ptype))[0] + ">"); continue; }
         if (NOT_CLOTHES.test(title + " " + ptype) || SKU_TITLE.test(title)) { drop("notClothes", title); continue; }
-        const all = p.variants || [], variants = all.filter((v) => v.available !== false);
-        if (!variants.length) { drop("soldOut", title); continue; }
+        // Sold out pieces stay (marked x:1): when you look for a style, a piece you can't buy is still an idea for
+        // your tailor. Not ones from long ago.
+        const all = p.variants || [], inStock = all.filter((v) => v.available !== false), gone = !inStock.length;
+        if (!all.length || (gone && String(p.published_at || p.created_at || "").slice(0, 10) < soldOutSince)) { drop("soldOut", title); continue; }
+        const variants = gone ? all : inStock;
         const imgs = [...new Set((p.images || []).map((im) => im && im.src).filter(Boolean).map(imgUrl))];
         if (!imgs.length) { drop("noPhoto", title); continue; }
         const type = typeOf({ title, product_type: ptype }) || s.def || "";
@@ -207,11 +281,11 @@ for (const [si, s] of STORES.entries()) {
         const vo = (v, o) => clean(v["option" + (o.k + 1)]);
         let sizes, soldOut = [];
         if (sizeOpt){
-          const inStock = new Set(variants.map((v) => vo(v, sizeOpt)));
-          const order = sizeOpt.values.length ? sizeOpt.values : [...inStock];
-          sizes = order.filter((x) => inStock.has(x));
-          soldOut = order.filter((x) => !inStock.has(x));
-        } else sizes = [...new Set(variants.map((v) => clean(v.option1 || v.title)).filter((x) => x && x.length <= 6 && !/default/i.test(x)))];
+          const have = new Set(inStock.map((v) => vo(v, sizeOpt)));
+          const order = sizeOpt.values.length ? sizeOpt.values : [...have];
+          sizes = order.filter((x) => have.has(x));
+          soldOut = order.filter((x) => !have.has(x));
+        } else sizes = [...new Set(inStock.map((v) => clean(v.option1 || v.title)).filter((x) => x && x.length <= 6 && !/default/i.test(x)))];
         // The colour: a single colour option, a "color: x" tag, the end of the title ("... - Military Green"), or a colour word in it.
         const tail = /\s[-–:|]\s([^-–:|]+)$/.exec(title);
         const colour = (colourOpt && colourOpt.values.length === 1 && colourOpt.values[0]) || tagValue(tags, /^colou?r\s*[:_-]\s*(.+)$/) || findWord(COLOURS, tail ? tail[1] : "") || findWord(COLOURS, title + " " + (variants[0].title || ""));
@@ -227,6 +301,7 @@ for (const [si, s] of STORES.entries()) {
           sz: sizes.slice(0, 16), d: String(p.published_at || p.created_at || "").slice(0, 10),
         };
         if (was > price) item.cp = was;
+        if (gone){ item.x = 1; rep.soldOut++; }
         const descText = textOf(p.body_html);
         const cut = cutOf([title, tags.join(" "), descText].join(" "));
         if (cut) item.ct = cut;
@@ -253,8 +328,13 @@ for (const [si, s] of STORES.entries()) {
   if (s.ip) for (const x of mine) x.im = x.im.map((u) => (u.startsWith(s.ip) ? u.slice(s.ip.length) : u));
   if (s.ip) for (const x of mine){ const m = details[hashStr(x.id) % DETAIL_CHUNKS][x.id]; if (m && m.mi) m.mi = m.mi.map((u) => (u.startsWith(s.ip) ? u.slice(s.ip.length) : u)); }
   rep.ms = Date.now() - t0;
-  report.push(rep);
+  report[si] = rep;
   console.log(JSON.stringify(rep));
+}
+// Six stores at a time (each store still gets one request at a time, with a pause between pages).
+{
+  let next = 0;
+  await Promise.all(Array.from({ length: 6 }, async () => { while (next < STORES.length) await readStore(next++); }));
 }
 
 const stores = STORES.map((s) => ({ d: s.d, name: s.name, tags: s.tags, cur: s.cur || "USD", il: s.il, ip: s.ip || "" }));

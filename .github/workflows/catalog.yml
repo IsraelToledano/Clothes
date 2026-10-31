@@ -1,11 +1,12 @@
-# Rebuilds Drape's product catalog (real menswear from real stores) once a day and publishes it with the
-# app on GitHub Pages, in catalog/. No AI, no keys: each store's public /products.json.
+# Rebuilds Drape's product catalog (real menswear from real stores) once a day. No AI, no keys: each store's
+# public /products.json. It goes on its own branch, catalog-data, replaced each day (one commit, so the repo
+# doesn't grow); the app reads it from raw.githubusercontent.com.
 name: catalog
 on:
   workflow_dispatch:
     inputs:
       target:
-        description: "main publishes it with the app; preview only puts it on the catalog-preview branch, for checking"
+        description: "main publishes it (the catalog-data branch); preview only puts it on the catalog-preview branch, for checking"
         default: main
   schedule:
     - cron: "17 2 * * *"
@@ -17,7 +18,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
         with:
@@ -27,20 +28,10 @@ jobs:
           node-version: 22
       - name: Build the catalog
         run: node scripts/build-catalog.mjs
-      - name: Preview only (catalog-preview branch)
-        if: ${{ inputs.target == 'preview' }}
+      - name: Publish it (catalog-data), or a preview (catalog-preview)
         run: |
           git config user.name "drape-catalog"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          mv catalog /tmp/catalog && git checkout -q --orphan catalog-preview && git rm -rqf . && mv /tmp/catalog catalog
-          git add catalog && git commit -qm "Catalog preview $(date -u +%Y-%m-%dT%H:%M)" && git push -qf origin catalog-preview
-      - name: Publish it
-        if: ${{ inputs.target != 'preview' }}
-        run: |
-          git config user.name "drape-catalog"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add catalog
-          if git diff --cached --quiet; then echo "no changes"; exit 0; fi
-          git commit -qm "Catalog update $(date -u +%Y-%m-%d)"
-          git pull -q --rebase origin main
-          git push -q origin HEAD:main
+          BRANCH=catalog-data; [ "${{ inputs.target }}" = "preview" ] && BRANCH=catalog-preview
+          mv catalog /tmp/catalog && git checkout -q --orphan "$BRANCH" && git rm -rqf . && mv /tmp/catalog catalog
+          git add catalog && git commit -qm "Catalog $(date -u +%Y-%m-%dT%H:%M)" && git push -qf origin "$BRANCH"
