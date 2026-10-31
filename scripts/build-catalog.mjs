@@ -99,12 +99,15 @@ function bestType(text){
   }
   return best;
 }
+const NARROWER = { Blazers: "Jackets", Suits: "Jackets", Coats: "Jackets", Overshirts: "Shirts", Polos: "Shirts", Swimwear: "Shorts", Jeans: "Trousers", Sweatshirts: "Knitwear" };
 function typeOf(p) {
   const pt = String(p.product_type || "").trim(), byType = pt ? bestType(pt) : "";
   const byTitle = bestType(p.title || "");
   if (byType === "Shoes") return "Shoes"; // shoe names say oxford, derby, cap toe: the store's type is surer
   if (byType === "Accessories") return byTitle === "Accessories" ? "Accessories" : ""; // an accessory we know, or nothing
-  if (byTitle) return byTitle; // the name is more precise ("Italian Wool Overshirt" filed as "Shirt", "Linen Tie" as "Suit Accessories")
+  // A store type that's a narrower kind of what the name says wins: "Dylan Jacket" filed as "Blazers" is a blazer.
+  if (byType && NARROWER[byType] === byTitle) return byType;
+  if (byTitle) return byTitle; // otherwise the name is more precise ("Italian Wool Overshirt" filed as "Shirt", "Linen Tie" as "Suit Accessories")
   if (byType) return byType;
   if (/outerwear/i.test(pt)) return "Jackets"; // only when the name didn't say
   return "";
