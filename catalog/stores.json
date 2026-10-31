@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-30T08:44:16.661Z",
+ "updated": "2026-10-31T08:31:06.032Z",
  "format": 2,
  "chunks": 128,
  "stores": [
@@ -540,25 +540,25 @@
   }
  ],
  "counts": {
-  "Knitwear": 3665,
-  "Jackets": 3194,
-  "Shirts": 4214,
-  "Trousers": 2545,
-  "T-shirts": 1947,
-  "Shorts": 952,
-  "Overshirts": 374,
-  "Shoes": 2022
+  "Knitwear": 3806,
+  "Jackets": 3309,
+  "Shirts": 4285,
+  "Trousers": 2630,
+  "T-shirts": 1979,
+  "Shorts": 950,
+  "Overshirts": 378,
+  "Shoes": 2032
  },
  "report": [
   {
    "store": "rowingblazers.com",
    "pages": 4,
-   "raw": 798,
-   "kept": 428,
+   "raw": 805,
+   "kept": 431,
    "drop": {
     "notHis": 242,
     "notClothes": 107,
-    "soldOut": 21,
+    "soldOut": 25,
     "noPhoto": 0,
     "noType": 0
    },
@@ -572,27 +572,27 @@
     ],
     "noType": []
    },
-   "ms": 4127
+   "ms": 4712
   },
   {
    "store": "alexmill.com",
-   "pages": 1,
-   "raw": 248,
-   "kept": 51,
+   "pages": 4,
+   "raw": 989,
+   "kept": 206,
    "drop": {
-    "notHis": 172,
-    "notClothes": 12,
-    "soldOut": 1,
-    "noPhoto": 0,
-    "noType": 12
+    "notHis": 702,
+    "notClothes": 63,
+    "soldOut": 4,
+    "noPhoto": 1,
+    "noType": 13
    },
    "samples": {
     "notHis": [
+     "The Collector's Weekday NYC Marathon Tote [Unisex Accessories] <women>",
+     "The Collector's Weekday NYC Marathon Tote [Unisex Accessories] <women>",
      "Neil Pant in Herringbone [Women's Pants] <Women>",
      "The Perfect Weekday Tote [Unisex Accessories] <women>",
-     "The Perfect Weekday Tote [Unisex Accessories] <women>",
-     "Fracap Magnifico Boot [Unisex Shoes] <women>",
-     "Alex Mill x Owen Barry Gloves [Unisex Accessories] <women>"
+     "Fracap Magnifico Boot [Unisex Shoes] <women>"
     ],
     "noType": [
      "Alphabet Charm in Leather []",
@@ -602,17 +602,17 @@
      "Alphabet Charm in Leather []"
     ]
    },
-   "ms": 860
+   "ms": 5318
   },
   {
    "store": "toddsnyder.com",
    "pages": 12,
    "raw": 3000,
-   "kept": 1770,
+   "kept": 1776,
    "drop": {
     "notHis": 7,
     "notClothes": 712,
-    "soldOut": 465,
+    "soldOut": 459,
     "noPhoto": 0,
     "noType": 46
    },
@@ -632,16 +632,16 @@
      "Mykonos Swim Brief [TS SWIM]"
     ]
    },
-   "ms": 15931
+   "ms": 18056
   },
   {
    "store": "drakes.com",
    "pages": 9,
-   "raw": 2078,
-   "kept": 926,
+   "raw": 2088,
+   "kept": 925,
    "drop": {
     "notHis": 0,
-    "notClothes": 1049,
+    "notClothes": 1060,
     "soldOut": 103,
     "noPhoto": 0,
     "noType": 0
@@ -650,17 +650,17 @@
     "notHis": [],
     "noType": []
    },
-   "ms": 14055
+   "ms": 15507
   },
   {
    "store": "aimeleondore.com",
    "pages": 4,
    "raw": 970,
-   "kept": 464,
+   "kept": 461,
    "drop": {
     "notHis": 98,
     "notClothes": 319,
-    "soldOut": 28,
+    "soldOut": 31,
     "noPhoto": 0,
     "noType": 61
    },
@@ -668,9 +668,9 @@
     "notHis": [
      "Boiled Wool Letterman Sweater [Sweaters] <womens>",
      "Striped Tailored Maxi Skirt [Suiting] <Skirt>",
-     "Wool Cashmere Jacquard Shell [Sweaters] <womens>",
      "Wool Cashmere Jacquard Cardigan [Sweaters] <womens>",
-     "Shearling Bomber Jacket [Outerwear] <womens>"
+     "Wool Cashmere Jacquard Shell [Sweaters] <womens>",
+     "Poros Jacquard Pullover [Sweaters] <womens>"
     ],
     "noType": [
      "Atlas Vintage Leather 10 Lb Kettle Bell [Lifestyle]",
@@ -680,17 +680,17 @@
      "Café Leon Dore Cappuccino Cup & Saucer (Set of 6) [Lifestyle]"
     ]
    },
-   "ms": 4323
+   "ms": 4948
   },
   {
    "store": "taylorstitch.com",
    "pages": 12,
    "raw": 3000,
-   "kept": 498,
+   "kept": 502,
    "drop": {
     "notHis": 50,
-    "notClothes": 579,
-    "soldOut": 1871,
+    "notClothes": 582,
+    "soldOut": 1864,
     "noPhoto": 2,
     "noType": 0
    },
@@ -704,7 +704,7 @@
     ],
     "noType": []
    },
-   "ms": 16020
+   "ms": 20476
   },
   {
    "store": "noahny.com",
@@ -728,17 +728,17 @@
      "Noah Surf Wax [Surf]"
     ]
    },
-   "ms": 2263
+   "ms": 3164
   },
   {
    "store": "percivalclo.com",
    "pages": 4,
-   "raw": 910,
-   "kept": 543,
+   "raw": 909,
+   "kept": 541,
    "drop": {
     "notHis": 3,
     "notClothes": 167,
-    "soldOut": 189,
+    "soldOut": 190,
     "noPhoto": 0,
     "noType": 8
    },
@@ -756,7 +756,7 @@
      "PCVL Performance Top | Rust [Jersey]"
     ]
    },
-   "ms": 5566
+   "ms": 7602
   },
   {
    "store": "portugueseflannel.com",
@@ -774,7 +774,7 @@
     "notHis": [],
     "noType": []
    },
-   "ms": 1508
+   "ms": 1198
   },
   {
    "store": "oliverspencer.co.uk",
@@ -804,51 +804,51 @@
      "Attirecare Garment Spray Aureum 250ml [Home & Garden-Rollover]"
     ]
    },
-   "ms": 2897
+   "ms": 3968
   },
   {
    "store": "universalworks.co.uk",
    "pages": 6,
-   "raw": 1382,
-   "kept": 989,
+   "raw": 1381,
+   "kept": 992,
    "drop": {
     "notHis": 0,
-    "notClothes": 337,
-    "soldOut": 29,
+    "notClothes": 339,
+    "soldOut": 22,
     "noPhoto": 0,
-    "noType": 27
+    "noType": 28
    },
    "samples": {
     "notHis": [],
     "noType": [
+     "Paraboot x Universal Works Thiers/Jannu in Sand Leather/Suede [Collab]",
      "cableami® Brown Boa Aviator [cableami®]",
      "cableami® Black Boa Aviator [cableami®]",
      "F/CE.® Brown 420 re/cor Travel BP 2.0 [F/CE]",
-     "F/CE.® Brown 420 re/cor Daytrip BP 2.0 [F/CE]",
-     "F/CE.® Black 420 re/cor Daytrip BP 2.0 [F/CE]"
+     "F/CE.® Brown 420 re/cor Daytrip BP 2.0 [F/CE]"
     ]
    },
-   "ms": 7069
+   "ms": 8926
   },
   {
    "store": "kith.com",
    "pages": 12,
    "raw": 3000,
-   "kept": 1069,
+   "kept": 1333,
    "drop": {
-    "notHis": 1158,
-    "notClothes": 382,
-    "soldOut": 367,
+    "notHis": 1144,
+    "notClothes": 387,
+    "soldOut": 112,
     "noPhoto": 0,
     "noType": 24
    },
    "samples": {
     "notHis": [
-     "Alexander Wang AW Hotfix Pool Slide - Black / Jet [Sandals] <wmns>",
-     "Stand Studio Aya Jacket - Dark Brown [Jackets] <wmns>",
-     "Miaou Kira Skirt - Mustard Plaid [Mini Skirts] <Skirt>",
-     "Susanna Chow Dorothy Suede Midi Coat - Olive Green [Coats] <wmns>",
-     "Stand Studio Silena Jacket - Beige Snake [Jackets] <wmns>"
+     "Kith Classics for adidas Originals Adilette - Chalky Brown [Sandals] <women>",
+     "Kith Classics for adidas Originals Adilette - Brown [Sandals] <women>",
+     "Kith Classics for adidas Originals Stan Smith One Piece - Brown / Aurora Coffee [Low Top Sneakers] <wmns>",
+     "Kith Classics for adidas Originals Stan Smith One Piece - Core White [Low Top Sneakers] <wmns>",
+     "Kith Classics for adidas Originals Stan Smith One Piece - Chalky Brown [Low Top Sneakers] <wmns>"
     ],
     "noType": [
      "adidas x Willy Chavarria Dazzle Long Sleeve Jersey - Black [Jerseys]",
@@ -858,41 +858,41 @@
      "Kith Ivy for Wilson Striped Wristbands - Nocturnal [Wristbands]"
     ]
    },
-   "ms": 16507
+   "ms": 14534
   },
   {
    "store": "corridornyc.com",
-   "pages": 2,
-   "raw": 492,
-   "kept": 195,
+   "pages": 3,
+   "raw": 511,
+   "kept": 206,
    "drop": {
     "notHis": 0,
-    "notClothes": 83,
-    "soldOut": 195,
+    "notClothes": 88,
+    "soldOut": 194,
     "noPhoto": 0,
-    "noType": 19
+    "noType": 23
    },
    "samples": {
     "notHis": [],
     "noType": [
-     "Herringbone Raglan - Charcoal [Raglan]",
-     "Mirabelle LS [LS w/ 1 Chest Pocket]",
-     "Herringbone LS [LS w/ 1 Chest Pocket]",
-     "Shadow Check LS - Green [LS w/ 1 Chest Pocket]",
-     "Homestead LS [LS w/ 1 Chest Pocket]"
+     "Crinkle Plaid LS - Navy [LS w/ 1 Chest Pocket]",
+     "Poplin Mini Check LS - Grey [LS]",
+     "Reverse Tweed Snow Check - Cambridge [LS w/ 1 Chest Pocket]",
+     "Rapids LS - Blue [LS w/ 2 Chest Pockets]",
+     "Herringbone Raglan - Charcoal [Raglan]"
     ]
    },
-   "ms": 2469
+   "ms": 4219
   },
   {
    "store": "outerknown.com",
    "pages": 5,
-   "raw": 1048,
-   "kept": 276,
+   "raw": 1046,
+   "kept": 272,
    "drop": {
     "notHis": 440,
-    "notClothes": 126,
-    "soldOut": 127,
+    "notClothes": 125,
+    "soldOut": 130,
     "noPhoto": 5,
     "noType": 74
    },
@@ -912,7 +912,7 @@
      "Nomadic Volley - Outerworn [Swim Bottoms]"
     ]
    },
-   "ms": 6471
+   "ms": 6330
   },
   {
    "store": "howlerbros.com",
@@ -936,7 +936,7 @@
      "H Bar B Snapshirt - Grampa’s Curtains : Antique Black []"
     ]
    },
-   "ms": 5054
+   "ms": 5972
   },
   {
    "store": "ledbury.com",
@@ -957,7 +957,7 @@
     ],
     "noType": []
    },
-   "ms": 4920
+   "ms": 5712
   },
   {
    "store": "knickerbocker.nyc",
@@ -975,17 +975,17 @@
     "notHis": [],
     "noType": []
    },
-   "ms": 1174
+   "ms": 1137
   },
   {
    "store": "ironandresin.com",
    "pages": 3,
    "raw": 705,
-   "kept": 299,
+   "kept": 298,
    "drop": {
     "notHis": 21,
     "notClothes": 164,
-    "soldOut": 200,
+    "soldOut": 201,
     "noPhoto": 1,
     "noType": 20
    },
@@ -1005,13 +1005,13 @@
      "Wilderness X INR Jersey []"
     ]
    },
-   "ms": 3804
+   "ms": 4125
   },
   {
    "store": "clubmonaco.com",
    "pages": 1,
-   "raw": 138,
-   "kept": 21,
+   "raw": 137,
+   "kept": 20,
    "drop": {
     "notHis": 1,
     "notClothes": 13,
@@ -1025,43 +1025,43 @@
     ],
     "noType": []
    },
-   "ms": 870
+   "ms": 716
   },
   {
    "store": "jpressonline.com",
    "pages": 12,
-   "raw": 2949,
+   "raw": 3000,
    "kept": 1136,
    "drop": {
-    "notHis": 103,
-    "notClothes": 1247,
+    "notHis": 104,
+    "notClothes": 1259,
     "soldOut": 145,
     "noPhoto": 0,
-    "noType": 318
+    "noType": 356
    },
    "samples": {
     "notHis": [
+     "The Great Book of School Stories for Boys by Herbert Strang 1932 [Vintage] <Boys>",
      "Made-in-England Women’s Lavenham Black Stewart Tartan Raydon Quilted Jacket [Casual Outerwear] <Women>",
      "Made-in-England Berkeley College Schoolboy Muffler [Schoolboy Mufflers] <boys>",
      "Made-in-England Davenport College Schoolboy Muffler [Schoolboy Mufflers] <boys>",
-     "Made-in-England Navy & Burgundy Wool Schoolboy Muffler [Schoolboy Mufflers] <boys>",
-     "Made-in-England Brown & Double White Wool Schoolboy Muffler [Schoolboy Mufflers] <boys>"
+     "Made-in-England Navy & Burgundy Wool Schoolboy Muffler [Schoolboy Mufflers] <boys>"
     ],
     "noType": [
-     "Vintage Monaco Monte Carlo Limoges Porcelain Ashtray [Vintage]",
-     "Vintage Gordon's Dry Gin Red Ceramic Heart Shaped Ashtray Catchall Dish [Vintage]",
-     "Vintage Preppy Alligator Framed Needlepoint Art 9.5 x 11.5 in. [Vintage]",
-     "Vintage Apilco France Golf Porcelain Ashtray Catchall Dish [Vintage]",
-     "Vintage Nantucket Island Framed Needlepoint Map 17.5 x 22.5 in. [Vintage]"
+     "Vintage Haviland Limoges France “Le Roi Babar” Porcelain Bowl [Vintage]",
+     "Vintage BOAC de Havilland DH.106 Comet 4 Wade Airplane Jet Ashtray [Vintage]",
+     "Vintage “Save the Alligator… Eat a Preppie” Metal Lapel Pinback Button [Vintage]",
+     "Vintage \"Preppies Need Love Too\" 1981 Metal Button Pin [Vintage]",
+     "Vintage Guinness is Good For You Barrel Match Holder Ashtray [Vintage]"
     ]
    },
-   "ms": 21234
+   "ms": 29015
   },
   {
    "store": "grayers.com",
    "pages": 2,
-   "raw": 470,
-   "kept": 395,
+   "raw": 481,
+   "kept": 406,
    "drop": {
     "notHis": 35,
     "notClothes": 33,
@@ -1085,7 +1085,7 @@
      "Edward Stretch Straight Fit Denim - Vintage Wash [Bottom]"
     ]
    },
-   "ms": 2568
+   "ms": 2889
   },
   {
    "store": "kamakurashirts.com",
@@ -1109,17 +1109,17 @@
      "TOKYO SLIM FIT - Cutaway Panama Mesh J-TECH EASY CARE [Men Easy Care]"
     ]
    },
-   "ms": 10003
+   "ms": 8952
   },
   {
    "store": "sunspel.com",
    "pages": 5,
    "raw": 1064,
-   "kept": 681,
+   "kept": 684,
    "drop": {
     "notHis": 120,
     "notClothes": 232,
-    "soldOut": 30,
+    "soldOut": 27,
     "noPhoto": 0,
     "noType": 1
    },
@@ -1135,7 +1135,7 @@
      "Gift Box [Gift Box]"
     ]
    },
-   "ms": 4675
+   "ms": 6890
   },
   {
    "store": "privatewhitevc.com",
@@ -1155,17 +1155,17 @@
      "The Lifeline - Charcoal [Jersey]"
     ]
    },
-   "ms": 2479
+   "ms": 1957
   },
   {
    "store": "colhays.com",
    "pages": 1,
    "raw": 83,
-   "kept": 70,
+   "kept": 69,
    "drop": {
     "notHis": 0,
     "notClothes": 1,
-    "soldOut": 12,
+    "soldOut": 13,
     "noPhoto": 0,
     "noType": 0
    },
@@ -1173,7 +1173,7 @@
     "notHis": [],
     "noType": []
    },
-   "ms": 1368
+   "ms": 1249
   },
   {
    "store": "norseprojects.com",
@@ -1191,7 +1191,7 @@
     "notHis": [],
     "noType": []
    },
-   "ms": 4185
+   "ms": 3075
   },
   {
    "store": "billyreid.com",
@@ -1219,7 +1219,7 @@
      "Billy Reid x Williams Sonoma Julep Strainer [HOME/GIFTS]"
     ]
    },
-   "ms": 2032
+   "ms": 2258
   },
   {
    "store": "orlebarbrown.com",
@@ -1249,7 +1249,7 @@
      "Russell []"
     ]
    },
-   "ms": 7135
+   "ms": 7151
   },
   {
    "store": "debonnefacture.fr",
@@ -1267,7 +1267,7 @@
     "notHis": [],
     "noType": []
    },
-   "ms": 804
+   "ms": 1428
   },
   {
    "store": "akindofguise.com",
@@ -1297,17 +1297,17 @@
      "DUMA PLEATED DENIM [Clothing]"
     ]
    },
-   "ms": 3200
+   "ms": 3606
   },
   {
    "store": "albamclothing.com",
    "pages": 1,
-   "raw": 64,
+   "raw": 63,
    "kept": 53,
    "drop": {
     "notHis": 0,
     "notClothes": 3,
-    "soldOut": 8,
+    "soldOut": 7,
     "noPhoto": 0,
     "noType": 0
    },
@@ -1315,41 +1315,41 @@
     "notHis": [],
     "noType": []
    },
-   "ms": 545
+   "ms": 519
   },
   {
    "store": "folkclothing.com",
    "pages": 6,
-   "raw": 1401,
-   "kept": 651,
+   "raw": 1402,
+   "kept": 646,
    "drop": {
-    "notHis": 519,
+    "notHis": 520,
     "notClothes": 83,
-    "soldOut": 148,
+    "soldOut": 153,
     "noPhoto": 0,
     "noType": 0
    },
    "samples": {
     "notHis": [
+     "Technical Cap - Orange [Headwear & Gloves] <womens>",
      "Melange Sock - Summer Blue Mix [Socks] <womens>",
      "Melange Sock - Ocean Blue Mix [Socks] <womens>",
      "Melange Sock - Ochre Mix [Socks] <womens>",
-     "Melange Wool Sock - Dark Sage Melange [Socks] <womens>",
-     "Melange Socks - Ochre Pink Mix [Socks] <womens>"
+     "Melange Wool Sock - Dark Sage Melange [Socks] <womens>"
     ],
     "noType": []
    },
-   "ms": 11029
+   "ms": 11589
   },
   {
    "store": "waxlondon.com",
    "pages": 3,
    "raw": 719,
-   "kept": 501,
+   "kept": 502,
    "drop": {
     "notHis": 0,
     "notClothes": 96,
-    "soldOut": 122,
+    "soldOut": 121,
     "noPhoto": 0,
     "noType": 0
    },
@@ -1357,15 +1357,15 @@
     "notHis": [],
     "noType": []
    },
-   "ms": 5460
+   "ms": 5191
   },
   {
    "store": "youmustcreate.com",
    "pages": 2,
-   "raw": 438,
-   "kept": 142,
+   "raw": 454,
+   "kept": 146,
    "drop": {
-    "notHis": 289,
+    "notHis": 301,
     "notClothes": 1,
     "soldOut": 6,
     "noPhoto": 0,
@@ -1373,15 +1373,15 @@
    },
    "samples": {
     "notHis": [
-     "Needle Trouser [Trousers] <womens>",
-     "Deadbeat Trouser [Trousers] <womens>",
-     "Like A Trouser [Trousers] <womens>",
-     "PJ Overshirt [Shirts] <womens>",
-     "Needle Jacket [Jackets] <womens>"
+     "Marianne Shirt [Shirts] <womens>",
+     "Selene Shirt [Shirts] <womens>",
+     "TLC Skirt [Skirts] <Skirt>",
+     "Anti Shirt [Shirts] <womens>",
+     "Basement Bomber Jacket [Jackets] <womens>"
     ],
     "noType": []
    },
-   "ms": 2720
+   "ms": 2519
   },
   {
    "store": "kestin.co",
@@ -1404,7 +1404,7 @@
      "Dreghorn Fleece in Navy Ribbed Wool Blend [AW26 SEASONAL - FLEECE]"
     ]
    },
-   "ms": 728
+   "ms": 1744
   },
   {
    "store": "mackweldon.com",
@@ -1414,9 +1414,9 @@
    "drop": {
     "notHis": 1,
     "notClothes": 371,
-    "soldOut": 19,
+    "soldOut": 20,
     "noPhoto": 0,
-    "noType": 18
+    "noType": 17
    },
    "samples": {
     "notHis": [
@@ -1427,10 +1427,10 @@
      "Ion Briefcase [Final Sale]",
      "Ion Weekender [Final Sale]",
      "SILVER Active Gaiter [Final Sale]",
-     "WARMKNIT Waffle Neck Gaiter [Final Sale]"
+     "WARMKNIT Waffle Long Sleeve Crew [Final Sale]"
     ]
    },
-   "ms": 9017
+   "ms": 10352
   },
   {
    "store": "reigningchamp.com",
@@ -1456,17 +1456,17 @@
      "Midweight Jersey Standard Long Sleeve [MENS]"
     ]
    },
-   "ms": 4612
+   "ms": 4975
   },
   {
    "store": "rancourtandcompany.com",
    "pages": 1,
    "raw": 210,
-   "kept": 137,
+   "kept": 138,
    "drop": {
     "notHis": 18,
     "notClothes": 42,
-    "soldOut": 4,
+    "soldOut": 3,
     "noPhoto": 4,
     "noType": 5
    },
@@ -1486,17 +1486,17 @@
      "Leather Conditioner - Armstrong's Brooklyn Leather Conditioner - Neutral [Leather Care]"
     ]
    },
-   "ms": 1106
+   "ms": 1908
   },
   {
    "store": "quoddy.com",
    "pages": 3,
    "raw": 649,
-   "kept": 337,
+   "kept": 336,
    "drop": {
     "notHis": 118,
     "notClothes": 57,
-    "soldOut": 113,
+    "soldOut": 114,
     "noPhoto": 2,
     "noType": 22
    },
@@ -1516,7 +1516,7 @@
      "Men’s Nubuck Chuck LE Chukka: Midnight [Chukkas]"
     ]
    },
-   "ms": 7265
+   "ms": 6250
   },
   {
    "store": "paulevansny.com",
@@ -1534,17 +1534,17 @@
     "notHis": [],
     "noType": []
    },
-   "ms": 1008
+   "ms": 925
   },
   {
    "store": "thursdayboots.com",
    "pages": 7,
-   "raw": 1707,
+   "raw": 1704,
    "kept": 697,
    "drop": {
-    "notHis": 694,
+    "notHis": 692,
     "notClothes": 286,
-    "soldOut": 29,
+    "soldOut": 28,
     "noPhoto": 1,
     "noType": 0
    },
@@ -1558,19 +1558,19 @@
     ],
     "noType": []
    },
-   "ms": 10519
+   "ms": 11493
   },
   {
    "store": "armorlux.com",
    "pages": 12,
    "raw": 3000,
-   "kept": 1239,
+   "kept": 1247,
    "drop": {
-    "notHis": 1415,
+    "notHis": 1413,
     "notClothes": 53,
-    "soldOut": 30,
+    "soldOut": 21,
     "noPhoto": 0,
-    "noType": 263
+    "noType": 266
    },
    "samples": {
     "notHis": [
@@ -1588,22 +1588,24 @@
      "Slip fermé homme en coton [Homme|Ss-Vetements-Bas]"
     ]
    },
-   "ms": 22552
+   "ms": 23999
   },
   {
    "store": "uskees.com",
    "pages": 1,
-   "raw": 247,
-   "kept": 182,
+   "raw": 249,
+   "kept": 183,
    "drop": {
-    "notHis": 2,
-    "notClothes": 51,
+    "notHis": 4,
+    "notClothes": 50,
     "soldOut": 5,
     "noPhoto": 0,
     "noType": 7
    },
    "samples": {
     "notHis": [
+     "7023 B-Boy Crew t-shirt - navy [T-SHIRTS_JERSEY] <Boy>",
+     "7023 B-Boy Crew t-shirt - white [T-SHIRTS_JERSEY] <Boy>",
      "7023 Ski club t-shirt - baby yellow [T-SHIRTS_JERSEY] <baby>",
      "6013 Advanced Oxford shirt - baby blue pinstripe [LONG SLEEVES_OXFORD] <baby>"
     ],
@@ -1615,17 +1617,17 @@
      "7015 Racquet Club track top - cream [TRACK_TOP_COTTON]"
     ]
    },
-   "ms": 1149
+   "ms": 559
   },
   {
    "store": "stoffa.co",
    "pages": 6,
-   "raw": 1474,
+   "raw": 1473,
    "kept": 216,
    "drop": {
     "notHis": 4,
     "notClothes": 119,
-    "soldOut": 1134,
+    "soldOut": 1133,
     "noPhoto": 0,
     "noType": 1
    },
@@ -1640,7 +1642,7 @@
      "Justsmile Issue 6 (Eyes on the Prize) [Printed Goods]"
     ]
    },
-   "ms": 9812
+   "ms": 8341
   }
  ]
 }
