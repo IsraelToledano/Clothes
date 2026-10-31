@@ -102,7 +102,9 @@ function bestType(text){
 const NARROWER = { Blazers: "Jackets", Suits: "Jackets", Coats: "Jackets", Overshirts: "Shirts", Polos: "Shirts", Swimwear: "Shorts", Jeans: "Trousers", Sweatshirts: "Knitwear" };
 function typeOf(p) {
   const pt = String(p.product_type || "").trim(), byType = pt ? bestType(pt) : "";
-  const byTitle = bestType(p.title || "");
+  // Without a colour ending ("Manuel Blazer - Peacoat", "Cuban Shirt | Linen | Cream"), when the rest still says what it is.
+  const title = String(p.title || ""), core = title.replace(/\s[-–|]\s[^-–|]+$/, "");
+  const byTitle = (core !== title && bestType(core)) || bestType(title);
   if (byType === "Shoes") return "Shoes"; // shoe names say oxford, derby, cap toe: the store's type is surer
   if (byType === "Accessories") return byTitle === "Accessories" ? "Accessories" : ""; // an accessory we know, or nothing
   // A store type that's a narrower kind of what the name says wins: "Dylan Jacket" filed as "Blazers" is a blazer.
