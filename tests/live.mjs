@@ -223,6 +223,19 @@ try {
       log("shoes", R.app.shoes);
     } catch (e) { R.app.shoes = { error: String((e && e.message) || e) }; }
   }
+  /* ---------- 4b. the new categories: suits, swimwear, coats, sneakers, hats ---------- */
+  if (first) {
+    R.app.categories = {};
+    for (const cat of ["Suits", "Swimwear", "Coats", "Sneakers", "Hats"]) {
+      try {
+        await page.evaluate((c) => { Q.type = c; Q.styles = ["Preppy"]; Q.text = ""; save("query", Q); startRound(); }, cat);
+        await page.waitForSelector("#card img.prod.ok", { timeout: 20000 }); await page.waitForTimeout(600);
+        R.app.categories[cat] = await page.evaluate(() => ({ pool: S.pool.length, first: [S.current].concat(S.queue).slice(0, 5).map((i) => i.store + " | " + i.title + " | " + i.why) }));
+        await page.screenshot({ path: path.join(OUT, "category-" + cat.toLowerCase() + ".png") });
+      } catch (e) { R.app.categories[cat] = { error: String((e && e.message) || e) }; }
+    }
+    log("categories", R.app.categories);
+  }
   /* ---------- 5. About you: short and slim, looking for jackets ---------- */
   if (first) {
     try {
@@ -265,6 +278,7 @@ const md = [
   `Gallery, details, zoom, saved: ${JSON.stringify(a.gallery || null)}`,
   `Shoes (first 20): ${a.shoes ? (a.shoes.error || a.shoes.kinds + " kinds; most from one maker: " + JSON.stringify(a.shoes.topMaker) + "; same model twice: " + (a.shoes.sameModel.length ? a.shoes.sameModel.join("; ") : "never")) : "-"}`,
   `About you (jackets, first 20): ${a.aboutYou ? (a.aboutYou.error || "not set: " + a.aboutYou.notSet.long + " long; short + slim: " + a.aboutYou.shortSlim.long + " long, " + a.aboutYou.shortSlim.suitYou + " that suit you — " + a.aboutYou.shortSlim.first.join(" / ")) : "-"}`,
+  `New categories (Preppy): ${a.categories ? Object.entries(a.categories).map(([k, v]) => k + ": " + (v.error || v.pool + " pieces; " + v.first.slice(0, 3).join(" / "))).join(" || ") : "-"}`,
   `Errors: ${(a.errors || []).join(" | ") || "none"}`,
   a.stuck ? `STUCK at start: ${JSON.stringify(a.stuck)}` : "",
   a.stuckAfter ? `STUCK after card ${a.stuckAfter.n}: ${JSON.stringify(a.stuckAfter)}` : "",

@@ -235,7 +235,13 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
 .card-meta .mono-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .card-price{font-size:17px;white-space:nowrap;flex:none}
 .card-info .because{margin-top:2px}
-.about-line{margin:-8px 0 0;font-size:14px;color:var(--muted)}
+.about-line{margin:8px 2px 0;font-size:14px;color:var(--muted)}
+.select-wrap{position:relative}
+.select{appearance:none;-webkit-appearance:none;display:block;width:100%;height:54px;padding:0 46px 0 16px;border-radius:16px;border:1.5px solid var(--ink);background:var(--card);color:var(--ink);font-size:17px;font-weight:700}
+.select-wrap svg{position:absolute;right:16px;top:50%;width:18px;height:18px;transform:translateY(-50%) rotate(90deg);pointer-events:none}
+.screen.roomy .bottom.sticky{margin-left:-16px;margin-right:-16px;padding:16px 16px 0;background:linear-gradient(to bottom,rgba(238,240,243,0),var(--bg) 22px)}
+.chips.small{gap:6px}
+.chips.small .chip{height:38px;padding:0 13px;font-size:14px;border-radius:19px}
 .about-line .link-btn{min-height:32px;padding:0;font-size:14px}
 .fit-note{margin:0 6px;display:flex;gap:8px;align-items:center;font-size:13px;font-weight:600;color:#1E7A46}
 .fit-note.bad{color:var(--danger)}
@@ -361,7 +367,7 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "1.6.0";
+const APP_VERSION = "1.7.0";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
 const SERVER_EXPECTED = "1.1.0"; // the worker/worker.js version this app was built with
 
@@ -374,8 +380,70 @@ let AI = Object.assign({url:DEFAULT_WORKER, code:"", on:false, health:null}, loa
 const aiOn = () => !!(AI.on && AI.code && AI.url);
 
 /* ---------------- options ---------------- */
-const TYPES = ["T-shirts","Shirts","Overshirts","Knitwear","Jackets","Trousers","Shorts","Shoes","Surprise me"];
-const STYLES = ["Relaxed","Minimal","Smart-casual","Streetwear","Vintage","Sporty"];
+// The catalog's files, one per type (scripts/build-catalog.mjs).
+const FILES = ["T-shirts","Polos","Shirts","Overshirts","Knitwear","Sweatshirts","Suits","Blazers","Jackets","Coats","Trousers","Jeans","Shorts","Swimwear","Shoes","Accessories"];
+// What you can look for: one category at a time, picked from a list. Most are a catalog file; some are kinds
+// within one (Sneakers, Boots... of Shoes; Hats, Bags... of Accessories).
+const CATEGORIES = [
+  ["Tops", [["T-shirts"], ["Polos", "Polos & rugbys"], ["Shirts"], ["Overshirts"], ["Knitwear", "Knitwear & sweaters"], ["Sweatshirts", "Sweatshirts & hoodies"]]],
+  ["Tailoring", [["Suits"], ["Blazers", "Blazers & sport coats"]]],
+  ["Outerwear", [["Jackets"], ["Coats"]]],
+  ["Bottoms", [["Trousers", "Trousers & chinos"], ["Jeans"], ["Shorts"], ["Swimwear"]]],
+  ["Shoes", [["Shoes", "All shoes"], ["Sneakers"], ["Boots"], ["Smart shoes", "Loafers & smart shoes"], ["Sandals", "Sandals & slides"]]],
+  ["Accessories", [["Accessories", "All accessories"], ["Hats", "Hats & caps"], ["Bags"], ["Belts", "Belts & braces"], ["Scarves", "Scarves & gloves"], ["Ties", "Ties & pocket squares"], ["Socks"], ["Sunglasses"], ["Wallets", "Wallets & card holders"]]],
+];
+const CAT_DEF = {
+  "Sneakers": {files:["Shoes"], kinds:["Court & canvas sneakers", "Running sneakers", "Sneakers"]},
+  "Boots": {files:["Shoes"], kinds:["Boots", "Chukkas & desert boots", "Chelsea boots"]},
+  "Smart shoes": {files:["Shoes"], kinds:["Loafers", "Boat shoes", "Monk straps", "Brogues & wingtips", "Derbies", "Oxfords", "Moccasins & drivers", "Espadrilles"]},
+  "Sandals": {files:["Shoes"], kinds:["Sandals & slides", "Mules & clogs"]},
+  "Hats": {files:["Accessories"], kinds:["Hats & caps"]},
+  "Bags": {files:["Accessories"], kinds:["Bags"]},
+  "Belts": {files:["Accessories"], kinds:["Belts & braces"]},
+  "Scarves": {files:["Accessories"], kinds:["Scarves & gloves"]},
+  "Ties": {files:["Accessories"], kinds:["Ties & pocket squares"]},
+  "Socks": {files:["Accessories"], kinds:["Socks"]},
+  "Sunglasses": {files:["Accessories"], kinds:["Sunglasses"]},
+  "Wallets": {files:["Accessories"], kinds:["Wallets"]},
+};
+const ALL_CLOTHES = FILES.filter((f) => f !== "Accessories");
+const catDef = (c) => CAT_DEF[c] || (FILES.includes(c) ? {files:[c]} : {files:ALL_CLOTHES});
+const catLabel = (c) => { for (const [, l] of CATEGORIES) for (const [id, lab] of l) if (id === c) return lab || id; return "Anything"; };
+const STYLE_GROUPS = [
+  ["Look", ["Relaxed","Minimal","Smart-casual","Classic","Tailored","Preppy","Ivy & Americana","Quiet luxury","Streetwear","Vintage","Workwear","Rugged","Outdoor","Sporty","Coastal","Scandinavian","Japanese"]],
+  ["Colours & patterns", ["Neutrals","Earth tones","Blues & navy","Black","Pastels","Bold colour","Stripes","Checks & plaids","Prints"]],
+];
+const STYLES = STYLE_GROUPS.flatMap((g) => g[1]);
+// What each style looks like in the catalog: store styles to favour (and not), stores, words to look for
+// in a piece and words to avoid. Read on the phone with the brands in your own words (BRAND_READS).
+const STYLE_READS = {
+  "Relaxed": {tags:["relaxed"], words:["relaxed","easy","garment-dyed","linen","camp collar","drawstring","loose","unstructured"], avoid:["skinny"]},
+  "Minimal": {tags:["minimal"], words:["essential","merino","poplin","plain","solid","organic","clean"], avoid:["graphic","logo","print","printed","camo","patch","embroidered"], notTags:["streetwear"]},
+  "Smart-casual": {tags:["smart","classic","tailored"], words:["oxford","knit polo","merino","chino","suede","loafer","overshirt","cashmere","poplin","pleated"], avoid:["graphic","logo","distressed","camo","hoodie"]},
+  "Classic": {tags:["classic"], words:["oxford","chino","cable","crewneck","poplin","navy","button-down","button down","shetland"], avoid:["graphic","distressed","oversized"]},
+  "Tailored": {tags:["tailored","smart"], words:["tailored","pleated","wool","blazer","trouser","flannel","slim","suit","gurkha","side adjuster"], avoid:["hoodie","sweatpant","graphic","oversized","cargo"]},
+  "Preppy": {tags:["preppy"], words:["oxford","button-down","button down","rugby","cable","madras","seersucker","stripe","polo","chino","boat","varsity","cricket"], avoid:["graphic","tech","snap","camo"], notTags:["streetwear"]},
+  "Ivy & Americana": {tags:["preppy","classic","vintage"], stores:["J.Press","Rowing Blazers","Grayers"], words:["oxford","button-down","button down","shetland","tweed","chambray","madras","chino","loafer","varsity","repp","made-in-usa","made in usa","university stripe"], avoid:["tech","graphic"]},
+  "Quiet luxury": {tags:["luxe"], stores:["Colhay's","Sunspel","Private White V.C.","Stoffa"], words:["cashmere","merino","suede","linen","camel","cream","silk","knit polo","mohair","alpaca"], avoid:["logo","graphic","camo","print"], notTags:["streetwear"]},
+  "Streetwear": {tags:["streetwear","youthful"], words:["graphic","hoodie","oversized","logo","cargo","nylon","puffer","track"], avoid:["tailored","pleated","silk"]},
+  "Vintage": {tags:["vintage"], words:["vintage","washed","faded","garment-dyed","corduroy","selvedge","retro","distressed","broken-in"]},
+  "Workwear": {tags:["workwear"], words:["chore","canvas","duck","work","utility","carpenter","denim","selvedge","twill","cpo","painter","moleskin"], avoid:["silk","tailored"]},
+  "Rugged": {tags:["rugged","workwear"], words:["boot","flannel","waxed","heavyweight","leather","suede","field","wool","shearling","corduroy"]},
+  "Outdoor": {tags:["rugged","sporty","surf"], words:["fleece","nylon","ripstop","gore-tex","shell","hiking","trail","quilted","down","waterproof","anorak","puffer","parka"]},
+  "Sporty": {tags:["sporty"], words:["track","nylon","tech","performance","jersey","running","athletic","tennis","sweat"], avoid:["silk","tailored"]},
+  "Coastal": {tags:["surf","relaxed"], stores:["Orlebar Brown","Outerknown","Armor-Lux"], words:["linen","seersucker","camp collar","cotton-linen","stripe","swim","espadrille","breton","chambray","terry","resort"]},
+  "Scandinavian": {tags:["minimal","smart"], stores:["Norse Projects","Folk","Sunspel"], words:["merino","organic","wool","structured","grey","navy","ecru"], avoid:["graphic","print","camo"]},
+  "Japanese": {tags:["vintage","workwear"], stores:["Kamakura Shirts"], words:["selvedge","japanese","japan","indigo","sashiko","kapital","beams","loopwheel","made in japan","made-in-japan"]},
+  "Neutrals": {words:["ecru","cream","stone","oatmeal","beige","sand","grey","gray","white","ivory","taupe","bone","natural","khaki","off-white","oat","undyed"], avoid:["neon","bright","red","orange","yellow","pink","purple"]},
+  "Earth tones": {words:["olive","brown","rust","khaki","tan","camel","tobacco","chocolate","forest","sage","terracotta","mustard","moss","bronze","cognac","walnut"], avoid:["neon","pink","purple","bright"]},
+  "Blues & navy": {words:["navy","blue","indigo","chambray","denim","sky","cobalt","midnight"]},
+  "Black": {words:["black","charcoal","onyx","jet"]},
+  "Pastels": {words:["pastel","pink","mint","lavender","lilac","peach","butter","light blue","pale","powder","sky blue","lemon"]},
+  "Bold colour": {words:["red","orange","yellow","cobalt","bright","purple","kelly","emerald","scarlet","tomato","magenta"], avoid:["black","charcoal"]},
+  "Stripes": {words:["stripe","striped","breton","pinstripe","bengal","mariniere","marinière","ticking","awning"]},
+  "Checks & plaids": {words:["check","checked","plaid","tartan","gingham","madras","houndstooth","glen","windowpane","buffalo"]},
+  "Prints": {words:["print","printed","floral","paisley","pattern","patterned","polka","dot","motif","jacquard","camo","graphic"]},
+};
 const BUDGETS = [{id:"u200",label:"Under ₪200"},{id:"200-400",label:"₪200–400"},{id:"400+",label:"₪400+"},{id:"any",label:"Any"}];
 const SIZES = ["S","M","L","XL","XXL"];
 const SHOE_SIZES = ["40","41","42","43","44","45","46"];
@@ -844,6 +912,14 @@ const ils = (p) => p.price * (TO_ILS[p.currency] || 3.7);
 
 // Kinds of each type, from words in the title: they keep a search varied and tell the AI what you hearted.
 const KIND_RULES = {
+  "Polos": [["Knit polo", /knit|merino|cashmere|wool|sweater/], ["Rugby", /rugby/], ["Long sleeve", /long sleeve|long-sleeve|l\/s/], ["Johnny & camp collar", /johnny|camp|resort|cuban/], ["Stripes", /stripe/], ["Piqué", /piqu/], ["Jersey", /jersey/]],
+  "Sweatshirts": [["Hoodie", /hood/], ["Zip", /zip/], ["Graphic", /graphic|logo|print|embroider|appliqu/], ["Fleece", /fleece|sherpa/], ["Crewneck", /crew/]],
+  "Suits": [["Double-breasted", /double[- ]breasted|\bdb\b/], ["Tuxedo & dinner", /tux|dinner/], ["Linen", /linen/], ["Seersucker", /seersucker/], ["Corduroy", /cord/], ["Flannel", /flannel/], ["Tweed", /tweed|donegal|herringbone/], ["Waistcoat", /waistcoat|vest/], ["Cotton", /cotton|chino|twill/], ["Wool", /wool/]],
+  "Blazers": [["Double-breasted", /double[- ]breasted|\bdb\b/], ["Linen & seersucker", /linen|seersucker/], ["Tweed & wool", /tweed|shetland|donegal|flannel|herringbone/], ["Corduroy", /cord/], ["Knit & unstructured", /knit|jersey|unstructured|unlined/], ["Madras & check", /madras|check|plaid|tartan|gingham/], ["Velvet", /velvet/], ["Navy", /navy/]],
+  "Coats": [["Overcoat & topcoat", /overcoat|topcoat|chesterfield|balmacaan|polo coat/], ["Peacoat", /pea ?coat|caban/], ["Trench & mac", /trench|\bmac\b|mackintosh|raincoat/], ["Parka", /parka/], ["Duffle", /duffle|duffel/], ["Car coat", /car ?coat/], ["Puffer & down", /puffer|down|quilt|doudoune/], ["Shearling", /shearling|sherpa/]],
+  "Jeans": [["Selvedge", /selvedge|selvage/], ["Black", /black/], ["Light wash", /light|bleach|stone ?wash/], ["Relaxed & wide", /relaxed|loose|wide|baggy/], ["Slim", /slim|skinny|taper/], ["Straight", /straight|regular|classic/], ["Carpenter & work", /carpenter|work|painter/]],
+  "Swimwear": [["Tailored", /tailored|adjuster|button|bulldog/], ["Printed", /print|floral|pattern|paisley|camo/], ["Stripes", /stripe/], ["Board shorts", /board/], ["Trunks", /trunk/], ["Drawstring", /drawstring|drawcord/]],
+  "Accessories": [["Bags", /\b(bags?|totes?|backpacks?|duffle|duffel|weekender|holdall|briefcase|messenger|crossbody|sacoche|pouch|dopp|washbag|wash bag)\b/], ["Hats & caps", /\b(hats?|caps?|beanies?|berets?|bucket)\b/], ["Belts & braces", /\b(belts?|braces|suspenders)\b/], ["Scarves & gloves", /\b(scarf|scarves|snood|gloves?|mittens?|bandanas?|neckerchief)\b/], ["Ties & pocket squares", /\b(ties?|bow ?ties?|neckties?|pocket squares?|cufflinks?|tie bars?)\b/], ["Socks", /\bsocks?\b/], ["Sunglasses", /\b(sunglasses|eyewear|optical|frames?)\b/], ["Wallets", /\b(wallets?|card ?holders?|cardholders?|money clips?)\b/]],
   "Shirts": [["Oxford", /oxford/], ["Rugby", /rugby/], ["Polo", /polo/], ["Madras & check", /madras|gingham|check|plaid|tartan/], ["Seersucker", /seersucker/], ["Chambray & denim", /chambray|denim|indigo/], ["Flannel", /flannel|brushed/], ["Linen", /linen/], ["Corduroy", /corduroy|\bcord\b/], ["Camp collar", /camp|cuban|resort|bowling|vacation/], ["Band collar", /band collar|grandad|mandarin|collarless/], ["Popover", /popover|pullover/], ["Western & work", /western|work shirt|workwear|utility|mechanic|military|cpo/], ["Stripes", /stripe/], ["Poplin", /poplin|dress shirt|spread collar/], ["Short sleeve", /short sleeve|s\/s|\bss\b/]],
   "T-shirts": [["Henley", /henley/], ["Pocket tee", /pocket/], ["Stripes", /stripe|breton/], ["Ringer", /ringer/], ["Long sleeve", /long sleeve|l\/s/], ["Graphic", /graphic|logo|print/], ["Heavyweight", /heavyweight|heavy/]],
   "Knitwear": [["Cardigan", /cardigan/], ["Cable knit", /cable/], ["Quarter zip", /zip/], ["Knit polo", /polo/], ["Turtleneck", /turtle|mock/], ["Fair Isle", /fair isle|jacquard|intarsia/], ["Cashmere", /cashmere/], ["Mohair", /mohair|brushed/], ["Sweatshirt", /sweatshirt|fleece|hoodie/], ["Crewneck", /crew/]],
@@ -862,7 +938,7 @@ function kindOf(p){
 }
 
 const CAT = {stores:null, lists:{}};
-const CAT_TYPES = TYPES.filter((t) => t !== "Surprise me");
+const CAT_TYPES = FILES;
 const typeFile = (t) => "catalog/" + t.toLowerCase().replace(/[^a-z]+/g, "-") + ".json";
 function fromCat(x, type){
   const st = CAT.stores.stores[x.s] || {};
@@ -896,14 +972,14 @@ async function moreOf(i){
   return m;
 }
 async function loadCatalog(){
-  const want = Q.type && Q.type !== "Surprise me" ? [Q.type] : CAT_TYPES;
+  const def = catDef(Q.type), want = def.files;
   await loadStores();
   await Promise.all(want.filter((t) => !CAT.lists[t]).map((t) => fetch(typeFile(t), {cache:"no-cache"}).then((r) => (r.ok ? r.json() : [])).then((l) => { CAT.lists[t] = l.filter((x) => !/\b(wmns|womens|women's)\b|^spacer\b/i.test(x.t)).map((x) => fromCat(x, t)); }).catch(() => { CAT.lists[t] = []; })));
-  return want.flatMap((t) => CAT.lists[t] || []);
+  const pool = want.flatMap((t) => CAT.lists[t] || []);
+  return def.kinds ? pool.filter((p) => def.kinds.includes(p.kind)) : pool;
 }
 
 // What the brief asks for, as store styles: the chips, and brands or words in your own text.
-const STYLE_TAGS = {"Relaxed":["relaxed"], "Minimal":["minimal"], "Smart-casual":["smart","classic","tailored"], "Streetwear":["streetwear","youthful"], "Vintage":["vintage","workwear"], "Sporty":["sporty","surf"]};
 // Brands in your own words. The catalog doesn't carry them, so each is read as what it looks like: the
 // stores that fit (by their style tags), words to look for in a piece, and words and store styles to avoid.
 // This works on the phone at once, with or without the AI.
@@ -922,9 +998,18 @@ const BRAND_READS = [
 ];
 const COLOURISH = /^(navy|white|ecru|stone|cream|camel|black|grey|blue|olive)$/;
 function briefRead(){
-  const text = Q.text || "";
-  if (S.brief && S.brief.text === text) return S.brief;
-  const out = {text, brands:[], words:[], avoid:[], tags:{}, notTags:{}, stores:{}};
+  const text = Q.text || "", key = text + "|" + (Q.styles || []).join(",");
+  if (S.brief && S.brief.key === key) return S.brief;
+  const out = {text, key, brands:[], styles:[], words:[], avoid:[], tags:{}, notTags:{}, stores:{}};
+  for (const name of Q.styles || []){
+    const r = STYLE_READS[name];
+    if (!r) continue;
+    out.styles.push(name);
+    for (const st of r.stores || []) out.stores[st] = Math.max(out.stores[st] || 0, 2);
+    for (const t of r.tags || []) out.tags[t] = (out.tags[t] || 0) + 1.5;
+    for (const t of r.notTags || []) out.notTags[t] = (out.notTags[t] || 0) + 1;
+    out.words.push(...(r.words || [])); out.avoid.push(...(r.avoid || []));
+  }
   for (const b of BRAND_READS) if (b.re.test(text)){
     out.brands.push(b.name);
     (b.stores || []).forEach((st, k) => { out.stores[st] = Math.max(out.stores[st] || 0, k ? 1.5 : 3); });
@@ -947,7 +1032,6 @@ const TEXT_TAGS = [
 ];
 function briefTags(){
   const t = Object.assign({}, briefRead().tags);
-  for (const s of Q.styles || []) for (const x of STYLE_TAGS[s] || []) t[x] = (t[x] || 0) + 1;
   for (const [re, xs] of TEXT_TAGS) if (re.test(Q.text || "")) for (const x of xs) t[x] = (t[x] || 0) + 2;
   return t;
 }
@@ -967,21 +1051,22 @@ const BIGGISH = /\b(oversized|boxy|baggy|wide[- ]leg|wide fit|big shirt|loose|dr
 const TRIMMISH = /\b(slim|trim|tailored|tapered|fitted|skinny)\b/;
 function fitForMe(p){
   const me = PREFS.me || {}, out = {s:0, good:"", bad:""};
-  if (!isProduct(p)) return out;
+  if (!isProduct(p) || p.type === "Shoes" || p.type === "Accessories") return out;
   const t = (p.title + " " + (p.fit || "") + " " + (p.tags || []).join(" ")).toLowerCase(), ct = p.ct || "";
-  const coat = p.type === "Jackets" || p.type === "Overshirts" || p.type === "Knitwear";
-  const long = coat && (ct.includes("L") || LONGISH.test(t)), cropped = ct.includes("C") || CROPPY.test(t) || (p.type === "Jackets" && SHORT_JACKETS.has(p.kind));
+  const coat = ["Jackets", "Coats", "Blazers", "Overshirts", "Knitwear", "Sweatshirts"].includes(p.type);
+  const long = coat && (ct.includes("L") || LONGISH.test(t) || (p.type === "Coats" && ["Overcoat & topcoat", "Trench & mac"].includes(p.kind)));
+  const cropped = ct.includes("C") || CROPPY.test(t) || (p.type === "Jackets" && SHORT_JACKETS.has(p.kind)) || (p.type === "Coats" && ["Peacoat", "Car coat"].includes(p.kind));
   const big = ct.includes("O") || BIGGISH.test(t), trim = ct.includes("T") || TRIMMISH.test(t), relaxed = /\brelaxed\b/.test(t);
   const add = (n, why) => { out.s += n; if (n > 0 && !out.good) out.good = why; if (n < 0 && !out.bad) out.bad = why; };
   if (me.height === "short"){
     if (long) add(-4, "long for your height");
     else if (cropped && coat) add(1.5, "cropped, good for your height");
-    if (big && (p.type === "Trousers" || p.type === "Jackets" || p.type === "Knitwear")) add(-1.5, "a lot of fabric for your height");
-    if (p.type === "Shorts" && p.is) add(p.is >= 8 ? -1.5 : p.is <= 7 ? 1 : 0, p.is >= 8 ? "long shorts for your height" : "a shorter inseam suits your height");
+    if (big && ["Trousers", "Jeans", "Jackets", "Coats", "Knitwear", "Sweatshirts", "Suits"].includes(p.type)) add(-1.5, "a lot of fabric for your height");
+    if ((p.type === "Shorts" || p.type === "Swimwear") && p.is) add(p.is >= 8 ? -1.5 : p.is <= 7 ? 1 : 0, p.is >= 8 ? "long shorts for your height" : "a shorter inseam suits your height");
   }
   if (me.height === "tall"){ if (cropped && coat) add(-1.5, "cropped, short on you"); else if (long) add(1, "a long cut suits your height"); }
   if (me.build === "slim"){ if (big) add(-3, "oversized on a slim build"); else if (trim) add(1.5, "a slimmer cut for your build"); else if (relaxed) add(-0.5, ""); }
-  if (me.build === "broad"){ if (/\bskinny\b/.test(t) || ct.includes("T") && p.type === "Trousers") add(-2, "a narrow cut for your build"); else if (relaxed) add(1, "a relaxed cut for your build"); }
+  if (me.build === "broad"){ if (/\bskinny\b/.test(t) || ct.includes("T") && (p.type === "Trousers" || p.type === "Jeans")) add(-2, "a narrow cut for your build"); else if (relaxed) add(1, "a relaxed cut for your build"); }
   if (me.build === "athletic" && /\bskinny\b/.test(t)) add(-1, "skinny");
   if (me.fit === "slim"){ if (trim) add(1.5, "the slimmer fit you like"); else if (big) add(-2, "looser than you like"); }
   if (me.fit === "relaxed"){ if (relaxed || big) add(1, "the relaxed fit you like"); else if (/\bskinny\b/.test(t)) add(-1.5, "tighter than you like"); }
@@ -991,17 +1076,23 @@ function fitForMe(p){
   if (mine && sz.length && sz.some((x) => /^(XXS|XS|S|M|L|XL|XXL|XXXL|2XL|3XL)$/.test(x)) && !sz.includes(mine)) add(-3, "not in your size (" + mine + ")");
   return out;
 }
+const WORD_RE = new Map();
+function wordIn(hay, w){
+  let re = WORD_RE.get(w);
+  if (!re){ re = new RegExp("(^|[^a-z])" + w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "($|[^a-z])"); WORD_RE.set(w, re); }
+  return re.test(hay);
+}
 function fitScore(p, ctx){
   if (PREFS.shipIL && p.ships === false) return -Infinity;
   const b = BUDGETS_ILS[PREFS.budget];
   if (b && (ils(p) < b[0] || ils(p) > b[1])) return -Infinity;
-  const hay = (p.title + " " + p.ptype + " " + p.tags.join(" ") + " " + p.kind + " " + (p.fabric || "")).toLowerCase();
+  const hay = (p.title + " " + p.ptype + " " + p.tags.join(" ") + " " + p.kind + " " + (p.fabric || "") + " " + (p.colour || "")).toLowerCase();
   let s = p.storeTags.reduce((a, t) => a + (ctx.tags[t] || 0) - (ctx.brief.notTags[t] || 0), 0) * 1.2;
   s += Math.max(ctx.brief.stores[p.store] || 0, ctx.named.has(p.store) ? 3 : 0); // a store you named, or one that fits a brand you named
   // Words from the brands you named: up to three count, each one is shown on the card as the reason.
-  const hit = ctx.brief.words.filter((w) => hay.includes(w));
+  const hit = ctx.brief.words.filter((w) => wordIn(hay, w));
   s += Math.min(3, hit.length) * 2.5;
-  for (const w of ctx.brief.avoid) if (hay.includes(w)) s -= 3;
+  for (const w of ctx.brief.avoid) if (wordIn(hay, w)) s -= 3;
   p._hit = hit;
   for (const w of ctx.sig.pos) if (hay.includes(w)) s += 2;
   for (const w of ctx.sig.neg) if (hay.includes(w)) s -= 4;
@@ -1064,10 +1155,17 @@ function refill(){
     const hay = (p.title + " " + p.ptype + " " + p.tags.join(" ") + " " + p.kind + " " + (p.fabric || "")).toLowerCase();
     // Things (oxford, polo, linen) before colours; credited to the brand you named that they come from.
     const mine = (p._hit || []).filter((w) => !(p._hit || []).some((x) => x !== w && x.includes(w))).sort((a, b) => COLOURISH.test(a) - COLOURISH.test(b)).slice(0, 2);
-    if (mine.length){ const b = BRAND_READS.find((x) => br.brands.includes(x.name) && x.words.includes(mine[0])); return (b ? "Like " + b.name + ": " : "You asked: ") + mine.join(", "); }
+    if (mine.length){
+      const b = BRAND_READS.find((x) => br.brands.includes(x.name) && x.words.includes(mine[0]));
+      if (b) return "Like " + b.name + ": " + mine.join(", ");
+      const st = br.styles.find((n) => (STYLE_READS[n].words || []).includes(mine[0]));
+      return (st ? st + ": " : "You asked: ") + mine.join(", ");
+    }
     if (ctx.named.has(p.store)) return "You named " + p.store + " · " + p.kind;
     const bs = BRAND_READS.find((x) => br.brands.includes(x.name) && (x.stores || []).includes(p.store));
     if (bs) return "Like " + bs.name + " · " + p.kind;
+    const ss = br.styles.find((n) => (STYLE_READS[n].stores || []).includes(p.store));
+    if (ss) return ss + " · " + p.kind;
     const fromAi = ai.filter((w) => hay.includes(w)).slice(0, 2);
     if (fromAi.length && Q.text) return "From your words: " + fromAi.join(", ");
     if (p._me) return p._me[0].toUpperCase() + p._me.slice(1);
@@ -1110,7 +1208,7 @@ function meNote(){
 }
 function aiKeywords(prod, gen){
   const titles = (v) => S.round.votes.filter((x) => x.v === v).map((x) => x.title).slice(-8);
-  return aiCall("/keywords", {query:{type:Q.type || "Surprise me", styles:Q.styles, text:[Q.text, meNote()].filter(Boolean).join(". ")}, product:prod && {title:prod.title, store:prod.store, kind:prod.kind, colour:prod.colour, fabric:prod.fabric, price:prod.price}, liked:titles("like"), passed:titles("later")}).then((r) => {
+  return aiCall("/keywords", {query:{type:catLabel(Q.type), styles:Q.styles, text:[Q.text, meNote()].filter(Boolean).join(". ")}, product:prod && {title:prod.title, store:prod.store, kind:prod.kind, colour:prod.colour, fabric:prod.fabric, price:prod.price}, liked:titles("like"), passed:titles("later")}).then((r) => {
     if (gen !== S.gen || !r) return;
     if (r.model) S.textModel = r.model;
     const clean = (a) => (Array.isArray(a) ? a : []).map((w) => String(w).toLowerCase().trim()).filter((w) => w.length > 2).slice(0, 12);
@@ -1257,10 +1355,15 @@ function renderStart(){
   return `<main class="screen roomy" aria-labelledby="start-h">
     <header class="top"><span class="brand"><span class="wordmark">drape</span><button type="button" class="ver" data-act="refresh" aria-label="Update the app (version ${APP_VERSION})">v${APP_VERSION} ${ICON.refresh}</button></span>${hbtns(true)}</header>
     <h1 id="start-h" class="h1">What are you looking for today?</h1>
-    <fieldset><legend class="label">Type of clothing</legend><div class="chips">${TYPES.map((t) => `<button type="button" class="chip" data-act="type" data-v="${esc(t)}" aria-pressed="${Q.type === t}">${esc(t)}</button>`).join("")}</div></fieldset>
-    <fieldset><legend class="label">Style <span class="hint">· pick any</span></legend><div class="chips">${STYLES.map((s) => { const on = Q.styles.includes(s); return `<button type="button" class="chip" data-act="style" data-v="${esc(s)}" aria-pressed="${on}">${on ? ICON.check : ""}${esc(s)}</button>`; }).join("")}</div></fieldset>
+    <div><label class="label" for="cat">What kind of piece</label>
+      <div class="select-wrap"><select id="cat" class="select">
+        <option value="Surprise me"${!Q.type || Q.type === "Surprise me" ? " selected" : ""}>Anything · surprise me</option>
+        ${CATEGORIES.map(([g, l]) => `<optgroup label="${esc(g)}">${l.map(([id, lab]) => `<option value="${esc(id)}"${Q.type === id ? " selected" : ""}>${esc(lab || id)}</option>`).join("")}</optgroup>`).join("")}
+      </select>${ICON.fwd}</div>
+      <p class="about-line">${PREFS.me.height || PREFS.me.build || PREFS.me.fit ? `For you: ${esc([meLabel("height"), meLabel("build"), meLabel("fit") && meLabel("fit") + " fit", PREFS.sizeSet ? "size " + PREFS.size : ""].filter(Boolean).join(" · "))} · <button type="button" class="link-btn" data-act="about">Change</button>` : `<button type="button" class="link-btn" data-act="about">Add your height and build</button> so suggestions suit you`}</p>
+    </div>
+    ${STYLE_GROUPS.map(([g, list], k) => `<fieldset><legend class="label">${esc(g)} <span class="hint">· pick any${k ? "" : (Q.styles.length ? " · " + Q.styles.length + " picked" : "")}</span></legend><div class="chips small">${list.map((s) => { const on = Q.styles.includes(s); return `<button type="button" class="chip" data-act="style" data-v="${esc(s)}" aria-pressed="${on}">${on ? ICON.check : ""}${esc(s)}</button>`; }).join("")}</div></fieldset>`).join("")}
     <div><label class="label" for="txt">In your own words <span class="hint">· optional</span></label><textarea id="txt" rows="3" placeholder="e.g. something light to throw over a tee on summer evenings, nothing too sporty">${esc(Q.text)}</textarea></div>
-    <p class="about-line">${PREFS.me.height || PREFS.me.build || PREFS.me.fit ? `About you: ${esc([meLabel("height"), meLabel("build"), meLabel("fit") && meLabel("fit") + " fit", PREFS.sizeSet ? "size " + PREFS.size : ""].filter(Boolean).join(" · "))} · <button type="button" class="link-btn" data-act="about">Change</button>` : `<button type="button" class="link-btn" data-act="about">Add your height and build</button> so suggestions suit you`}</p>
     <div class="bottom sticky"><button type="button" class="cta" data-act="go">Show me ideas ${ICON.arrow}</button>
       ${SAVED.length ? `<button type="button" class="link-btn" data-act="saved">Saved pieces · ${SAVED.length}</button>` : ""}
       ${aiOn() ? "" : `<p class="small-note" style="margin-top:6px">Sample ideas for now · <button type="button" class="link-btn" data-act="profile">turn on AI</button></p>`}</div>
@@ -1280,7 +1383,7 @@ function ideaImage(i){
 
 function metaHtml(){
   const n = S.round.votes.length;
-  return `<span class="meta">${esc(Q.type || "Anything")} · ${n} vote${n === 1 ? "" : "s"}</span>`;
+  return `<span class="meta">${esc(catLabel(Q.type))} · ${n} vote${n === 1 ? "" : "s"}</span>`;
 }
 function headCenter(){
   const u = S.toast && S.toast.undo;
@@ -2184,6 +2287,7 @@ document.addEventListener("input", (e) => {
   if (e.target.id === "txt"){ Q.text = e.target.value; save("query", Q); }
 });
 document.addEventListener("change", (e) => {
+  if (e.target.id === "cat"){ Q.type = e.target.value; save("query", Q); return; }
   if (e.target.id === "shipIL"){ PREFS.shipIL = e.target.checked; save("prefs", PREFS); }
 });
 document.addEventListener("keydown", (e) => {
@@ -2333,8 +2437,8 @@ function askSnapshot(){
   L.push(`catalog: ${CAT.stores ? CAT.stores.stores.length + " stores, updated " + CAT.stores.updated + ", " + JSON.stringify(CAT.stores.counts) : "not loaded"}   pool for this search: ${S.pool ? S.pool.length : 0}   AI words: ${(S.aiKeys || []).join(", ") || "-"}${S.aiAvoid && S.aiAvoid.length ? "   avoid: " + S.aiAvoid.join(", ") : ""}`);
   if (S.diag) L.push(`AI check: ${JSON.stringify(S.diag)}`);
   L.push(`last photo error: ${S.imgErr || "none"}`);
-  L.push(`\nSEARCH: type=${Q.type || "-"}  styles=${(Q.styles || []).join(", ") || "-"}  text="${Q.text || ""}"`);
-  try{ const b = briefRead(); L.push(`YOUR WORDS READ AS: brands ${b.brands.join(", ") || "-"}; look for ${b.words.join(", ") || "-"}; avoid ${b.avoid.join(", ") || "-"}; store styles +${Object.keys(b.tags).join("/") || "-"} -${Object.keys(b.notTags).join("/") || "-"}; stores ${Object.keys(b.stores).join(", ") || "-"}`); }catch(e){}
+  L.push(`\nSEARCH: type=${Q.type || "-"} (${catLabel(Q.type)})  styles=${(Q.styles || []).join(", ") || "-"}  text="${Q.text || ""}"`);
+  try{ const b = briefRead(); L.push(`YOUR WORDS READ AS: brands ${b.brands.join(", ") || "-"}; styles ${b.styles.join(", ") || "-"}; look for ${b.words.join(", ") || "-"}; avoid ${b.avoid.join(", ") || "-"}; store styles +${Object.keys(b.tags).join("/") || "-"} -${Object.keys(b.notTags).join("/") || "-"}; stores ${Object.keys(b.stores).join(", ") || "-"}`); }catch(e){}
   L.push(`LIKED: ${likedList().slice(0, 8).map((x) => x.title).join("; ") || "-"}`);
   L.push(`PREFS: ${JSON.stringify(PREFS)}`);
   if (S.current && isProduct(S.current)){ const f = fitForMe(S.current); L.push(`FOR YOU: ${f.s ? (f.s > 0 ? "+" : "") + f.s + " " + (f.good || f.bad) : "neutral"}   cut: ${S.current.ct || "-"}${S.current.is ? "   inseam " + S.current.is + '"' : ""}`); }
