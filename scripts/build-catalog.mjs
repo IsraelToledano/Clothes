@@ -63,29 +63,51 @@ const STORES = [
 const NOT_HIS = /\b(femme|wmn'?s|wmns|nike (ps|gs|td)|jordan (ps|gs|td)|little kids?|big kids?|women|womens|women's|women’s|woman|ladies|girls?|kids?|boys?|baby(?![\s-]*(cashmere|alpaca|merino|cord))|toddler|skirts?|blouses?|bralettes?|bikinis?|leggings?|camisoles?|bodysuits?|jumpsuits?|rompers?|maternity|corsets?|bras?|halter|crop tops?|scarf tank|wrap top)\b/i;
 // "Dress" is a women's piece only in the title or type, and not as in dress shirt, dress trouser or dress socks.
 const A_DRESS = /\bdress(es)?\b(?!\s*(shirts?|trousers?|pants?|socks?|shoes?|boots?|chinos?|code|gordon))/i;
-// Not clothes (or not one piece of clothing). Careful with colours and details: "Cream Oxford", "Floral Print
-// Shirt", "Patch Pocket" and "Tie-Dye" are clothes (before 1.3 those words dropped them).
-const NOT_CLOTHES = /\b(accessor(y|ies)|underwear|boxers?|boxer briefs?|briefs|pyjamas?|pajamas?|robes?|bow ?ties?|neckties?|ties?(?![- ]?dye)|socks?|hats?|caps?|beanies?|scarf|scarves|belts?|bags?|totes?|backpacks?|wallets?|card ?holders?|gloves?|sunglasses|glasses|jewel(le)?ry|bracelets?|necklaces?|rings?|cufflinks?|pocket squares?|bandanas?|keyrings?|watch(es)?|watch straps?|laces|shoe care|shoe cream|polish|shoe brush|hangers?|face ?masks?|face covering|gift ?cards?|e-?gift|candles?|mugs?|posters?|stickers?|books?|magazines?|keychains?|key rings?|umbrellas?|towels?|blankets?|fragrances?|perfumes?|cologne|incense|art prints?|enamel pins?|lapel pins?|patches|swatch(es)?|fabric samples?|samples?|bundles?|insurance|shipping|donations?|cushions?|pillows?|rugs?|ornaments?|playing cards|dog|leash|collar for|mtm|made to measure|spacer|wine|resoles?|refurbishment|insoles?|footbeds?|protection|lunchbox|washbags?|notebooks?|glass(es)? set|undershirts?|cummerbunds?|braces|eyewear|earrings?|ear cuffs?|snapbacks?|strapbacks?|hair|styling paste|publications?|print material|gicl[ée]e|helmets?|sacoches?|pouch(es)?|plates?|masks?)\b/i;
+// Not kept at all: not clothes, or not one piece of clothing. Careful with colours and details: "Cream Oxford",
+// "Floral Print Shirt", "Patch Pocket", "Tie-Dye", "Watch Cap" and "Hairy Suede" are clothes.
+const NOT_CLOTHES = /\b(underwear|boxers?|boxer briefs?|briefs|pyjamas?|pajamas?|robes?|jewel(le)?ry|bracelets?|necklaces?|pendants?|rings?|earrings?|ear cuffs?|watch(es)?(?! caps?)|watch straps?|laces|shoe care|shoe cream|polish|shoe brush|shoe trees?|hangers?|face ?masks?|face covering|masks?|gift ?cards?|e-?gift|gift wrap(ping)?|gift box|candles?|mugs?|posters?|stickers?|books?|magazines?|publications?|keychains?|key ?rings?|umbrellas?|towels?|blankets?|fragrances?|perfumes?|cologne|incense|art prints?|print material|gicl[ée]e|enamel pins?|lapel pins?|patches|swatch(es)?|fabric samples?|samples?|bundles?|insurance|shipping|donations?|cushions?|pillows?|rugs?|ornaments?|playing cards|dog|leash|collar for|mtm|made to measure|spacer|wine|resoles?|refurbishment|insoles?|footbeds?|(order|package|shipping) protection|lunchbox|notebooks?|glass(es)? set|undershirts?|cummerbunds?|hair|styling paste|helmets?|plates?|ashtrays?|kettle ?bells?|boxing (pads?|gloves?)|scissors|care kit|carbon|wetsuits?)\b/i;
 const SKU_TITLE = /^[A-Z]{1,2}\d{3}[A-Z0-9]{3,}\b/; // "M993C0370Q - Original Fabrics": a fabric for made-to-measure, not a piece
 
-// The app's types. First match wins, so the more specific ones come first.
+// The catalog's types (one file each). The app's categories read one or more of them (Sneakers, Boots...
+// are kinds of Shoes; Hats, Bags, Belts... kinds of Accessories). The word that ends last in a name decides
+// ("Bandana Print Camp Shirt" is a shirt, "Belt Bag" a bag); when two end together, the earlier rule here
+// wins ("Swim Short" swimwear, "Shirt Jacket" overshirt, "Suit Jacket" suit, "Polo Coat" coat).
 const TYPE_RULES = [
-  ["Shoes", /\b(footwear|sneakers?|trainers?|shoes?|boots?|loafers?|sandals?|derbys?|derbies|moccasins?|mules?|slides|espadrilles?|clogs?|slippers?|oxfords? (shoes?|sneakers?)|tennis oxfords?)\b/i],
-  ["Shorts", /\b(bermudas?|sweatshorts?|shorts|short)\b(?!\s*-?\s*sleeve)|\bswim ?trunks?\b|\bboardshorts?\b/i],
-  ["Trousers", /\b(pantalons?|pants?|trousers?|chinos?|jeans?|denim pant|slacks|joggers?|sweatpants?|overalls|5 pockets?|five pockets?)\b/i],
-  ["Overshirts", /\b(overshirts?|over-shirts?|shirt jackets?|shirt-jackets?|shackets?|chore (coats?|jackets?)|cpo)\b/i],
-  ["Jackets", /\b(doudounes?|vestes?|manteaux?|cabans?|blousons?|cirés?|puffers?|topcoats?|raincoats?|trench(coats?)?|balmacaans?|chesterfields?|sherpas?|truckers?|jackets?|blazers?|coats?|parkas?|bombers?|anoraks?|gilets?|vests?|waistcoats?|cagoules?|windbreakers?|sport ?coats?|overcoats?|peacoats?|suits?|suit outfit|tuxedos?(?! shirt))\b/i],
-  ["T-shirts", /\b(d[ée]bardeurs?|longsleeves?|marini[eè]res?|tee-shirts?|t-?shirts?|tees?|henleys?|ringer|tank tops?|thermals?)\b/i],
-  ["Knitwear", /\b(pulls?|pull-overs?|knitwear|sweatshirts?|hoodies?|hooded|loopback|lambswool|roll ?necks?|rollnecks?|sweaters?|cardigans?|jumpers?|knits?|knitted|crewnecks?|quarter[- ]zip|half[- ]zip|turtlenecks?|mock ?necks?|pullovers?|cashmere|merino|fair isle|cable)\b/i],
-  ["Shirts", /\b(button[- ]ups?|chemises?|wovens?|spread|shirts?|oxfords?|popovers?|button[- ]downs?|polos?|rugbys?|camp collar|flannels?|chambray|overshirts?)\b/i],
+  ["Swimwear", /\b(swim ?trunks?|swim ?shorts?|board ?shorts?|boardshorts?|swim(wear|suits?|ming)?|trunks?|bathers)\b/i],
+  ["Shorts", /\b(bermudas?|sweatshorts?|shorts|short(?!\s*-?\s*sleeve))\b/i],
+  ["Overshirts", /\b(overshirts?|over-shirts?|shirt[- ]jackets?|shackets?|chore (coats?|jackets?)|cpo)\b/i],
+  ["Suits", /\b(suit jackets?|dinner jackets?|suits?|suiting|tuxedos?(?!\s*shirt)|waistcoats?|two[- ]piece|three[- ]piece)\b/i],
+  ["Blazers", /\b(blazers?|sport ?coats?|sports? jackets?|unstructured jackets?|tailored jackets?)\b/i],
+  ["Coats", /\b(coats?|overcoats?|topcoats?|peacoats?|pea ?coats?|parkas?|trench( ?coats?)?|raincoats?|car ?coats?|duffle coats?|duffel coats?|balmacaans?|chesterfields?|great ?coats?|macs?|mackintosh|ulsters?|cabans?|manteaux?)\b/i],
+  ["Jackets", /\b(doudounes?|vestes?|blousons?|cirés?|puffers?|sherpas?|truckers?|jackets?|bombers?|anoraks?|gilets?|vests?|cagoules?|windbreakers?|harringtons?|shells?)\b/i],
+  ["Polos", /\b(knit polos?|polos?( shirts?)?|rugbys?( shirts?)?|rugby( jerseys?)?)\b/i],
+  ["Sweatshirts", /\b(sweatshirts?|hoodies?|hooded|hoody|loopback|crew ?sweats?|zip[- ]ups?|track ?tops?)\b/i],
+  ["T-shirts", /\b(d[ée]bardeurs?|longsleeves?|marini[eè]res?|tee-shirts?|t-?shirts?|tees?|henleys?|ringer|tank tops?|tanks?|thermals?|breton (shirts?|tops?))\b/i],
+  ["Knitwear", /\b(pulls?|pull-overs?|knitwear|lambswool|roll ?necks?|rollnecks?|sweaters?|cardigans?|jumpers?|knits?|knitted|crewnecks?|quarter[- ]zips?|half[- ]zips?|turtlenecks?|mock ?necks?|pullovers?|cashmere|merino|fair isle|cable|shetland|guernseys?|ganseys?)\b/i],
+  ["Shirts", /\b(button[- ]ups?|chemises?|wovens?|shirts?|oxfords?|popovers?|button[- ]downs?|camp collar|flannels?|chambray|spread)\b/i],
+  ["Jeans", /\b(jeans?|denim (pants?|trousers?)|5[- ]pockets?|five[- ]pockets?)\b/i],
+  ["Trousers", /\b(pantalons?|pants?|trousers?|chinos?|slacks|joggers?|sweatpants?|overalls|fatigues?|cargos?)\b/i],
+  ["Shoes", /\b(footwear|sneakers?|trainers?|shoes?|boots?|loafers?|sandals?|derbys?|derbies|moccasins?|mules?|slides|espadrilles?|clogs?|slippers?|oxfords? (shoes?|sneakers?)|tennis oxfords?|chukkas?|brogues?|monk ?straps?|wallabees?|flip[- ]flops?)\b/i],
+  ["Accessories", /\b(accessor(y|ies)|bucket hats?|hats?|caps?|beanies?|snapbacks?|strapbacks?|berets?|bags?|totes?|backpacks?|duffle bags?|duffel bags?|weekenders?|holdalls?|briefcases?|messenger|crossbody|sacoches?|pouch(es)?|dopp kits?|wash ?bags?|belts?|braces|suspenders|scarf|scarves|snoods?|gloves?|mittens?|bow ?ties?|neckties?|ties?(?![- ]?dye)|pocket squares?|cufflinks?|tie bars?|socks?|sunglasses|eyewear|optical|wallets?|card ?holders?|cardholders?|money clips?|bandanas?|neckerchiefs?)\b/i],
 ];
+function bestType(text){
+  let best = "", end = -1;
+  for (const [t, re] of TYPE_RULES){
+    const g = new RegExp(re.source, "gi");
+    let m;
+    while ((m = g.exec(text))){ const e = m.index + m[0].length; if (e > end){ end = e; best = t; } if (!m[0].length) g.lastIndex++; }
+  }
+  return best;
+}
+const BROAD_TYPE = /&|\/|\btops?\b|^(men'?s?|mens|clothing|apparel|general|lifestyle|new|sale|final sale|collection|default)$/i;
 function typeOf(p) {
-  const hay = [p.title, p.product_type].join(" ");
-  // A broad store type ("Men-Shirts & Tops") says less than the title ("Ribbed Slub Tee").
-  if (/&|\/|\btops?\b/i.test(p.product_type || "")) for (const [t, re] of TYPE_RULES) if (re.test(p.title || "")) return t;
-  for (const [t, re] of TYPE_RULES) if (re.test(p.product_type || "") ) return t;
-  for (const [t, re] of TYPE_RULES) if (re.test(hay)) return t;
-  if (/outerwear/i.test(p.product_type || "")) return "Jackets"; // only when the title didn't say (an "Outerwear" overshirt is an overshirt)
+  const pt = String(p.product_type || "").trim(), byType = pt && !BROAD_TYPE.test(pt) ? bestType(pt) : "";
+  const byTitle = bestType(p.title || "");
+  if (byType === "Shoes") return "Shoes"; // shoe names say oxford, derby, cap toe: the store's type is surer
+  if (byType === "Accessories") return byTitle === "Accessories" ? "Accessories" : ""; // an accessory we know, or nothing
+  if (byTitle && !(byTitle === "Accessories" && byType)) return byTitle; // the name is more precise ("Italian Wool Overshirt" filed as "Shirt")
+  if (byType) return byType;
+  if (/outerwear/i.test(pt)) return "Jackets"; // only when the name didn't say
   return "";
 }
 const FABRICS = ["oxford", "poplin", "linen", "seersucker", "chambray", "denim", "flannel", "madras", "gingham", "corduroy", "twill", "jersey", "pique", "terry", "cashmere", "merino", "wool", "silk", "suede", "leather", "canvas", "cotton", "fleece", "nylon", "herringbone", "tweed", "mohair", "boucle", "waffle", "velvet"];
@@ -204,7 +226,7 @@ for (const [si, s] of STORES.entries()) {
         const descText = textOf(p.body_html);
         const cut = cutOf([title, tags.join(" "), descText].join(" "));
         if (cut) item.ct = cut;
-        if (type === "Shorts"){ const ins = inseamOf(title) || inseamOf(descText); if (ins) item.is = ins; }
+        if (type === "Shorts" || type === "Swimwear"){ const ins = inseamOf(title) || inseamOf(descText); if (ins) item.is = ins; }
         if (fit && fit.length <= 20) item.ft = cap(fit);
         (byType[type] = byType[type] || []).push(item);
         mine.push(item);
