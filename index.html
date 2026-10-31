@@ -242,6 +242,14 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
 .screen.roomy .bottom.sticky{margin-left:-16px;margin-right:-16px;padding:16px 16px 0;background:linear-gradient(to bottom,rgba(238,240,243,0),var(--bg) 22px)}
 .chips.small{gap:6px}
 .chips.small .chip{height:38px;padding:0 13px;font-size:14px;border-radius:19px}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--card)}
+.seg button{min-height:48px;border:0;background:transparent;color:var(--muted);font-size:15px;font-weight:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:6px 8px}
+.seg button small{font-size:11.5px;font-weight:400}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.mode-note{margin:8px 2px 0;font-size:13px;line-height:1.4;color:var(--muted)}
+.brief{font-family:inherit;overflow-wrap:anywhere;margin:0;padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--bg);font-size:14px;line-height:1.5;color:var(--ink);white-space:pre-wrap;max-height:42vh;overflow:auto}
+.brief b{font-weight:700}
+.sold{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:1px 5px;margin-left:6px}
 .about-line .link-btn{min-height:32px;padding:0;font-size:14px}
 .fit-note{margin:0 6px;display:flex;gap:8px;align-items:center;font-size:13px;font-weight:600;color:#1E7A46}
 .fit-note.bad{color:var(--danger)}
@@ -367,7 +375,7 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "1.7.0";
+const APP_VERSION = "1.8.0";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
 const SERVER_EXPECTED = "1.1.0"; // the worker/worker.js version this app was built with
 
@@ -417,6 +425,9 @@ const STYLES = STYLE_GROUPS.flatMap((g) => g[1]);
 // What each style looks like in the catalog: store styles to favour (and not), stores, words to look for
 // in a piece and words to avoid. Read on the phone with the brands in your own words (BRAND_READS).
 const STYLE_READS = {
+  // Not a chip: read from your words ("wedding", "groom", "best man", "black tie").
+  "Wedding": {tags:["tailored","luxe","classic"], notTags:["streetwear","workwear","surf","sporty"], stores:["Huntsman","Richard James","Anglo-Italian","P Johnson","Saman Amel","Oliver Brown","Drake's","Turnbull & Asser","Husbands"],
+    words:["suit","tuxedo","dinner","waistcoat","three-piece","double-breasted","double breasted","peak lapel","shawl","silk","mohair","flannel","morning","formal","tie","bow tie","pocket square","dress shirt","cufflink","oxford"], avoid:["denim","jean","chore","work shirt","fleece","hoodie","sweatpant","jogger","hiking","cargo","graphic","camo","utility"]},
   "Relaxed": {tags:["relaxed"], words:["relaxed","easy","garment-dyed","linen","camp collar","drawstring","loose","unstructured"], avoid:["skinny"]},
   "Minimal": {tags:["minimal"], words:["essential","merino","poplin","plain","solid","organic","clean"], avoid:["graphic","logo","print","printed","camo","patch","embroidered"], notTags:["streetwear"]},
   "Smart-casual": {tags:["smart","classic","tailored"], words:["oxford","knit polo","merino","chino","suede","loafer","overshirt","cashmere","poplin","pleated"], avoid:["graphic","logo","distressed","camo","hoodie"]},
@@ -539,13 +550,17 @@ const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({"&":"
 
 /* ---------------- state ---------------- */
 let Q = load("query", {type:"", styles:[], text:""});
+if (!Q.mode) Q.mode = "style"; // "style": find a look (sold out pieces and every store too) · "shop": pieces you can buy now
+const styleMode = () => Q.mode !== "shop";
 let TASTE = load("taste", {w:{}, votes:[]});
 let PREFS = load("prefs", {budget:"any", size:"M", shoe:"43", shipIL:true});
 if (!PREFS.me) PREFS.me = {height:"", build:"", fit:""}; // About you (taste profile): what flatters you
+if (PREFS.me.skin === undefined){ PREFS.me.skin = "fair"; save("prefs", PREFS); } // you said: fair skin
 const ME_OPTS = {
   height:[["short", "Under 170 cm"], ["average", "170–182 cm"], ["tall", "Over 182 cm"]],
   build:[["slim", "Slim"], ["average", "Average"], ["athletic", "Athletic"], ["broad", "Broad"]],
   fit:[["slim", "Slimmer"], ["regular", "Regular"], ["relaxed", "Relaxed"]],
+  skin:[["fair", "Fair"], ["medium", "Medium"], ["olive", "Olive"], ["deep", "Deep"]],
 };
 const meLabel = (k) => { const v = PREFS.me[k], o = (ME_OPTS[k] || []).find((x) => x[0] === v); return o ? o[1] : ""; };
 let PICKS = load("picks", []);
@@ -577,7 +592,7 @@ function recordVote(idea, v, f, src){
   if (VAL[v]) for (const a of attrsOf(idea)){ const k = akey(a); TASTE.w[k] = (TASTE.w[k] || 0) + VAL[v] * f; }
   const rec = {id:idea.id, title:idea.title, tint:idea.tint, v, f, src, at:Date.now()};
   TASTE.votes.push(rec);
-  if (TASTE.votes.length > 600) TASTE.votes = TASTE.votes.slice(-600);
+  if (TASTE.votes.length > 3000) TASTE.votes = TASTE.votes.slice(-3000); // every answer stays: a piece you said no to doesn't come back
   save("taste", TASTE);
   return rec;
 }
@@ -939,18 +954,22 @@ function kindOf(p){
 
 const CAT = {stores:null, lists:{}};
 const CAT_TYPES = FILES;
-const typeFile = (t) => "catalog/" + t.toLowerCase().replace(/[^a-z]+/g, "-") + ".json";
+// The catalog lives on its own branch (catalog-data), rebuilt daily; the copy next to the app is the fallback.
+const CAT_REMOTE = "https://raw.githubusercontent.com/IsraelToledano/Clothes/catalog-data/catalog/";
+let CAT_BASE = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? "catalog/" : CAT_REMOTE;
+const typeFile = (t) => CAT_BASE + t.toLowerCase().replace(/[^a-z]+/g, "-") + ".json";
 function fromCat(x, type){
   const st = CAT.stores.stores[x.s] || {};
   // Catalog format 2 saves photos without the store's common folder ("ip"); format 1 has full addresses.
   const abs = (u) => (/^https?:\/\//.test(u) ? u : u.startsWith("//") ? "https:" + u : (st.ip || "") + u);
   const ims = (x.im || []).map(abs);
-  const p = {id:x.id, store:st.name, domain:st.d, brand:st.name, title:x.t, price:x.p, was:x.cp || 0, currency:st.cur, url:"https://" + st.d + "/products/" + x.h, image:sized(ims[0], 900), images:ims, type, ptype:x.pt || "", fabric:x.f || "", colour:x.c || "", fit:x.ft || "", tags:x.tg || [], sizes:x.sz || [], ct:x.ct || "", is:x.is || 0, ships:st.il, storeTags:st.tags || [], date:x.d || ""};
+  const p = {id:x.id, store:st.name, domain:st.d, brand:st.name, title:x.t, price:x.p, was:x.cp || 0, currency:st.cur, url:"https://" + st.d + "/products/" + x.h, image:sized(ims[0], 900), images:ims, type, ptype:x.pt || "", fabric:x.f || "", colour:x.c || "", fit:x.ft || "", tags:x.tg || [], sizes:x.sz || [], ct:x.ct || "", is:x.is || 0, ships:st.il, storeTags:st.tags || [], date:x.d || "", sold:!!x.x};
   p.kind = kindOf(p);
   return prepProduct(p);
 }
 async function loadStores(){
-  if (!CAT.stores) CAT.stores = await fetch("catalog/stores.json", {cache:"no-cache"}).then((r) => { if (!r.ok) throw new Error("The product catalog didn't load (" + r.status + ")"); return r.json(); });
+  const get = (base) => fetch(base + "stores.json", {cache:"no-cache"}).then((r) => { if (!r.ok) throw new Error("The product catalog didn't load (" + r.status + ")"); return r.json(); });
+  if (!CAT.stores) CAT.stores = await get(CAT_BASE).catch((e) => { if (CAT_BASE === "catalog/") throw e; CAT_BASE = "catalog/"; return get(CAT_BASE); });
   return CAT.stores;
 }
 // The longer details of a piece (the store's description, sold-out sizes, colours): in small files the
@@ -961,7 +980,7 @@ async function moreOf(i){
   const st = await loadStores().catch(() => null);
   if (!st || st.format !== 2) return null;
   const n = hashStr(i.id) % (st.chunks || 128);
-  if (!MORE[n]) MORE[n] = fetch("catalog/details/" + String(n).padStart(3, "0") + ".json").then((r) => (r.ok ? r.json() : {})).catch(() => { delete MORE[n]; return {}; });
+  if (!MORE[n]) MORE[n] = fetch(CAT_BASE + "details/" + String(n).padStart(3, "0") + ".json").then((r) => (r.ok ? r.json() : {})).catch(() => { delete MORE[n]; return {}; });
   const m = (await MORE[n])[i.id] || null;
   // Photos 4 to 8 live in the details file: add them to the piece (once), with the store's folder.
   if (m && m.mi && !m._abs){
@@ -1010,6 +1029,14 @@ function briefRead(){
     for (const t of r.notTags || []) out.notTags[t] = (out.notTags[t] || 0) + 1;
     out.words.push(...(r.words || [])); out.avoid.push(...(r.avoid || []));
   }
+  if (textMe().occasion === "wedding"){
+    const r = STYLE_READS.Wedding;
+    out.styles.push("Wedding");
+    for (const st of r.stores) out.stores[st] = Math.max(out.stores[st] || 0, 2);
+    for (const t of r.tags) out.tags[t] = (out.tags[t] || 0) + 2;
+    for (const t of r.notTags) out.notTags[t] = (out.notTags[t] || 0) + 1.5;
+    out.words.push(...r.words); out.avoid.push(...r.avoid);
+  }
   for (const b of BRAND_READS) if (b.re.test(text)){
     out.brands.push(b.name);
     (b.stores || []).forEach((st, k) => { out.stores[st] = Math.max(out.stores[st] || 0, k ? 1.5 : 3); });
@@ -1049,9 +1076,71 @@ const CROPPY = /\b(cropped|crop)\b/;
 const SHORT_JACKETS = new Set(["Bomber", "Harrington", "Denim & trucker", "Suede & leather"]);
 const BIGGISH = /\b(oversized|boxy|baggy|wide[- ]leg|wide fit|big shirt|loose|drop[- ]shoulder|balloon)\b/;
 const TRIMMISH = /\b(slim|trim|tailored|tapered|fitted|skinny)\b/;
+// What your own words say about you, for this search only (they win over About you): "184 cm / 95 kg",
+// "5'7", "fair skin", "I'm the groom's brother".
+function textMe(){
+  const t = String(Q.text || "").toLowerCase();
+  if (S.tme && S.tme.key === t) return S.tme;
+  const out = {key:t};
+  let cm = 0, m;
+  if ((m = /\b(1[4-9]\d|2[0-2]\d)\s*cm\b/.exec(t))) cm = +m[1];
+  else if ((m = /\b1[.,](\d{2})\s*m\b/.exec(t))) cm = 100 + +m[1];
+  else if ((m = /\b([4-7])\s*(?:'|’|ft|foot|feet)\s*(\d{1,2})?/.exec(t))) cm = Math.round((+m[1] * 12 + (+m[2] || 0)) * 2.54);
+  let kg = 0;
+  if ((m = /\b(\d{2,3})\s*(?:kg|kilo)/.exec(t))) kg = +m[1];
+  else if ((m = /\b(\d{2,3})\s*(?:lb|lbs|pounds)\b/.exec(t))) kg = Math.round(+m[1] * 0.4536);
+  if (cm){ out.cm = cm; out.height = cm < 170 ? "short" : cm <= 182 ? "average" : "tall"; }
+  if (kg){ out.kg = kg; const bmi = kg / Math.pow((cm || 175) / 100, 2); out.build = bmi < 20.5 ? "slim" : bmi < 25 ? "average" : "broad"; }
+  if (/\b(white|fair|pale|light|porcelain)[\s-]+skin|\bskin\b[^.,;]{0,20}\b(fair|pale|white|light)\b/.test(t)) out.skin = "fair";
+  else if (/\bolive[\s-]+skin|\bskin\b[^.,;]{0,20}\bolive\b/.test(t)) out.skin = "olive";
+  else if (/\b(dark|black|brown|deep)[\s-]+skin|\bskin\b[^.,;]{0,20}\b(dark|deep)\b/.test(t)) out.skin = "deep";
+  else if (/\b(tan|tanned|medium)[\s-]+skin/.test(t)) out.skin = "medium";
+  if (/\b(wedding|groom|groom'?s|best man|bride|bride'?s|black tie|black-tie|gala|engagement party)\b/.test(t)) out.occasion = "wedding";
+  return (S.tme = out);
+}
+// About you, with what your words say in this search on top.
+function meNow(){
+  const t = textMe(), me = Object.assign({}, PREFS.me || {});
+  for (const k of ["height", "build", "skin"]) if (t[k]) me[k] = t[k];
+  me.fromText = !!(t.height || t.build || t.skin);
+  me.bodyFromText = !!((t.height && t.height !== (PREFS.me || {}).height) || (t.build && t.build !== (PREFS.me || {}).build));
+  return me;
+}
+function textMeLine(){
+  const t = textMe(), l = [];
+  if (t.cm) l.push(t.cm + " cm (" + {short:"under 170", average:"170–182", tall:"over 182"}[t.height] + ")");
+  if (t.kg) l.push(t.kg + " kg (" + t.build + " build)");
+  if (t.skin) l.push(t.skin + " skin");
+  if (t.occasion) l.push("for a wedding");
+  return l.join(" · ");
+}
+// Colours near your face for your skin: for fair skin, deep and cool colours (navy, charcoal, burgundy,
+// bottle green, cobalt, light blue, pink) give contrast; pale warm ones (beige, sand, khaki, mustard) can
+// wash it out. Only for pieces worn near the face; never against a colour style you picked.
+const NEAR_FACE = new Set(["Shirts", "T-shirts", "Polos", "Knitwear", "Sweatshirts", "Overshirts", "Jackets", "Coats", "Blazers", "Suits"]);
+const SKIN = {
+  fair:{good:/\b(navy|midnight|charcoal|burgundy|wine|oxblood|claret|bordeaux|maroon|bottle green|forest|forest green|emerald|racing green|hunter green|cobalt|royal blue|sky blue|light blue|pale blue|powder blue|french blue|blue|plum|aubergine|teal|petrol|pink|rose|lavender|grey|gray|slate)\b/,
+        bad:/\b(beige|sand|khaki|oatmeal|stone|taupe|mustard|yellow|orange|nude|tan|camel|biscuit|mushroom|putty|fawn|wheat|butter)\b/, good_t:"suits fair skin", bad_t:"can wash out fair skin"},
+  olive:{good:/\b(burgundy|wine|navy|cream|ecru|white|rust|terracotta|teal|cobalt|charcoal|chocolate|brown)\b/, bad:/\b(olive|khaki|mustard|yellow|lime|chartreuse|army)\b/, good_t:"suits olive skin", bad_t:"can look flat on olive skin"},
+};
+function skinFor(p, me){
+  const r = SKIN[me.skin], out = {s:0, good:"", bad:""};
+  if (!r || !isProduct(p)) return out;
+  const near = NEAR_FACE.has(p.type) || (p.type === "Accessories" && /^(Scarves|Ties)/.test(p.kind || ""));
+  if (!near) return out;
+  let c = String(p.colour || "").toLowerCase();
+  if (!c){ const tail = /\s[-–:|]\s([^-–:|]+)$/.exec(p.title || ""); c = (tail ? tail[1] : String(p.title || "")).toLowerCase().replace(/stone island|sand-?washed|stonewash(ed)?|tan(ned)? leather/g, " "); }
+  const want = briefRead().words;
+  const g = r.good.exec(c), b = r.bad.exec(c);
+  if (b && g) return out; // "Navy Khaki Plaid": both; neither note
+  if (b && !want.includes(b[1])){ out.s = -1.5; out.bad = cap(b[1]) + " " + r.bad_t; }
+  else if (g){ out.s = 1; out.good = cap(g[1]) + " " + r.good_t; }
+  return out;
+}
 function fitForMe(p){
-  const me = PREFS.me || {}, out = {s:0, good:"", bad:""};
-  if (!isProduct(p) || p.type === "Shoes" || p.type === "Accessories") return out;
+  const me = meNow(), out = {s:0, good:"", bad:""};
+  const sk = skinFor(p, me);
+  if (!isProduct(p) || p.type === "Shoes" || p.type === "Accessories") return sk;
   const t = (p.title + " " + (p.fit || "") + " " + (p.tags || []).join(" ")).toLowerCase(), ct = p.ct || "";
   const coat = ["Jackets", "Coats", "Blazers", "Overshirts", "Knitwear", "Sweatshirts"].includes(p.type);
   const long = coat && (ct.includes("L") || LONGISH.test(t) || (p.type === "Coats" && ["Overcoat & topcoat", "Trench & mac"].includes(p.kind)));
@@ -1071,11 +1160,14 @@ function fitForMe(p){
   if (me.fit === "slim"){ if (trim) add(1.5, "the slimmer fit you like"); else if (big) add(-2, "looser than you like"); }
   if (me.fit === "relaxed"){ if (relaxed || big) add(1, "the relaxed fit you like"); else if (/\bskinny\b/.test(t)) add(-1.5, "tighter than you like"); }
   if (me.fit === "regular" && big) add(-1, "looser than you like");
+  if (sk.s) add(sk.s, sk.s > 0 ? sk.good : sk.bad);
   // Your size: letter sizes in stock (S, M, L...) without yours count against a piece; it can't be bought.
-  const mine = String(p.type === "Shoes" || !PREFS.sizeSet ? "" : PREFS.size || "").toUpperCase(), sz = (p.sizes || []).map((x) => String(x).toUpperCase());
+  // Only when shopping (an idea for your tailor has no size), and not when your words describe another body.
+  const mine = String(p.type === "Shoes" || !PREFS.sizeSet || styleMode() || me.bodyFromText ? "" : PREFS.size || "").toUpperCase(), sz = (p.sizes || []).map((x) => String(x).toUpperCase());
   if (mine && sz.length && sz.some((x) => /^(XXS|XS|S|M|L|XL|XXL|XXXL|2XL|3XL)$/.test(x)) && !sz.includes(mine)) add(-3, "not in your size (" + mine + ")");
   return out;
 }
+const cap = (x) => (x ? x[0].toUpperCase() + x.slice(1) : "");
 const WORD_RE = new Map();
 function wordIn(hay, w){
   let re = WORD_RE.get(w);
@@ -1083,9 +1175,13 @@ function wordIn(hay, w){
   return re.test(hay);
 }
 function fitScore(p, ctx){
-  if (PREFS.shipIL && p.ships === false) return -Infinity;
-  const b = BUDGETS_ILS[PREFS.budget];
-  if (b && (ils(p) < b[0] || ils(p) > b[1])) return -Infinity;
+  if (!ctx.style){
+    // Shopping: in stock, ships to Israel (if you asked), in your budget. Finding a style: everything.
+    if (p.sold) return -Infinity;
+    if (PREFS.shipIL && p.ships === false) return -Infinity;
+    const b = BUDGETS_ILS[PREFS.budget];
+    if (b && (ils(p) < b[0] || ils(p) > b[1])) return -Infinity;
+  }
   const hay = (p.title + " " + p.ptype + " " + p.tags.join(" ") + " " + p.kind + " " + (p.fabric || "") + " " + (p.colour || "")).toLowerCase();
   let s = p.storeTags.reduce((a, t) => a + (ctx.tags[t] || 0) - (ctx.brief.notTags[t] || 0), 0) * 1.2;
   s += Math.max(ctx.brief.stores[p.store] || 0, ctx.named.has(p.store) ? 3 : 0); // a store you named, or one that fits a brand you named
@@ -1107,6 +1203,17 @@ function fitScore(p, ctx){
 const BUDGETS_ILS = {"u200":[0,200], "200-400":[200,400], "400+":[400,1e9]};
 
 // Fill the queue from the catalog: best fits first, but never the same store or kind of piece twice in a row.
+// Pieces you've answered in any search (a left swipe means no): they don't come back, nor other colours
+// of the same model. Only when a category runs out do ones you passed on return, oldest first; never hearts.
+function pastAnswers(){
+  const n = TASTE.votes.length + (LIKED || []).length;
+  if (S.past && S.past.n === n && S.past.pool === S.pool) return S.past;
+  const at = new Map(), hated = new Set();
+  for (const v of TASTE.votes){ if (!at.has(v.id)) at.set(v.id, v.at || 0); if (v.v === "hate" || v.v === "like" || v.v === "love") hated.add(v.id); }
+  for (const x of LIKED || []){ at.set(x.id, 0); hated.add(x.id); }
+  const items = (S.pool || []).filter((p) => at.has(p.id));
+  return (S.past = {n, pool:S.pool, at, keep:hated, items, keys:new Set(items.map(pieceKey))});
+}
 function refill(){
   if (!S.pool) return;
   // Keep the card on deck and any "more like" pieces from a heart; re-rank everything else.
@@ -1114,15 +1221,26 @@ function refill(){
   const ids = new Set(S.round.votes.map((v) => v.id).concat(keep.map((i) => i.id), S.current ? [S.current.id] : []));
   const norm = (x) => String(x || "").toLowerCase().replace(/[^a-z0-9]/g, ""), said = norm(Q.text);
   const named = new Set(((CAT.stores && CAT.stores.stores) || []).map((x) => x.name).filter((n) => norm(n).length > 3 && said.includes(norm(n))));
-  const ctx = {tags:briefTags(), brief:briefRead(), named, sig:textSignals(Q.text), recent:new Date(Date.now() - 120 * 864e5).toISOString().slice(0, 10)};
-  // Never the same piece twice in a search, in any colour.
+  const ctx = {tags:briefTags(), brief:briefRead(), named, sig:textSignals(Q.text), recent:new Date(Date.now() - 120 * 864e5).toISOString().slice(0, 10), style:styleMode()};
+  // Never the same piece twice in a search, in any colour; nor one you answered in an earlier search.
+  const past = pastAnswers();
   const seenK = new Set(S.round.votes.map(seenKey).concat(keep.map(pieceKey), S.current ? [pieceKey(S.current)] : []));
-  const cands = [];
-  for (const p of S.pool) if (!ids.has(p.id) && !seenK.has(pieceKey(p))){ const sc = fitScore(p, ctx); if (sc > -Infinity) cands.push([p, sc]); }
+  let cands = [];
+  const scoreIn = (p) => { const sc = fitScore(p, ctx); if (sc > -Infinity) cands.push([p, sc]); };
+  for (const p of S.pool) if (!ids.has(p.id) && !seenK.has(pieceKey(p)) && !past.at.has(p.id) && !past.keys.has(pieceKey(p))) scoreIn(p);
+  S.round.recycled = false;
+  if (cands.length < 24){
+    // You've seen almost all of this category: the ones you passed on ("not now") come back, oldest first.
+    const back = past.items.filter((p) => !past.keep.has(p.id) && !ids.has(p.id) && !seenK.has(pieceKey(p))).sort((a, b) => past.at.get(a.id) - past.at.get(b.id));
+    const n0 = cands.length;
+    back.forEach(scoreIn);
+    for (let k = n0; k < cands.length; k++) cands[k][1] -= 50 + k * 0.01; // after every new piece
+    S.round.recycled = cands.length > n0;
+  }
   cands.sort((a, b) => b[1] - a[1]);
-  const top = cands.slice(0, 400), out = [];
+  const top = cands.slice(0, 500), out = [];
   const recent = [S.current].concat(keep).filter(Boolean);
-  const seenF = S.round.votes.map((v) => byId(v.id)).filter(Boolean).concat(recent);
+  const seenF = S.round.votes.map((v) => byId(v.id)).filter(Boolean).concat(recent, S.round.recycled ? [] : past.items);
   const perStore = {}, perMaker = {};
   while (out.length < 36 && top.length){
     const last = recent.concat(out).slice(-3), prev = last[last.length - 1];
@@ -1235,11 +1353,12 @@ function takeNext(){
 function converge(i){
   if (!S.pool) return;
   S.hunt = i; S.huntAt = S.round.votes.length;
-  const ids = new Set(shownIdeas().map((x) => x.id).concat(S.round.votes.map((v) => v.id)));
+  const past = pastAnswers();
+  const ids = new Set(shownIdeas().map((x) => x.id).concat(S.round.votes.map((v) => v.id), [...past.at.keys()]));
   const tw = titleWords(i);
   const sim = (p) => (p.kind === i.kind ? 3 : 0) + (p.fabric && p.fabric === i.fabric ? 2 : 0) + (p.colour && p.colour === i.colour ? 1 : 0) + (p.store === i.store ? 1 : 0)
     + Math.min(3, [...titleWords(p)].filter((w) => tw.has(w)).length) + (Math.abs(p.price - i.price) < i.price * 0.35 ? 0.5 : 0);
-  const close = S.pool.filter((p) => !ids.has(p.id) && p.id !== i.id && (!PREFS.shipIL || p.ships !== false)).map((p) => [p, sim(p) + (hashStr(S.roundId + p.id) % 100) / 200]).sort((a, b) => b[1] - a[1]);
+  const close = S.pool.filter((p) => !ids.has(p.id) && p.id !== i.id && !past.keys.has(pieceKey(p)) && (styleMode() || (!p.sold && (!PREFS.shipIL || p.ships !== false)))).map((p) => [p, sim(p) + (hashStr(S.roundId + p.id) % 100) / 200]).sort((a, b) => b[1] - a[1]);
   const pick = [], stores = {};
   const titles = new Set([pieceKey(i)].concat(S.round.votes.map(seenKey), S.queue.slice(0, ON_DECK).map(pieceKey)));
   const seenF = S.round.votes.map((v) => byId(v.id)).filter(Boolean).concat([i], S.queue.slice(0, ON_DECK));
@@ -1355,12 +1474,16 @@ function renderStart(){
   return `<main class="screen roomy" aria-labelledby="start-h">
     <header class="top"><span class="brand"><span class="wordmark">drape</span><button type="button" class="ver" data-act="refresh" aria-label="Update the app (version ${APP_VERSION})">v${APP_VERSION} ${ICON.refresh}</button></span>${hbtns(true)}</header>
     <h1 id="start-h" class="h1">What are you looking for today?</h1>
+    <div><div class="seg" role="group" aria-label="What for">
+        <button type="button" data-act="mode" data-v="style" aria-pressed="${styleMode()}">Find a style<small>ideas for your tailor</small></button>
+        <button type="button" data-act="mode" data-v="shop" aria-pressed="${!styleMode()}">Shop<small>pieces to buy now</small></button></div>
+      <p class="mode-note">${styleMode() ? `Every piece we find, sold out too, from ${CAT.stores ? CAT.stores.stores.length : "100+"} stores anywhere. Pick the look; have it made.` : `Only pieces in stock${PREFS.shipIL ? " that ship to Israel" : ""}${PREFS.budget && PREFS.budget !== "any" ? ", in your budget" : ""}${PREFS.sizeSet ? ", in your size first" : ""}.`}</p></div>
     <div><label class="label" for="cat">What kind of piece</label>
       <div class="select-wrap"><select id="cat" class="select">
         <option value="Surprise me"${!Q.type || Q.type === "Surprise me" ? " selected" : ""}>Anything · surprise me</option>
         ${CATEGORIES.map(([g, l]) => `<optgroup label="${esc(g)}">${l.map(([id, lab]) => `<option value="${esc(id)}"${Q.type === id ? " selected" : ""}>${esc(lab || id)}</option>`).join("")}</optgroup>`).join("")}
       </select>${ICON.fwd}</div>
-      <p class="about-line">${PREFS.me.height || PREFS.me.build || PREFS.me.fit ? `For you: ${esc([meLabel("height"), meLabel("build"), meLabel("fit") && meLabel("fit") + " fit", PREFS.sizeSet ? "size " + PREFS.size : ""].filter(Boolean).join(" · "))} · <button type="button" class="link-btn" data-act="about">Change</button>` : `<button type="button" class="link-btn" data-act="about">Add your height and build</button> so suggestions suit you`}</p>
+      <p class="about-line">${PREFS.me.height || PREFS.me.build || PREFS.me.fit || PREFS.me.skin ? `For you: ${esc([meLabel("height"), meLabel("build"), meLabel("fit") && meLabel("fit") + " fit", PREFS.sizeSet ? "size " + PREFS.size : "", PREFS.me.skin ? meLabel("skin").toLowerCase() + " skin" : ""].filter(Boolean).join(" · "))} · <button type="button" class="link-btn" data-act="about">Change</button>` : `<button type="button" class="link-btn" data-act="about">Add your height and build</button> so suggestions suit you`}</p>
     </div>
     ${STYLE_GROUPS.map(([g, list], k) => `<fieldset><legend class="label">${esc(g)} <span class="hint">· pick any${k ? "" : (Q.styles.length ? " · " + Q.styles.length + " picked" : "")}</span></legend><div class="chips small">${list.map((s) => { const on = Q.styles.includes(s); return `<button type="button" class="chip" data-act="style" data-v="${esc(s)}" aria-pressed="${on}">${on ? ICON.check : ""}${esc(s)}</button>`; }).join("")}</div></fieldset>`).join("")}
     <div><label class="label" for="txt">In your own words <span class="hint">· optional</span></label><textarea id="txt" rows="3" placeholder="e.g. something light to throw over a tee on summer evenings, nothing too sporty">${esc(Q.text)}</textarea></div>
@@ -1481,21 +1604,23 @@ function renderExplore(){
       </div>
     </article>
     <section class="card-info">
-      <p class="card-meta"><span class="mono-label">${esc(pr ? (i.brand && i.brand !== i.store ? i.brand + " · " + i.store : i.store) : (isAI(i) ? "AI idea · not a real product" : "Sample idea · not a real product"))}</span>${pr ? `<span class="card-price">${priceHtml(i)}${i.was > i.price ? ` <span class="sale">−${Math.round((1 - i.price / i.was) * 100)}%</span>` : ""}</span>` : ""}</p>
+      <p class="card-meta"><span class="mono-label">${esc(pr ? (i.brand && i.brand !== i.store ? i.brand + " · " + i.store : i.store) : (isAI(i) ? "AI idea · not a real product" : "Sample idea · not a real product"))}</span>${pr ? `<span class="card-price">${priceHtml(i)}${i.sold ? `<span class="sold">Sold out</span>` : i.was > i.price ? ` <span class="sale">−${Math.round((1 - i.price / i.was) * 100)}%</span>` : ""}</span>` : ""}</p>
       <h1 id="idea-t" class="idea-title">${esc(i.title)}</h1>
       ${pr ? "" : `<p class="idea-desc">${esc(i.desc)}</p>`}
       ${b ? `<span class="because">${esc(b)}</span>` : ""}
     </section>
     ${voteBtns(false)}
-    <div class="acts three"><button type="button" class="outline-btn back-btn" data-act="prev"${prevVote() ? "" : " disabled"} aria-label="Back to the previous piece">${ICON.prev}</button><button type="button" class="outline-btn save-btn${isSaved(i.id) ? " on" : ""}" data-act="save" aria-pressed="${isSaved(i.id)}">${isSaved(i.id) ? ICON.marked + "Saved" : ICON.mark + "Save"}</button><button type="button" class="outline-btn" data-act="pick">${ICON.bag}This is it</button></div>
+    <div class="acts three"><button type="button" class="outline-btn back-btn" data-act="prev"${prevVote() ? "" : " disabled"} aria-label="Back to the previous piece">${ICON.prev}</button><button type="button" class="outline-btn save-btn${isSaved(i.id) ? " on" : ""}" data-act="save" aria-pressed="${isSaved(i.id)}">${isSaved(i.id) ? ICON.marked + "Saved" : ICON.mark + "Save"}</button><button type="button" class="outline-btn" data-act="pick">${styleMode() && pr ? ICON.check + "My style" : ICON.bag + "This is it"}</button></div>
     ${S.round.votes.length < 3 ? `<p class="hint-line">Swipe the photo: ← not now · getting closer →. Tap its sides for more photos, its middle to zoom. Scroll down for details.</p>` : ""}
+    ${S.round.votes.length < 3 && textMeLine() ? `<p class="hint-line">From your words, this search: ${esc(textMeLine())}. About you stays as it is.</p>` : ""}
+    ${S.round.recycled ? `<p class="insight-line">${ICON.refresh}<span>You've seen every new piece here; these are ones you passed on before</span></p>` : ""}
     ${insight ? `<p class="insight-line">${ICON.sliders}<span>${esc(insight)}</span></p>` : ""}
     ${(() => { const f = fitForMe(i); return f.bad ? `<p class="fit-note bad">${ICON.sliders}<span>${esc(f.bad[0].toUpperCase() + f.bad.slice(1))}</span></p>` : f.good ? `<p class="fit-note">${ICON.check}<span>${esc(f.good[0].toUpperCase() + f.good.slice(1))}</span></p>` : ""; })()}
     <section class="card-more" aria-label="More about it">
       ${np > 1 ? `<div class="dt-sec"><span class="mono-label">All ${np} photos</span><div class="dt-thumbs flat" role="group" aria-label="All photos">${photosOf(i).map((u, j) => `<button type="button" class="dt-thumb" data-act="card-photo" data-v="${j}" aria-label="Show photo ${j + 1}" aria-current="${j === k}"><img src="${esc(pr ? sized(u, 160) : u)}" alt="" loading="lazy"></button>`).join("")}</div></div>` : ""}
       ${specs.length ? `<dl class="specs">${specs.map(([x, y]) => `<div><dt>${x}</dt><dd>${esc(y)}</dd></div>`).join("")}</dl>` : ""}
       ${pr ? `<div id="card-more-in" class="more-in">${moreHtml(i)}</div>
-      <p class="small-note" style="text-align:left">${[i.ships === true ? "Ships to Israel" : i.ships === false ? "Doesn't ship to Israel" : "", "Prices in " + (i.currency || "USD"), "From the store's site, refreshed daily"].filter(Boolean).join(" · ")}</p>
+      <p class="small-note" style="text-align:left">${[i.sold ? "Sold out at the store: an idea for your tailor" : "", i.ships === true ? "Ships to Israel" : i.ships === false ? "Doesn't ship to Israel" : "", "Prices in " + (i.currency || "USD"), "From the store's site, refreshed daily"].filter(Boolean).join(" · ")}</p>
       <button type="button" class="outline-btn filled" data-act="card-similar">Find similar in other stores</button>` : ""}
     </section>
   </main>`;
@@ -1552,7 +1677,7 @@ function renderDetail(){
       ${card ? "" : `<button type="button" class="outline-btn${saved ? "" : " filled"} save-btn${saved ? " on" : ""}" data-act="dt-save" aria-pressed="${saved}" style="width:100%">${saved ? ICON.marked + "Saved · tap to remove" : ICON.mark + "Save"}</button>`}
       ${specs.length ? `<dl class="specs">${specs.map(([a, b]) => `<div><dt>${a}</dt><dd>${esc(b)}</dd></div>`).join("")}</dl>` : ""}
       ${pr ? `<div id="dt-more">${moreHtml(i)}</div>` : ""}
-      ${pr ? `<p class="small-note" style="text-align:left">${[i.ships === true ? "Ships to Israel" : i.ships === false ? "Doesn't ship to Israel" : "", "Prices in " + (i.currency || "USD"), "From the store's site, refreshed daily"].filter(Boolean).join(" · ")}</p>
+      ${pr ? `<p class="small-note" style="text-align:left">${[i.sold ? "Sold out at the store: an idea for your tailor" : "", i.ships === true ? "Ships to Israel" : i.ships === false ? "Doesn't ship to Israel" : "", "Prices in " + (i.currency || "USD"), "From the store's site, refreshed daily"].filter(Boolean).join(" · ")}</p>
       <button type="button" class="outline-btn filled" data-act="dt-similar">Find similar in other stores</button>` : ""}
     </div>
   </div>
@@ -1827,6 +1952,7 @@ function renderSaved(){
 }
 
 function renderProductSheet(i){
+  if (styleMode()) return renderStyleSheet(i);
   return `<div class="scrim" data-act="scrim"><section class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-t">
     <span class="grab" aria-hidden="true"></span>
     <div class="picked"><span class="thumb" style="background:#fff">${thumbImg(i.id)}</span><div style="display:flex;flex-direction:column;gap:3px;min-width:0"><span class="mono-label" style="color:var(--accent)">You picked</span><h2 id="sheet-t">${esc(i.title)}</h2><span class="sub">${esc(money(i.price, i.currency) + " · " + i.store)}</span></div></div>
@@ -1834,6 +1960,67 @@ function renderProductSheet(i){
       <a class="cta" href="${esc(i.url)}" target="_blank" rel="noopener" data-act="open-product">Open at ${esc(i.store)} ${ICON.ext}</a>
       <button type="button" class="outline-btn" data-act="shop">Find similar in other stores</button>
       <button type="button" class="link-btn" data-act="sheet-close">Not yet — keep exploring</button>
+    </div>
+  </section></div>`;
+}
+// "My style": the piece is saved, and a brief for your tailor: what it is, in a tailor's words (from its name
+// and the store's description), and how to cut it for you. Copy or share it with the photos' link.
+const BRIEF_DETAILS = [
+  [/double[- ]breasted/, "double-breasted"], [/single[- ]breasted/, "single-breasted"], [/peak(ed)? lapels?/, "peak lapels"], [/notch(ed)? lapels?/, "notch lapels"],
+  [/shawl/, "shawl collar"], [/three[- ]piece|3[- ]piece|waistcoat|vest\b/, "with a waistcoat"], [/\b(two|2)[- ]button/, "two buttons"], [/3[- ]roll[- ]2|three[- ]roll[- ]two/, "3-roll-2 front"],
+  [/\b(one|1)[- ]button/, "one button"], [/\b(three|3)[- ]button/, "three buttons"], [/sack (model|coat|suit)|\bsack\b/, "an undarted sack cut"], [/unstructured|deconstructed|unlined/, "soft and unstructured"], [/half[- ]lined/, "half-lined"],
+  [/patch pockets?/, "patch pockets"], [/flap pockets?/, "flap pockets"], [/jetted|besom/, "jetted pockets"], [/ticket pocket/, "a ticket pocket"],
+  [/side vents|double vents?|twin vents?/, "side vents"], [/cent(re|er) vent|single vent/, "a centre vent"], [/natural shoulder|soft shoulder|spalla camicia|shirt shoulder/, "a soft natural shoulder"],
+  [/roped shoulder|con rollino/, "roped shoulders"], [/double[- ]pleat|two pleats/, "double pleats"], [/single[- ]pleat|pleated|pleats/, "pleats"], [/flat[- ]front/, "flat front"],
+  [/side adjusters?|gurkha/, "side adjusters"], [/turn[- ]?ups?|cuffed hem/, "turn-ups"], [/high[- ]rise|high[- ]waist/, "a high rise"], [/tapered/, "a tapered leg"], [/straight leg/, "a straight leg"], [/wide[- ]leg/, "a wide leg"],
+  [/button[- ]down/, "button-down collar"], [/spread collar|cutaway/, "spread collar"], [/camp collar|cuban collar|revere/, "camp collar"], [/band collar|grandad|mandarin/, "band collar"],
+  [/club collar|penny collar|rounded collar/, "club collar"], [/popover/, "popover front"], [/french cuffs?|double cuffs?/, "double cuffs"], [/raglan/, "raglan sleeves"],
+  [/cable/, "cable knit"], [/half[- ]zip|quarter[- ]zip/, "half zip"], [/shawl collar cardigan|cardigan/, "cardigan front"], [/crew ?neck/, "crew neck"], [/v[- ]neck/, "V-neck"], [/roll ?neck|turtle ?neck/, "roll neck"],
+];
+const BRIEF_CLOTH = /\b(wool|flannel|tweed|linen|cotton|cashmere|mohair|silk|seersucker|corduroy|cord|moleskin|velvet|hopsack|fresco|gabardine|twill|denim|chambray|oxford|poplin|jersey|merino|alpaca|lambswool|shetland|suede|leather|herringbone|houndstooth|prince of wales|glen check|pinstripe|chalk ?stripe|birdseye|nailhead|sharkskin|serge|barathea|melange|boucl[eé]|donegal)\b/g;
+const BRIEF_MILLS = /\b(vitale barberis canonico|vbc|loro piana|holland (&|and) sherry|dormeuil|zegna|reda|fox brothers|harrisons|abraham moon|thomas mason|albini|canclini|drago|marling (&|and) evans|lovat|caccioppoli|ariston|solbiati|delfino|fintes|carlo barbera|tollegno|guabello|baird mcnutt|moon)\b/;
+function tailorBrief(i){
+  const m = S.more[i.id] || null, desc = (m && m.d) || "";
+  const t = (i.title + " " + (i.ptype || "") + " " + (i.tags || []).join(" ") + " " + desc).toLowerCase();
+  const me = meNow(), tm = textMe(), L = [];
+  L.push("Like this: " + i.title + " (" + (i.brand && i.brand !== i.store ? i.brand + ", " : "") + i.store + ")");
+  L.push("Photos: " + i.url);
+  L.push("");
+  L.push("Piece: " + [i.kind && i.kind !== i.type ? i.kind : "", i.type].filter(Boolean).join(" · "));
+  const cloth = uniq([i.fabric.toLowerCase()].concat(t.match(BRIEF_CLOTH) || []).filter(Boolean)).slice(0, 4);
+  const mill = BRIEF_MILLS.exec(t), gsm = /\b(\d{3})\s*(g|gsm|grams?|gr)\b/.exec(t);
+  if (i.colour || cloth.length) L.push("Cloth: " + [i.colour, cloth.join(", "), mill ? "from " + mill[1].replace(/\b\w/g, (c) => c.toUpperCase()) : "", gsm ? "about " + gsm[1] + " g" : ""].filter(Boolean).join(" · "));
+  const det = uniq(BRIEF_DETAILS.filter(([re]) => re.test(t)).map((x) => x[1])).slice(0, 7);
+  if (det.length) L.push("Details: " + det.join(", "));
+  const cut = [], top = !["Trousers", "Jeans", "Shorts", "Swimwear", "Shoes", "Accessories"].includes(i.type), legs = ["Trousers", "Jeans", "Suits", "Shorts"].includes(i.type);
+  if (tm.cm || tm.kg) cut.push("I'm " + [tm.cm ? tm.cm + " cm" : "", tm.kg ? tm.kg + " kg" : ""].filter(Boolean).join(", "));
+  if (me.height === "short"){ if (top) cut.push("jacket length just covering the seat, a slightly higher button stance and moderate lapels, so the line stays long"); if (legs) cut.push("trousers with little or no break, mid to high rise"); if (i.type === "Coats") cut.push("coat above the knee"); }
+  if (me.height === "tall"){ if (top) cut.push("long enough to cover the seat fully; sleeves to show a little cuff"); if (legs) cut.push("a slight break"); }
+  if (me.build === "slim") cut.push("close through the chest and waist without pulling; a little structure in the shoulder");
+  if (me.build === "broad") cut.push("room through the chest and shoulders; a clean straight leg, not skinny");
+  if (me.build === "athletic") cut.push("room for the chest and thighs, taken in at the waist");
+  if (me.fit === "slim") cut.push("a trim fit overall"); if (me.fit === "relaxed") cut.push("an easy, relaxed fit");
+  if (cut.length) L.push("Cut for me: " + cut.join("; "));
+  const sk = skinFor(i, me);
+  if (sk.bad) L.push("Colour: " + sk.bad + "; consider it in navy, charcoal or a deeper shade");
+  else if (sk.good) L.push("Colour: " + sk.good);
+  if (tm.occasion === "wedding") L.push("For a wedding (family of the groom)");
+  if (desc){ const d = desc.replace(/\s+/g, " ").trim(); L.push(""); L.push("From the store: " + (d.length > 320 ? d.slice(0, 317).replace(/\s\S*$/, "") + "…" : d)); }
+  return L.join("\n");
+}
+function renderStyleSheet(i){
+  if (S.more[i.id] === undefined && !S.briefLoading){ S.briefLoading = true; moreOf(i).then((m) => { S.more[i.id] = m || null; }).catch(() => { S.more[i.id] = null; }).finally(() => { S.briefLoading = false; if (S.sheet) render(); }); }
+  const text = tailorBrief(i);
+  return `<div class="scrim" data-act="scrim"><section class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-t">
+    <span class="grab" aria-hidden="true"></span>
+    <div class="picked"><span class="thumb" style="background:#fff">${thumbImg(i.id)}</span><div style="display:flex;flex-direction:column;gap:3px;min-width:0"><span class="mono-label" style="color:var(--accent)">Your style · saved</span><h2 id="sheet-t">${esc(i.title)}</h2><span class="sub">${esc(i.store + (i.sold ? " · sold out" : " · " + money(i.price, i.currency)))}</span></div></div>
+    <span class="mono-label">Brief for your tailor</span>
+    <pre class="brief" id="brief">${esc(text)}</pre>
+    <div class="bottom">
+      <button type="button" class="cta" data-act="copy-brief">Copy the brief ${ICON.arrow}</button>
+      ${navigator.share ? `<button type="button" class="outline-btn" data-act="share-brief">Share it</button>` : ""}
+      <a class="outline-btn" href="${esc(i.url)}" target="_blank" rel="noopener" data-act="open-product">See the original at ${esc(i.store)} ${ICON.ext}</a>
+      <button type="button" class="link-btn" data-act="sheet-close">Keep exploring</button>
     </div>
   </section></div>`;
 }
@@ -1942,12 +2129,15 @@ function aboutCard(){
   if (m.build === "slim") eff.push("fewer oversized and boxy pieces, more slim and tailored cuts");
   if (m.build === "broad") eff.push("fewer skinny cuts, more relaxed ones");
   if (m.fit) eff.push("leaning " + (m.fit === "slim" ? "slimmer" : m.fit));
+  if (m.skin === "fair") eff.push("near your face, more navy, charcoal, burgundy, bottle green and light blue, less beige, sand and mustard");
+  if (m.skin === "olive") eff.push("near your face, more burgundy, navy, cream and rust, less olive, khaki and mustard");
   return `<section class="card" id="about" aria-labelledby="about-h">
     <h2 id="about-h">About you</h2>
     <p>So Drape suggests what suits you. Only on this phone.</p>
     <fieldset><legend class="mono-label" style="margin-bottom:8px">Height</legend><div class="chips">${chips("height")}</div></fieldset>
     <fieldset><legend class="mono-label" style="margin-bottom:8px">Build</legend><div class="chips">${chips("build")}</div></fieldset>
     <fieldset><legend class="mono-label" style="margin-bottom:8px">Fit you like</legend><div class="chips">${chips("fit")}</div></fieldset>
+    <fieldset><legend class="mono-label" style="margin-bottom:8px">Skin</legend><div class="chips">${chips("skin")}</div></fieldset>
     <fieldset><legend class="mono-label" style="margin-bottom:8px">Your size</legend><div class="chips">${["XS", "S", "M", "L", "XL", "XXL"].map((v) => `<button type="button" class="chip" data-act="me-size" data-v="${v}" aria-pressed="${!!PREFS.sizeSet && PREFS.size === v}">${v}</button>`).join("")}</div></fieldset>
     <fieldset><legend class="mono-label" style="margin-bottom:8px">Shoe size (EU)</legend><div class="chips">${SHOE_SIZES.map((v) => `<button type="button" class="chip" data-act="me-shoe" data-v="${v}" aria-pressed="${PREFS.shoe === v}">${v}</button>`).join("")}</div></fieldset>
     ${eff.length ? `<p style="color:var(--ink)"><b>What changes:</b> ${esc(eff.join("; "))}. Pieces not in your size come last.</p>` : `<p>Pick what fits you; pieces not in your size come last.</p>`}
@@ -2134,6 +2324,14 @@ function undo(){
 }
 function pickCurrent(){
   if (!S.current) return;
+  const i = S.current;
+  if (styleMode() && isProduct(i)){
+    // Your style: saved, counted as a strong yes, and the brief opens.
+    if (!isSaved(i.id)) toggleSave(i);
+    if (!S.round.votes.some((v) => v.id === i.id && v.v === "love")) S.round.votes.push(recordVote(i, "love", 1, "pick"));
+    const last = PICKS[PICKS.length - 1];
+    if (!last || last.id !== i.id){ PICKS.push({id:i.id, title:i.title, tint:i.tint, at:Date.now()}); if (PICKS.length > 100) PICKS = PICKS.slice(-100); save("picks", PICKS); }
+  }
   S.sheet = true;
   S.focus = ".sheet .cta";
   render();
@@ -2257,6 +2455,9 @@ const ACTIONS = {
   broaden(){ Q.type = "Surprise me"; save("query", Q); S.current = nextIdea(); render(); },
   scrim(el, e){ if (e.target !== el) return; if (S.modal){ S.modal = null; } else S.sheet = false; render(); },
   "sheet-close"(){ S.sheet = false; render(); },
+  mode(el){ Q.mode = el.dataset.v === "shop" ? "shop" : "style"; save("query", Q); render(); },
+  "copy-brief"(){ if (S.current) copyText(tailorBrief(S.current), "Brief copied: paste it to your tailor"); },
+  async "share-brief"(){ const i = S.current; if (!i) return; try{ await navigator.share({title:"Brief for my tailor: " + i.title, text:tailorBrief(i)}); }catch(e){} },
   budget(el){ PREFS.budget = el.dataset.v; save("prefs", PREFS); render(); },
   size(el){ if (S.current && S.current.type === "Shoes") PREFS.shoe = el.dataset.v; else { PREFS.size = el.dataset.v; PREFS.sizeSet = true; } save("prefs", PREFS); render(); },
   shop(){ toShop(); },
@@ -2437,7 +2638,9 @@ function askSnapshot(){
   L.push(`catalog: ${CAT.stores ? CAT.stores.stores.length + " stores, updated " + CAT.stores.updated + ", " + JSON.stringify(CAT.stores.counts) : "not loaded"}   pool for this search: ${S.pool ? S.pool.length : 0}   AI words: ${(S.aiKeys || []).join(", ") || "-"}${S.aiAvoid && S.aiAvoid.length ? "   avoid: " + S.aiAvoid.join(", ") : ""}`);
   if (S.diag) L.push(`AI check: ${JSON.stringify(S.diag)}`);
   L.push(`last photo error: ${S.imgErr || "none"}`);
-  L.push(`\nSEARCH: type=${Q.type || "-"} (${catLabel(Q.type)})  styles=${(Q.styles || []).join(", ") || "-"}  text="${Q.text || ""}"`);
+  L.push(`\nSEARCH: mode=${styleMode() ? "find a style" : "shop"}  type=${Q.type || "-"} (${catLabel(Q.type)})  styles=${(Q.styles || []).join(", ") || "-"}  text="${Q.text || ""}"`);
+  if (textMeLine()) L.push(`YOUR WORDS ABOUT YOU (this search): ${textMeLine()}`);
+  try{ const pa = pastAnswers(); L.push(`ANSWERED BEFORE: ${TASTE.votes.length} answers; ${pa.items.length} of this search's pieces not shown again${S.round.recycled ? " (ran out: showing ones you passed on)" : ""}`); }catch(e){}
   try{ const b = briefRead(); L.push(`YOUR WORDS READ AS: brands ${b.brands.join(", ") || "-"}; styles ${b.styles.join(", ") || "-"}; look for ${b.words.join(", ") || "-"}; avoid ${b.avoid.join(", ") || "-"}; store styles +${Object.keys(b.tags).join("/") || "-"} -${Object.keys(b.notTags).join("/") || "-"}; stores ${Object.keys(b.stores).join(", ") || "-"}`); }catch(e){}
   L.push(`LIKED: ${likedList().slice(0, 8).map((x) => x.title).join("; ") || "-"}`);
   L.push(`PREFS: ${JSON.stringify(PREFS)}`);

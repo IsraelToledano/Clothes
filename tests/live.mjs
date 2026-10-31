@@ -249,6 +249,52 @@ try {
       log("about you", R.app.aboutYou);
     } catch (e) { R.app.aboutYou = { error: String((e && e.message) || e) }; }
   }
+  /* ---------- 6. 1.8: answered pieces stay away; your words about you; find a style vs shop; the tailor's brief ---------- */
+  if (first) {
+    try {
+      const v18 = (R.app.v18 = {});
+      // a) a new search after the swipes above: none of the pieces answered before come back
+      await page.evaluate((q) => { Q = Object.assign({}, q, { mode: "style" }); save("query", Q); startRound(); }, BRIEF);
+      await page.waitForSelector("#card", { timeout: 20000 }); await page.waitForTimeout(800);
+      v18.again = await page.evaluate(() => { const past = new Set(TASTE.votes.map((v) => v.id)); const l = [S.current].concat(S.queue); return { answered: past.size, waiting: l.length, shownAgain: l.filter((i) => past.has(i.id)).map((i) => i.title) }; });
+      // b) your words about you, for a wedding
+      await page.evaluate(() => { Q.type = "Suits"; Q.styles = ["Tailored"]; Q.text = "I have white skin, I am the groom's brother, I'm 184 cm/95 kg"; Q.mode = "style"; save("query", Q); startRound(); });
+      await page.waitForSelector("#card img.prod.ok", { timeout: 20000 }); await page.waitForTimeout(800);
+      v18.words = await page.evaluate(() => ({ read: textMeLine(), styles: briefRead().styles, first: [S.current].concat(S.queue).slice(0, 6).map((i) => i.store + " | " + i.title + " | " + i.why + " | " + (fitForMe(i).good || fitForMe(i).bad)) }));
+      await page.screenshot({ path: path.join(OUT, "v18-wedding.png") });
+      // c) find a style vs shop (Suits): sold out and not-shipping pieces only when finding a style
+      const count = () => page.evaluate(() => { const l = [S.current].concat(S.queue); return { pool: S.pool.length, soldInPool: S.pool.filter((i) => i.sold).length, cards: l.length, soldOut: l.filter((i) => i.sold).length, notShipping: l.filter((i) => i.ships === false).length }; });
+      await page.evaluate(() => { Q.text = ""; Q.styles = []; save("query", Q); startRound(); }); await page.waitForSelector("#card", { timeout: 20000 }); await page.waitForTimeout(600);
+      v18.style = await count();
+      await page.evaluate(() => { Q.mode = "shop"; save("query", Q); startRound(); }); await page.waitForSelector("#card", { timeout: 20000 }); await page.waitForTimeout(600);
+      v18.shop = await count();
+      // d) "My style": saved, and the brief for a tailor
+      await page.evaluate(() => { Q.mode = "style"; Q.type = "Blazers"; save("query", Q); startRound(); }); await page.waitForSelector("#card img.prod.ok", { timeout: 20000 }); await page.waitForTimeout(600);
+      await page.click('[data-act="pick"]'); await page.waitForSelector("#brief", { timeout: 5000 }); await page.waitForTimeout(2500);
+      v18.brief = { saved: await page.evaluate(() => SAVED.some((x) => x.id === S.current.id)), text: (await page.innerText("#brief")).slice(0, 700) };
+      await page.screenshot({ path: path.join(OUT, "v18-brief.png") });
+      await page.click('[data-act="sheet-close"]');
+      log("1.8", v18);
+    } catch (e) { R.app.v18 = Object.assign(R.app.v18 || {}, { error: String((e && e.message) || e) }); }
+  }
+  /* ---------- 7. the deployed app (GitHub Pages) with the catalog from its branch ---------- */
+  if (process.env.SITE) {
+    try {
+      const pg = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+      const cat = [];
+      pg.on("response", async (r) => { if (r.url().includes("raw.githubusercontent.com")) { let n = 0; try { n = (await r.body()).length; } catch (e) {} cat.push({ file: r.url().split("/catalog/")[1], status: r.status(), bytes: n }); } });
+      pg.on("pageerror", (e) => R.app.errors.push("deployed pageerror: " + e.message));
+      await pg.goto(process.env.SITE + "?t=" + Date.now());
+      await pg.evaluate(() => { localStorage.clear(); localStorage.setItem("clothes:query", JSON.stringify({ type: "Suits", styles: ["Tailored"], text: "", mode: "style" })); });
+      await pg.reload(); await pg.waitForTimeout(800);
+      const ver = await pg.evaluate(() => APP_VERSION);
+      await pg.click('[data-act="go"]'); const t1 = Date.now();
+      const ok = await pg.waitForSelector("#card img.prod.ok", { timeout: 30000 }).then(() => true).catch(() => false);
+      R.app.deployed = { version: ver, firstCardMs: ok ? Date.now() - t1 : null, base: await pg.evaluate(() => CAT_BASE), pool: await pg.evaluate(() => (S.pool || []).length), catalogFiles: cat, first: ok ? await pg.evaluate(() => S.current.store + " | " + S.current.title) : "" };
+      await pg.screenshot({ path: path.join(OUT, "deployed.png") });
+      log("deployed", R.app.deployed);
+    } catch (e) { R.app.deployed = { error: String((e && e.message) || e) }; }
+  }
   R.app.report = await page.evaluate(() => askSnapshot()).catch((e) => "report failed: " + e.message);
   fs.writeFileSync(path.join(OUT, "report.txt"), R.app.report);
   await page.screenshot({ path: path.join(OUT, "final.png") });
@@ -279,6 +325,11 @@ const md = [
   `Shoes (first 20): ${a.shoes ? (a.shoes.error || a.shoes.kinds + " kinds; most from one maker: " + JSON.stringify(a.shoes.topMaker) + "; same model twice: " + (a.shoes.sameModel.length ? a.shoes.sameModel.join("; ") : "never")) : "-"}`,
   `About you (jackets, first 20): ${a.aboutYou ? (a.aboutYou.error || "not set: " + a.aboutYou.notSet.long + " long; short + slim: " + a.aboutYou.shortSlim.long + " long, " + a.aboutYou.shortSlim.suitYou + " that suit you — " + a.aboutYou.shortSlim.first.join(" / ")) : "-"}`,
   `New categories (Preppy): ${a.categories ? Object.entries(a.categories).map(([k, v]) => k + ": " + (v.error || v.pool + " pieces; " + v.first.slice(0, 3).join(" / "))).join(" || ") : "-"}`,
+  `1.8 answered before, new search: ${a.v18 && a.v18.again ? a.v18.again.answered + " answered; " + a.v18.again.waiting + " waiting; shown again: " + (a.v18.again.shownAgain.join("; ") || "none") : JSON.stringify(a.v18 && a.v18.error)}`,
+  `1.8 your words (wedding): ${a.v18 && a.v18.words ? a.v18.words.read + " — styles " + a.v18.words.styles.join(", ") + " — " + a.v18.words.first.join(" / ") : "-"}`,
+  `1.8 Suits, find a style: ${JSON.stringify(a.v18 && a.v18.style)}   shop: ${JSON.stringify(a.v18 && a.v18.shop)}`,
+  `1.8 my style: ${a.v18 && a.v18.brief ? "saved " + a.v18.brief.saved + " — " + a.v18.brief.text.replace(/\n/g, " / ") : "-"}`,
+  `Deployed app: ${JSON.stringify(a.deployed || null)}`,
   `Errors: ${(a.errors || []).join(" | ") || "none"}`,
   a.stuck ? `STUCK at start: ${JSON.stringify(a.stuck)}` : "",
   a.stuckAfter ? `STUCK after card ${a.stuckAfter.n}: ${JSON.stringify(a.stuckAfter)}` : "",

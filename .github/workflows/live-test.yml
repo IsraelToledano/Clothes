@@ -29,10 +29,15 @@ jobs:
         run: |
           npm i --no-save --no-package-lock playwright@1.48.2
           npx playwright install --with-deps chromium
+      - name: The catalog the app reads (its own branch)
+        run: |
+          git fetch -q origin catalog-data && rm -rf catalog && git archive origin/catalog-data catalog | tar x
+          curl -sS -o /dev/null -D - --compressed https://raw.githubusercontent.com/IsraelToledano/Clothes/catalog-data/catalog/shirts.json | grep -iE "^(HTTP|content-length|access-control-allow-origin|cache-control)" || true
       - name: Run the live test
         run: node tests/live.mjs
         env:
           WORKER: https://clothes.srul7022.workers.dev
+          SITE: https://israeltoledano.github.io/Clothes/
         continue-on-error: true
       - name: Save results to the live-results branch
         if: always()
