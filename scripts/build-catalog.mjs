@@ -65,7 +65,7 @@ const NOT_HIS = /\b(femme|wmn'?s|wmns|nike (ps|gs|td)|jordan (ps|gs|td)|little k
 const A_DRESS = /\bdress(es)?\b(?!\s*(shirts?|trousers?|pants?|socks?|shoes?|boots?|chinos?|code|gordon))/i;
 // Not kept at all: not clothes, or not one piece of clothing. Careful with colours and details: "Cream Oxford",
 // "Floral Print Shirt", "Patch Pocket", "Tie-Dye", "Watch Cap" and "Hairy Suede" are clothes.
-const NOT_CLOTHES = /\b(underwear|boxers?|boxer briefs?|briefs|pyjamas?|pajamas?|robes?|jewel(le)?ry|bracelets?|necklaces?|pendants?|rings?|earrings?|ear cuffs?|watch(es)?(?! caps?)|watch straps?|laces|shoe care|shoe cream|polish|shoe brush|shoe trees?|hangers?|face ?masks?|face covering|masks?|gift ?cards?|e-?gift|gift wrap(ping)?|gift box|candles?|mugs?|posters?|stickers?|books?|magazines?|publications?|keychains?|key ?rings?|umbrellas?|towels?|blankets?|fragrances?|perfumes?|cologne|incense|art prints?|print material|gicl[ée]e|enamel pins?|lapel pins?|patches|swatch(es)?|fabric samples?|samples?|bundles?|insurance|shipping|donations?|cushions?|pillows?|rugs?|ornaments?|playing cards|dog|leash|collar for|mtm|made to measure|spacer|wine|resoles?|refurbishment|insoles?|footbeds?|(order|package|shipping) protection|lunchbox|notebooks?|glass(es)? set|undershirts?|cummerbunds?|hair|styling paste|helmets?|plates?|ashtrays?|kettle ?bells?|boxing (pads?|gloves?)|scissors|care kit|carbon|wetsuits?)\b/i;
+const NOT_CLOTHES = /\b(underwear|boxers?|boxer briefs?|briefs|pyjamas?|pajamas?|robes?|jewel(le)?ry|bracelets?|necklaces?|pendants?|rings?|earrings?|ear cuffs?|watch(es)?(?! caps?)|watch straps?|laces|shoe care|shoe cream|polish|shoe brush|shoe trees?|hangers?|face ?masks?|face covering|masks?|gift ?cards?|e-?gift|gift wrap(ping)?|gift box|candles?|mugs?|posters?|stickers?|books?|magazines?|publications?|keychains?|key ?rings?|umbrellas?|towels?|blankets?|fragrances?|perfumes?|cologne|incense|art prints?|print material|gicl[ée]e|enamel pins?|lapel pins?|patches|swatch(es)?|fabric samples?|samples?|bundles?|insurance|shipping|donations?|cushions?|pillows?|rugs?|ornaments?|playing cards|dog|leash|collar for|mtm|made to measure|spacer|wine|resoles?|refurbishment|insoles?|footbeds?|(order|package|shipping) protection|lunchbox|notebooks?|glass(es)? set|undershirts?|cummerbunds?|hair|styling paste|helmets?|plates?|ashtrays?|kettle ?bells?|boxing (pads?|gloves?)|scissors|care kit|carbon|wetsuits?|badges?)\b/i;
 const SKU_TITLE = /^[A-Z]{1,2}\d{3}[A-Z0-9]{3,}\b/; // "M993C0370Q - Original Fabrics": a fabric for made-to-measure, not a piece
 
 // The catalog's types (one file each). The app's categories read one or more of them (Sneakers, Boots...
@@ -82,7 +82,7 @@ const TYPE_RULES = [
   ["Jackets", /\b(doudounes?|vestes?|blousons?|cirés?|puffers?|sherpas?|truckers?|jackets?|bombers?|anoraks?|gilets?|vests?|cagoules?|windbreakers?|harringtons?|shells?)\b/i],
   ["Polos", /\b(knit polos?|polos?( shirts?)?|rugbys?( shirts?)?|rugby( jerseys?)?)\b/i],
   ["Sweatshirts", /\b(sweatshirts?|hoodies?|hooded|hoody|loopback|crew ?sweats?|zip[- ]ups?|track ?tops?)\b/i],
-  ["T-shirts", /\b(d[ée]bardeurs?|longsleeves?|marini[eè]res?|tee-shirts?|t-?shirts?|tees?|henleys?|ringer|tank tops?|tanks?|thermals?|breton (shirts?|tops?))\b/i],
+  ["T-shirts", /\b(d[ée]bardeurs?|longsleeves?|marini[eè]res?|tee-shirts?|t[- ]?shirts?|tees?|henleys?|ringer|tank tops?|tanks?|thermals?|breton (shirts?|tops?))\b/i],
   ["Knitwear", /\b(pulls?|pull-overs?|knitwear|lambswool|roll ?necks?|rollnecks?|sweaters?|cardigans?|jumpers?|knits?|knitted|crewnecks?|quarter[- ]zips?|half[- ]zips?|turtlenecks?|mock ?necks?|pullovers?|cashmere|merino|fair isle|cable|shetland|guernseys?|ganseys?)\b/i],
   ["Shirts", /\b(button[- ]ups?|chemises?|wovens?|shirts?|oxfords?|popovers?|button[- ]downs?|camp collar|flannels?|chambray|spread)\b/i],
   ["Jeans", /\b(jeans?|denim (pants?|trousers?)|5[- ]pockets?|five[- ]pockets?)\b/i],
@@ -99,13 +99,12 @@ function bestType(text){
   }
   return best;
 }
-const BROAD_TYPE = /&|\/|\btops?\b|^(men'?s?|mens|clothing|apparel|general|lifestyle|new|sale|final sale|collection|default)$/i;
 function typeOf(p) {
-  const pt = String(p.product_type || "").trim(), byType = pt && !BROAD_TYPE.test(pt) ? bestType(pt) : "";
+  const pt = String(p.product_type || "").trim(), byType = pt ? bestType(pt) : "";
   const byTitle = bestType(p.title || "");
   if (byType === "Shoes") return "Shoes"; // shoe names say oxford, derby, cap toe: the store's type is surer
   if (byType === "Accessories") return byTitle === "Accessories" ? "Accessories" : ""; // an accessory we know, or nothing
-  if (byTitle && !(byTitle === "Accessories" && byType)) return byTitle; // the name is more precise ("Italian Wool Overshirt" filed as "Shirt")
+  if (byTitle) return byTitle; // the name is more precise ("Italian Wool Overshirt" filed as "Shirt", "Linen Tie" as "Suit Accessories")
   if (byType) return byType;
   if (/outerwear/i.test(pt)) return "Jackets"; // only when the name didn't say
   return "";
