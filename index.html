@@ -375,7 +375,7 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "1.8.0";
+const APP_VERSION = "1.8.1";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
 const SERVER_EXPECTED = "1.1.0"; // the worker/worker.js version this app was built with
 
@@ -1981,7 +1981,9 @@ const BRIEF_CLOTH = /\b(wool|flannel|tweed|linen|cotton|cashmere|mohair|silk|see
 const BRIEF_MILLS = /\b(vitale barberis canonico|vbc|loro piana|holland (&|and) sherry|dormeuil|zegna|reda|fox brothers|harrisons|abraham moon|thomas mason|albini|canclini|drago|marling (&|and) evans|lovat|caccioppoli|ariston|solbiati|delfino|fintes|carlo barbera|tollegno|guabello|baird mcnutt|moon)\b/;
 function tailorBrief(i){
   const m = S.more[i.id] || null, desc = (m && m.d) || "";
-  const t = (i.title + " " + (i.ptype || "") + " " + (i.tags || []).join(" ") + " " + desc).toLowerCase();
+  // What it's made of and its details: from the name and the description, not from styling tips in it ("wear it with denim").
+  const own = desc.split(/(?<=[.!?\n•])\s*/).filter((x) => !/\b(style|wear|pair|team|dress) (it|them|this|with)\b|\bgoes with\b|\bwith (your|a pair|jeans|denim|chinos|a tee)\b/i.test(x)).join(" ");
+  const t = (i.title + " " + (i.ptype || "") + " " + (i.tags || []).join(" ") + " " + own).toLowerCase();
   const me = meNow(), tm = textMe(), L = [];
   L.push("Like this: " + i.title + " (" + (i.brand && i.brand !== i.store ? i.brand + ", " : "") + i.store + ")");
   L.push("Photos: " + i.url);
