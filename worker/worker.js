@@ -21,7 +21,7 @@
 // On the free plan Cloudflare blocks requests past that instead of charging.
 
 // Bump with the app version so a report shows whether the server was redeployed.
-const SERVER_VERSION = "1.2.0";
+const SERVER_VERSION = "1.2.1";
 const APP_ORIGIN = "https://israeltoledano.github.io";
 // Gemma 4 26B (4B active) is fast and costs about a sixth of Llama 3.3 70B per idea in the free allowance.
 const TEXT_MODEL = "@cf/google/gemma-4-26b-a4b-it";
@@ -818,7 +818,8 @@ async function tryon(env, b, origin) {
   const fit = clip(b.fit, 120);
   const prompt = `Image 0 is a photo of a man. Image 1 is a store photo of a piece of men's clothing (${type}${what ? ": " + what : ""}). ` +
     `Make a realistic photo of the same man from image 0, with exactly the same face, hair, skin tone, body shape, height and proportions, the same pose, the same background and light, ` +
-    `now wearing the ${type === "Suits" ? "suit" : "piece"} from image 1 as his ${SLOT[type]}. Copy the piece exactly: its colour, fabric and texture, pattern, collar, buttons, pockets, length and cut. ` +
+    `now wearing the ${type === "Suits" ? "suit" : "piece"} from image 1 as his ${SLOT[type]}. Copy the piece exactly as image 1 shows it: its colour, fabric and texture, pattern and stripe width, collar, sleeves (long sleeves stay long, short stay short), buttons, pockets, length and cut. ` +
+    `Add nothing that isn't in image 1: no extra pockets, flaps, epaulettes or trims. ` +
     `It sits on his body naturally${fit ? ", " + fit : ""}. Keep the rest of his clothes as they are. Nothing from image 1 other than the piece: not the model, not the background. ` +
     `Photorealistic, sharp, his whole figure in frame. No text, no watermark.`;
   const form = new FormData();
