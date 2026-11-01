@@ -1,0 +1,965 @@
+{
+  "started": "2026-11-01T21:33:17.277Z",
+  "worker": "https://clothes.srul7022.workers.dev",
+  "log": [
+    "server version 1.3.1 (as expected)",
+    "health {\"ok\":true,\"ms\":115,\"status\":200,\"body\":{\"ok\":true,\"ideas\":true,\"images\":true,\"version\":\"1.3.1\",\"textModel\":\"gemma-4-26b-a4b-it\",\"imageModel\":\"schnell for the first cards, klein after\"}}",
+    "keywords (API) {\"ok\":true,\"ms\":2360,\"status\":200,\"body\":{\"keywords\":[\"oxford\",\"button down\",\"madras\",\"gingham\",\"chambray\",\"rugby stripe\",\"poplin\",\"linen\",\"navy\",\"stripe\"],\"avoid\":[\"streetwear\",\"oversized\",\"technical\",\"minimalist\"],\"stores\":[\"Rowing Blazers\",\"Todd Snyder\",\"Drake's\",\"Alex Mill\",\"Percival\"],\"why\":\"classic preppy american heritage\",\"model\":\"gemma\"}}",
+    "first card 587ms",
+    "card 1 Tonal Plaid Lightweight Flannel Shirt | photo 15ms | swipe later",
+    "card 2 Cotton-Cashmere Sport Shirt | photo 6ms | swipe like",
+    "card 3 Rugby Striped Shirt in Cotton Jersey | photo 8ms | swipe later",
+    "card 4 Navy, Brown & Orange Tattersall Cotton Flannel Sport Shirt - Classic Fit | photo 7ms | swipe later",
+    "card 5 Contemporary Shirt - Navy Cotton & Cashmere Flannel | photo 6ms | swipe later",
+    "card 6 Italian Featherweight Flannel Long Point Collar Dress Shirt | photo 6ms | swipe like",
+    "card 7 Navy and Red Check Cotton-Linen Two-Pocket Work Shirt | photo 6ms | swipe later",
+    "card 8 Navy Herringbone One Piece Collar Standard Fit Flannel Shirt | photo 10ms | swipe later",
+    "gallery & details {\"card\":{\"title\":\"Italian Double-Brushed Flannel Shirt\",\"store\":\"Todd Snyder\",\"photos\":8,\"onPhoto\":0,\"layout\":{\"photoBottom\":718,\"titleBottom\":808,\"screen\":844}},\"flipMs\":45,\"tapVoted\":false,\"cardZoom\":{\"opened\":true,\"photo\":2,\"opensAt\":{\"scale\":1.8,\"fill\":1.8,\"shown\":\"1\"},\"sharpMs\":663,\"closed\":true},\"zoomScale\":2.2,\"moreMs\":2,\"details\":{\"thumbs\":8,\"desc\":\"An elevated take on a classic flannel shirt. English heritage plaids get reinvented in buttery, double-brushed Italian cotton that’s soft but substantial — AKA all the ruggedness of a real vintage flannels without any of the downsides. The fit is a little roomy and designed for easy layering; it loo\",\"sizes\":[\"XS\",\"S\",\"M\",\"L\",\"XL (sold out)\",\"XXL (sold out)\"],\"specs\":[\"COLOUR: Charcoal\",\"FABRIC: Flannel\",\"FIT: Classic\"]},\"back\":{\"was\":\"Italian Double-Brushed Flannel Shirt\",\"nowShowing\":\"Navy Herringbone One Piece Collar Standard Fit Flannel Shirt\",\"expected\":\"Navy Herringbone One Piece Collar Standard Fit Flannel Shirt\",\"ok\":true,\"thenNext\":\"Italian Double-Brushed Flannel Shirt\"},\"saved\":{\"screen\":\"saved\",\"cards\":1,\"photos\":1},\"liked\":{\"cards\":[\"Italian Featherweight Flannel Long Point Collar Dress Shirt\",\"Cotton-Cashmere Sport Shirt\"],\"hearted\":[\"Cotton-Cashmere Sport Shirt\",\"Italian Featherweight Flannel Long Point Collar Dress Shirt\"]}}",
+    "shoes {\"cards\":[\"Drake's | Running sneakers | New Balance 'Summer Brights’ Green Banana Made in UK 991v2 Trainers\",\"Anglo-Italian | Chukkas & desert boots | Desert Boot Crepe Sole Black Suede\",\"Todd Snyder | Boots | CQP Forto Boot\",\"Turnbull & Asser | Derbies | Blue Weekend Fit Cotton-Cashmere Finch Shirt With Derby Collar And Chest Pocket\",\"New & Lingwood | Mules & clogs | Moss Green Suede All Day Slipper\",\"Anglo-Italian | Loafers | Crockett & Jones Studridge Loafer Black Suede City Sole\",\"Todd Snyder | Running sneakers | Asics Skyhand™ OG Sneaker\",\"Drake's | Derbies | Paraboot Michael Camel Leather Derby Shoe\",\"Velasca | Boots | Bajaffée\",\"New & Lingwood | Loafers | Tobacco Calf Suede Eton Loafers\",\"Todd Snyder | Chukkas & desert boots | Nomad Chukka Boot\",\"Drake's | Espadrilles | Sabah Terro Suede Shoes\",\"Turnbull & Asser | Derbies | SHIRTS WF DERBY COLLAR 1BC 1PKT WHT/STEEL GREY CHK\",\"New & Lingwood | Loafers | Brown Suede Butterfly Loafers\",\"Todd Snyder | Boots | Yuketen Suede Ranchero Boots\",\"Drake's | Chukkas & desert boots | Crosby Moc-Toe Chukka Boot Tobacco Suede\",\"Orlebar Brown | Sneakers | Somerled\",\"Huntsman | Mules & clogs | Blue Devon Four Point Star Cashmere Slippers\",\"Velasca | Chelsea boots | Freguiatt\",\"Paul Evans | Loafers | The Edward Penny Loafer - Dark Brown Suede\"],\"sameModel\":[],\"kinds\":9,\"topMaker\":[\"New & Lingwood\",3]}",
+    "categories {\"Suits\":{\"pool\":557,\"first\":[\"Todd Snyder | Italian Flannel Madison Suit | Charcoal suits fair skin\",\"Oliver Brown | Cadogan Suit - Navy Chalk Stripe Wool | Preppy: stripe\",\"Cordings | Navy 12oz Double Breasted Chalk Stripe Suit | Preppy: stripe\",\"Haspel | Vieux Carre Navy/Black Seersucker Stretch Tuxedo | Preppy: seersucker\",\"Todd Snyder | Portuguese Flannel Pinstripe Wythe Suit | Grey suits fair skin\"]},\"Swimwear\":{\"pool\":1225,\"first\":[\"Southern Tide | Colorblock Seersucker Stripe Maritime Swim Trunk | Preppy: seersucker, stripe\",\"Todd Snyder | 5\\\" Seersucker Montauk Swim Trunk | Preppy: seersucker\",\"Orlebar Brown | Bulldog Drawcord | Preppy: stripe, boat\",\"Haspel | Sherwood Navy Seersucker Stretch Swimsuit | Preppy: seersucker\",\"Percival | Rowan Seersucker Swim Shorts | Cotton | Navy Stripe | Preppy: seersucker, stripe\"]},\"Coats\":{\"pool\":868,\"first\":[\"Cordings | Navy Rugby Reefer Coat | Preppy: rugby\",\"Todd Snyder | Italian Houndstooth Car Coat | Charcoal suits fair skin\",\"J.Press | Made-in-USA Camelhair Polo Coat | Preppy: polo\",\"Kith | CDG Homme Wool Sage Stripe Full Parka - Navy / White | Preppy: stripe\",\"New & Lingwood | Navy Stripe Lined Rain Mac | Preppy: stripe\"]},\"Sneakers\":{\"pool\":1082,\"first\":[\"Todd Snyder | New Balance 1954R Sneaker | Running sneakers\",\"Kith | adidas BW Army - Shadow Navy / Charcoal | Sneakers\",\"J.Press | Sperry Red CVO Sneaker Reissued | Court & canvas sneakers\",\"Johnnie-O | LaRosa Sneaker | Sneakers\",\"Todd Snyder | Asics Skyhand™ OG Sneaker | Running sneakers\"]},\"Hats\":{\"pool\":2736,\"first\":[\"Todd Snyder | Seersucker Cap | Preppy: seersucker\",\"Drake's | Red and Orange Multi Stripe Geelongora Purl Stitch Knit Cap | Preppy: stripe\",\"Aimé Leon Dore | Washed Chino Hat | Preppy: chino\",\"Criquet | Throwback Hat - Criquet Stripe Embroidery - Navy Waxed Canvas | Preppy: stripe\",\"Todd Snyder | Selvedge Chino Dad Cap | Preppy: chino\"]}}",
+    "about you {\"notSet\":{\"long\":0,\"suitYou\":0,\"first\":[\"Todd Snyder | Denim Dylan Jacket | Denim & trucker\",\"Turnbull & Asser | Charcoal Houndstooth Flannel Jacket | Flannel\",\"Reigning Champ | Nylon Oxford Team Jacket | Oxford\",\"Outerknown | The Woolaroo Vest | Vest\",\"Todd Snyder | Barbour Waterproof Ursula Jacket | Cotton\",\"Battenwear | Warm-Up Fleece - Charcoal | Fleece\"]},\"shortSlim\":{\"long\":0,\"suitYou\":19,\"first\":[\"Todd Snyder | Italian Suede Grant Jacket | Cropped, good for your height\",\"Stoffa | Flight Jacket (Mid-Grey Cotton Canvas) | Cropped, good for your height\",\"Percival | Marcel Cord Jacket | Cotton | Burgundy | Cropped, good for your height\",\"J.Press | Penn Wool Varsity Jacket | Cropped, good for your height\",\"Todd Snyder | Denim Dylan Jacket | Cropped, good for your height\",\"Stoffa | Flight Jacket (Dark Chocolate Lamb Suede) | Cropped, good for your height\"]}}",
+    "1.8 {\"again\":{\"answered\":8,\"waiting\":38,\"shownAgain\":[]},\"words\":{\"read\":\"184 cm (over 182) · 95 kg (broad build) · fair skin · for a wedding\",\"styles\":[\"Tailored\",\"Wedding\"],\"first\":[\"Todd Snyder | Relaxed Italian Flannel Madison Suit | Tailored: wool, flannel | Charcoal suits fair skin\",\"Huntsman | Ecru Barathea Shawl Lapel Dinner Jacket | Wedding: tuxedo, dinner | \",\"Anglo-Italian | Suit Double Breasted Navy Wool Cavalry Twill | Tailored: wool, suit | Navy suits fair skin\",\"Richard James | Chapman Suit – Dusky Pink Wool Sharkskin | Tailored: wool, suit | Pink suits fair skin\",\"Todd Snyder | Portuguese Flannel Pinstripe Wythe Suit | Tailored: wool, flannel | Grey suits fair skin\",\"Oliver Brown | Carlyle Dinner Jacket - White | Tailored: wool, tuxedo | \"]},\"style\":{\"pool\":557,\"soldInPool\":20,\"cards\":36,\"soldOut\":0,\"notShipping\":7},\"shop\":{\"pool\":557,\"soldInPool\":20,\"cards\":36,\"soldOut\":0,\"notShipping\":0},\"brief\":{\"saved\":true,\"text\":\"Like this: Italian Flannel Houndstooth Sutton Jacket (Todd Snyder)\\nPhotos: https://toddsnyder.com/products/flannel-houndstooth-sutton-jacketcream\\n\\nPiece: Tweed & wool · Blazers\\nCloth: Cream · flannel, houndstooth, wool\\nDetails: two buttons, side vents\\nCut for me: jacket length just covering the seat, a slightly higher button stance and moderate lapels, so the line stays long; close through the chest and waist without pulling; a little structure in the shoulder\\n\\nFrom the store: Our Sutton Jacket offers a spin on a tailored sports coat — if you’re looking for a suit that doesn’t feel like a suit, you’ve found it. Here, it’s crafted from a lightweight Italian wool. This two-button jacket featur\"}}",
+    "people {\"before\":{\"votes\":9,\"saved\":2},\"dan\":{\"name\":\"Dan\",\"screen\":\"profile\",\"votes\":0,\"saved\":0,\"about\":\"About Dan\",\"header\":\"Dan · Suits · 0 votes\",\"first\":\"Todd Snyder | Italian Wool Gingham Wythe Suit | A relaxed cut for your build\"},\"back\":{\"name\":\"Me\",\"votes\":9,\"saved\":2,\"people\":[\"Me\",\"Dan\"]},\"same\":true}",
+    "1.11 {\"portrait\":{\"ok\":true,\"ms\":1289,\"status\":200,\"bytes\":379877,\"error\":\"\"},\"kb\":{\"1.10\":[30,30,30],\"1.11\":[18,18,18],\"heavy\":[81,81,81]},\"stylist 1.10\":{\"status\":200,\"ms\":7941,\"model\":\"gemma-4-26b-a4b-it\",\"summary\":\"Build a wardrobe around medium-contrast neutrals and rich, earthy tones to complement his skin. Focus on slim, structured silhouettes that respect his balanced proportions.\"},\"stylist 1.11\":{\"status\":200,\"ms\":7357,\"model\":\"gemma-4-26b-a4b-it\",\"summary\":\"Build a wardrobe around high-contrast neutrals and rich, saturated tones to complement your natural coloring. Focus on slim, structured silhouettes that emphasize your balanced proportions.\"},\"stylist heavy\":{\"status\":200,\"ms\":3958,\"model\":\"gemma-4-26b-a4b-it\",\"summary\":\"Build a wardrobe around high-contrast neutrals and earthy tones to complement your natural coloring. Focus on slim, structured silhouettes that emphasize your athletic build.\"},\"photos\":[\"336x448 34KB\",\"336x448 34KB\",\"336x448 34KB\"],\"stylist\":{\"model\":\"gemma-4-26b-a4b-it\",\"ms\":10408,\"summary\":\"Build a wardrobe around textured, slim-fitting classics that emphasize vertical lines. Focus on mid-to-high rise trousers and tailored layers to elongate the silhouette.\",\"best\":[\"navy\",\"charcoal\",\"forest green\",\"burgundy\",\"cream\",\"camel\",\"slate blue\",\"olive\"],\"less\":[\"stark white\",\"neon\",\"bright yellow\",\"pale pastels\"],\"lookFor\":[\"slim fit\",\"tapered leg\",\"high rise\",\"pointed collar\",\"textured fabrics\",\"monochromatic tones\",\"mid-weight flannel\",\"structured shoulders\"],\"avoid\":[\"oversized\",\"low rise\",\"longline tees\",\"wide leg\",\"heavy fabrics\",\"horizontal stripes\"],\"wallMs\":9009},\"cards\":[{\"piece\":\"Todd Snyder | Italian Herringbone Sport Coat\",\"state\":\"ok\",\"ms\":5441,\"err\":\"\",\"waitedMs\":5394},{\"piece\":\"Grayers | Corduroy Stretch Slim Fit Blazer - India Ink\",\"state\":\"ok\",\"ms\":5574,\"err\":\"\",\"waitedMs\":3,\"looks\":1},{\"piece\":\"Haspel | Traveler Navy Knit Blazer - Tailored Fit\",\"state\":\"ok\",\"ms\":2729,\"err\":\"\",\"waitedMs\":3},{\"piece\":\"Orlebar Brown | Mathis\",\"state\":\"ok\",\"ms\":6044,\"err\":\"\",\"waitedMs\":777},{\"piece\":\"Todd Snyder | Italian Wool Glen Plaid Sport Coat\",\"state\":\"ok\",\"ms\":5096,\"err\":\"\",\"waitedMs\":3},{\"piece\":\"Grayers | Burnham Knitted Wool Blazer - Charcoal\",\"state\":\"ok\",\"ms\":5443,\"err\":\"\",\"waitedMs\":3585}],\"onMe\":\"ON ME: on   drawn 7, drawing 2, failed 0, median 5443ms   stylist: read 2026-11-01T21:34:44.519Z\"}",
+    "deployed {\"version\":\"1.11.1\",\"firstCardMs\":846,\"base\":\"https://raw.githubusercontent.com/IsraelToledano/Clothes/catalog-data/catalog/\",\"pool\":557,\"catalogFiles\":[{\"file\":\"stores.json\",\"status\":200,\"bytes\":94293},{\"file\":\"suits.json\",\"status\":200,\"bytes\":295964},{\"file\":\"details/026.json\",\"status\":200,\"bytes\":315234},{\"file\":\"details/066.json\",\"status\":200,\"bytes\":307456}],\"first\":\"Todd Snyder | Italian Gabardine Sutton Suit\"}"
+  ],
+  "expectedServer": "1.3.1",
+  "deployed": "1.3.1",
+  "health": {
+    "ok": true,
+    "ms": 115,
+    "status": 200,
+    "body": {
+      "ok": true,
+      "ideas": true,
+      "images": true,
+      "version": "1.3.1",
+      "textModel": "gemma-4-26b-a4b-it",
+      "imageModel": "schnell for the first cards, klein after"
+    }
+  },
+  "catalog": {
+    "updated": "2026-11-01T09:18:48.085Z",
+    "counts": {
+      "Accessories": 11934,
+      "Coats": 868,
+      "Polos": 4430,
+      "Shirts": 10051,
+      "Overshirts": 1096,
+      "Jackets": 4795,
+      "Trousers": 5142,
+      "T-shirts": 5650,
+      "Knitwear": 5524,
+      "Sweatshirts": 2746,
+      "Shoes": 3967,
+      "Suits": 557,
+      "Blazers": 971,
+      "Jeans": 1457,
+      "Shorts": 1881,
+      "Swimwear": 1225
+    },
+    "failedStores": [
+      "bonobos.com: gave up after retries"
+    ],
+    "format": 2,
+    "photosPerShirt": {
+      "median": 3,
+      "min": 1,
+      "max": 3,
+      "oneOnly": 569,
+      "of": 10051
+    },
+    "details": {
+      "files": 128,
+      "pieces": 62294,
+      "withDescription": 59699,
+      "withSoldOutSizes": 33353,
+      "onSale": "2245 shirts"
+    }
+  },
+  "photosApi": [
+    {
+      "title": "Easy Care Dress Shirt Standard Fit - Blue Navy Tattersall",
+      "store": "Peter Manning",
+      "width": 900,
+      "ok": true,
+      "ms": 32,
+      "status": 200,
+      "bytes": 72526
+    },
+    {
+      "title": "Easy Care Dress Shirt Standard Fit - Blue Navy Tattersall",
+      "store": "Peter Manning",
+      "width": 2000,
+      "ok": true,
+      "ms": 59,
+      "status": 200,
+      "bytes": 740503
+    },
+    {
+      "title": "WM Brown Oxford Stripe Classic Fit Shirt in Gio Blue",
+      "store": "Budd",
+      "width": 900,
+      "ok": true,
+      "ms": 18,
+      "status": 200,
+      "bytes": 180564
+    },
+    {
+      "title": "WM Brown Oxford Stripe Classic Fit Shirt in Gio Blue",
+      "store": "Budd",
+      "width": 2000,
+      "ok": true,
+      "ms": 30,
+      "status": 200,
+      "bytes": 677031
+    },
+    {
+      "title": "Hinsley Checked Boxy Shirt | Cotton | Brown",
+      "store": "Percival",
+      "width": 900,
+      "ok": true,
+      "ms": 14,
+      "status": 200,
+      "bytes": 168273
+    },
+    {
+      "title": "Hinsley Checked Boxy Shirt | Cotton | Brown",
+      "store": "Percival",
+      "width": 2000,
+      "ok": true,
+      "ms": 25,
+      "status": 200,
+      "bytes": 1402287
+    },
+    {
+      "title": "Cotton Twill Sport Shirt - Ashland Plaid",
+      "store": "Duck Head",
+      "width": 900,
+      "ok": true,
+      "ms": 14,
+      "status": 200,
+      "bytes": 206189
+    },
+    {
+      "title": "Cotton Twill Sport Shirt - Ashland Plaid",
+      "store": "Duck Head",
+      "width": 2000,
+      "ok": true,
+      "ms": 19,
+      "status": 200,
+      "bytes": 780536
+    },
+    {
+      "title": "Skip Stripe Retro SS Camp - Blue",
+      "store": "Corridor",
+      "width": 900,
+      "ok": true,
+      "ms": 19,
+      "status": 200,
+      "bytes": 267685
+    },
+    {
+      "title": "Skip Stripe Retro SS Camp - Blue",
+      "store": "Corridor",
+      "width": 2000,
+      "ok": true,
+      "ms": 13,
+      "status": 200,
+      "bytes": 288750
+    },
+    {
+      "title": "Ornate Paisley Madder Silk Dressing Gown in Azure",
+      "store": "Budd",
+      "width": 900,
+      "ok": true,
+      "ms": 13,
+      "status": 200,
+      "bytes": 180521
+    },
+    {
+      "title": "Ornate Paisley Madder Silk Dressing Gown in Azure",
+      "store": "Budd",
+      "width": 2000,
+      "ok": true,
+      "ms": 17,
+      "status": 200,
+      "bytes": 825071
+    }
+  ],
+  "keywordsApi": {
+    "ok": true,
+    "ms": 2360,
+    "status": 200,
+    "body": {
+      "keywords": [
+        "oxford",
+        "button down",
+        "madras",
+        "gingham",
+        "chambray",
+        "rugby stripe",
+        "poplin",
+        "linen",
+        "navy",
+        "stripe"
+      ],
+      "avoid": [
+        "streetwear",
+        "oversized",
+        "technical",
+        "minimalist"
+      ],
+      "stores": [
+        "Rowing Blazers",
+        "Todd Snyder",
+        "Drake's",
+        "Alex Mill",
+        "Percival"
+      ],
+      "why": "classic preppy american heritage",
+      "model": "gemma"
+    }
+  },
+  "app": {
+    "requests": [
+      {
+        "kind": "/health",
+        "status": 200,
+        "ms": 124,
+        "at": 1793568801529
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 2571,
+        "at": 1793568805387
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 9814,
+        "at": 1793568817075
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 6936,
+        "at": 1793568823030
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 2279,
+        "at": 1793568834494
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 2352,
+        "at": 1793568836365
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 2076,
+        "at": 1793568837227
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 2169,
+        "at": 1793568839019
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 2175,
+        "at": 1793568840315
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 2157,
+        "at": 1793568841960
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 759,
+        "at": 1793568842713
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 2339,
+        "at": 1793568843058
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 1867,
+        "at": 1793568844832
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 722,
+        "at": 1793568845627
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 1906,
+        "at": 1793568846172
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 1950,
+        "at": 1793568847546
+      },
+      {
+        "kind": "/keywords",
+        "failed": "net::ERR_ABORTED",
+        "ms": 13013
+      },
+      {
+        "kind": "/health",
+        "status": 200,
+        "ms": 38,
+        "at": 1793568849107
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 1760,
+        "at": 1793568851999
+      },
+      {
+        "kind": "/health",
+        "status": 200,
+        "ms": 38,
+        "at": 1793568852467
+      },
+      {
+        "kind": "/stylist",
+        "status": 200,
+        "ms": 7933,
+        "at": 1793568862556
+      },
+      {
+        "kind": "/stylist",
+        "status": 200,
+        "ms": 7353,
+        "at": 1793568869918
+      },
+      {
+        "kind": "/stylist",
+        "status": 200,
+        "ms": 3941,
+        "at": 1793568873890
+      },
+      {
+        "kind": "/stylist",
+        "status": 200,
+        "ms": 10447,
+        "at": 1793568884519
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 2030,
+        "at": 1793568887494
+      },
+      {
+        "kind": "/tryon",
+        "status": 200,
+        "ms": 5368,
+        "at": 1793568890877
+      },
+      {
+        "kind": "/tryon",
+        "status": 200,
+        "ms": 5496,
+        "at": 1793568891012
+      },
+      {
+        "kind": "/tryon",
+        "status": 200,
+        "ms": 2707,
+        "at": 1793568893618
+      },
+      {
+        "kind": "/tryon",
+        "status": 200,
+        "ms": 5999,
+        "at": 1793568897702
+      },
+      {
+        "kind": "/tryon",
+        "status": 200,
+        "ms": 5061,
+        "at": 1793568898844
+      },
+      {
+        "kind": "/tryon",
+        "status": 200,
+        "ms": 5410,
+        "at": 1793568904284
+      },
+      {
+        "kind": "/tryon",
+        "status": 200,
+        "ms": 6578,
+        "at": 1793568904312
+      }
+    ],
+    "errors": [],
+    "cards": [
+      {
+        "n": 1,
+        "id": "p-clubmonaco-6935009460296",
+        "title": "Tonal Plaid Lightweight Flannel Shirt",
+        "why": "Like Ralph Lauren: madras, flannel",
+        "colour": "",
+        "fabric": "Flannel",
+        "store": "Club Monaco",
+        "brand": "Club Monaco",
+        "price": 69,
+        "currency": "USD",
+        "url": "https://clubmonaco.com/products/tonal-plaid-lightweight-flannel-shirt-795102306-410",
+        "boost": 0,
+        "waitedMs": 587,
+        "photoMs": 15,
+        "swipe": "later"
+      },
+      {
+        "n": 2,
+        "id": "p-toddsnyder-7240036778055",
+        "title": "Cotton-Cashmere Sport Shirt",
+        "why": "Smart-casual: cashmere, flannel",
+        "colour": "Navy",
+        "fabric": "Flannel",
+        "store": "Todd Snyder",
+        "brand": "Todd Snyder",
+        "price": 198,
+        "currency": "USD",
+        "url": "https://toddsnyder.com/products/cotton-cashmere-windowpane-sport-shirtnavy",
+        "boost": 0,
+        "waitedMs": 510,
+        "photoMs": 6,
+        "swipe": "like"
+      },
+      {
+        "n": 3,
+        "id": "p-alexmill-7699717783611",
+        "title": "Rugby Striped Shirt in Cotton Jersey",
+        "why": "Like Ralph Lauren: rugby, stripe",
+        "colour": "Dark Navy Stripe",
+        "fabric": "Jersey",
+        "store": "Alex Mill",
+        "brand": "Alex Mill",
+        "price": 148,
+        "currency": "USD",
+        "url": "https://alexmill.com/products/rugby-striped-in-cotton-jersey-in-dark-navy-stripe",
+        "boost": 0,
+        "waitedMs": 543,
+        "photoMs": 8,
+        "swipe": "later"
+      },
+      {
+        "n": 4,
+        "id": "p-jpressonline-8451670278191",
+        "title": "Navy, Brown & Orange Tattersall Cotton Flannel Sport Shirt - Classic Fit",
+        "why": "More like: Cotton-Cashmere Sport Shirt",
+        "colour": "Navy",
+        "fabric": "Flannel",
+        "store": "J.Press",
+        "brand": "J.Press",
+        "price": 195,
+        "currency": "USD",
+        "url": "https://jpressonline.com/products/navy-brown-orange-tattersall-cotton-flannel-sport-shirt-classic-fit",
+        "boost": 10,
+        "waitedMs": 503,
+        "photoMs": 7,
+        "swipe": "later"
+      },
+      {
+        "n": 5,
+        "id": "p-richard-james-7509063991357",
+        "title": "Contemporary Shirt - Navy Cotton & Cashmere Flannel",
+        "why": "More like: Cotton-Cashmere Sport Shirt",
+        "colour": "Navy",
+        "fabric": "Flannel",
+        "store": "Richard James",
+        "brand": "Richard James",
+        "price": 100,
+        "currency": "GBP",
+        "url": "https://richard-james.com/products/contemporary-shirt-navy-cotton-cashmere-flannel",
+        "boost": 10,
+        "waitedMs": 511,
+        "photoMs": 6,
+        "swipe": "later"
+      },
+      {
+        "n": 6,
+        "id": "p-toddsnyder-7560866103367",
+        "title": "Italian Featherweight Flannel Long Point Collar Dress Shirt",
+        "why": "More like: Cotton-Cashmere Sport Shirt",
+        "colour": "Navy",
+        "fabric": "Flannel",
+        "store": "Todd Snyder",
+        "brand": "Todd Snyder",
+        "price": 248,
+        "currency": "USD",
+        "url": "https://toddsnyder.com/products/glenplaid-brushed-wool-long-point-collar-dress-shirtnavy",
+        "boost": 10,
+        "waitedMs": 514,
+        "photoMs": 6,
+        "swipe": "like"
+      },
+      {
+        "n": 7,
+        "id": "p-drakes-9236868890837",
+        "title": "Navy and Red Check Cotton-Linen Two-Pocket Work Shirt",
+        "why": "Like Ralph Lauren: madras, cotton-linen",
+        "colour": "Blue",
+        "fabric": "Linen",
+        "store": "Drake's",
+        "brand": "Drake's",
+        "price": 275,
+        "currency": "GBP",
+        "url": "https://drakes.com/products/navy-and-red-check-cotton-linen-two-pocket-work-shirt",
+        "boost": 0,
+        "waitedMs": 547,
+        "photoMs": 6,
+        "swipe": "later"
+      },
+      {
+        "n": 8,
+        "id": "p-newandlingwood-8356057219222",
+        "title": "Navy Herringbone One Piece Collar Standard Fit Flannel Shirt",
+        "why": "More like: Italian Featherweight Flannel Long",
+        "colour": "Navy",
+        "fabric": "Flannel",
+        "store": "New & Lingwood",
+        "brand": "New & Lingwood",
+        "price": 175,
+        "currency": "GBP",
+        "url": "https://newandlingwood.com/products/herringbone-flannel-one-piece-collar-standard-shirt-navy",
+        "boost": 10,
+        "waitedMs": 508,
+        "photoMs": 10,
+        "swipe": "later"
+      }
+    ],
+    "firstCardMs": 587,
+    "samePiece": [],
+    "gallery": {
+      "card": {
+        "title": "Italian Double-Brushed Flannel Shirt",
+        "store": "Todd Snyder",
+        "photos": 8,
+        "onPhoto": 0,
+        "layout": {
+          "photoBottom": 718,
+          "titleBottom": 808,
+          "screen": 844
+        }
+      },
+      "flipMs": 45,
+      "tapVoted": false,
+      "cardZoom": {
+        "opened": true,
+        "photo": 2,
+        "opensAt": {
+          "scale": 1.8,
+          "fill": 1.8,
+          "shown": "1"
+        },
+        "sharpMs": 663,
+        "closed": true
+      },
+      "zoomScale": 2.2,
+      "moreMs": 2,
+      "details": {
+        "thumbs": 8,
+        "desc": "An elevated take on a classic flannel shirt. English heritage plaids get reinvented in buttery, double-brushed Italian cotton that’s soft but substantial — AKA all the ruggedness of a real vintage flannels without any of the downsides. The fit is a little roomy and designed for easy layering; it loo",
+        "sizes": [
+          "XS",
+          "S",
+          "M",
+          "L",
+          "XL (sold out)",
+          "XXL (sold out)"
+        ],
+        "specs": [
+          "COLOUR: Charcoal",
+          "FABRIC: Flannel",
+          "FIT: Classic"
+        ]
+      },
+      "back": {
+        "was": "Italian Double-Brushed Flannel Shirt",
+        "nowShowing": "Navy Herringbone One Piece Collar Standard Fit Flannel Shirt",
+        "expected": "Navy Herringbone One Piece Collar Standard Fit Flannel Shirt",
+        "ok": true,
+        "thenNext": "Italian Double-Brushed Flannel Shirt"
+      },
+      "saved": {
+        "screen": "saved",
+        "cards": 1,
+        "photos": 1
+      },
+      "liked": {
+        "cards": [
+          "Italian Featherweight Flannel Long Point Collar Dress Shirt",
+          "Cotton-Cashmere Sport Shirt"
+        ],
+        "hearted": [
+          "Cotton-Cashmere Sport Shirt",
+          "Italian Featherweight Flannel Long Point Collar Dress Shirt"
+        ]
+      }
+    },
+    "shoes": {
+      "cards": [
+        "Drake's | Running sneakers | New Balance 'Summer Brights’ Green Banana Made in UK 991v2 Trainers",
+        "Anglo-Italian | Chukkas & desert boots | Desert Boot Crepe Sole Black Suede",
+        "Todd Snyder | Boots | CQP Forto Boot",
+        "Turnbull & Asser | Derbies | Blue Weekend Fit Cotton-Cashmere Finch Shirt With Derby Collar And Chest Pocket",
+        "New & Lingwood | Mules & clogs | Moss Green Suede All Day Slipper",
+        "Anglo-Italian | Loafers | Crockett & Jones Studridge Loafer Black Suede City Sole",
+        "Todd Snyder | Running sneakers | Asics Skyhand™ OG Sneaker",
+        "Drake's | Derbies | Paraboot Michael Camel Leather Derby Shoe",
+        "Velasca | Boots | Bajaffée",
+        "New & Lingwood | Loafers | Tobacco Calf Suede Eton Loafers",
+        "Todd Snyder | Chukkas & desert boots | Nomad Chukka Boot",
+        "Drake's | Espadrilles | Sabah Terro Suede Shoes",
+        "Turnbull & Asser | Derbies | SHIRTS WF DERBY COLLAR 1BC 1PKT WHT/STEEL GREY CHK",
+        "New & Lingwood | Loafers | Brown Suede Butterfly Loafers",
+        "Todd Snyder | Boots | Yuketen Suede Ranchero Boots",
+        "Drake's | Chukkas & desert boots | Crosby Moc-Toe Chukka Boot Tobacco Suede",
+        "Orlebar Brown | Sneakers | Somerled",
+        "Huntsman | Mules & clogs | Blue Devon Four Point Star Cashmere Slippers",
+        "Velasca | Chelsea boots | Freguiatt",
+        "Paul Evans | Loafers | The Edward Penny Loafer - Dark Brown Suede"
+      ],
+      "sameModel": [],
+      "kinds": 9,
+      "topMaker": [
+        "New & Lingwood",
+        3
+      ]
+    },
+    "categories": {
+      "Suits": {
+        "pool": 557,
+        "first": [
+          "Todd Snyder | Italian Flannel Madison Suit | Charcoal suits fair skin",
+          "Oliver Brown | Cadogan Suit - Navy Chalk Stripe Wool | Preppy: stripe",
+          "Cordings | Navy 12oz Double Breasted Chalk Stripe Suit | Preppy: stripe",
+          "Haspel | Vieux Carre Navy/Black Seersucker Stretch Tuxedo | Preppy: seersucker",
+          "Todd Snyder | Portuguese Flannel Pinstripe Wythe Suit | Grey suits fair skin"
+        ]
+      },
+      "Swimwear": {
+        "pool": 1225,
+        "first": [
+          "Southern Tide | Colorblock Seersucker Stripe Maritime Swim Trunk | Preppy: seersucker, stripe",
+          "Todd Snyder | 5\" Seersucker Montauk Swim Trunk | Preppy: seersucker",
+          "Orlebar Brown | Bulldog Drawcord | Preppy: stripe, boat",
+          "Haspel | Sherwood Navy Seersucker Stretch Swimsuit | Preppy: seersucker",
+          "Percival | Rowan Seersucker Swim Shorts | Cotton | Navy Stripe | Preppy: seersucker, stripe"
+        ]
+      },
+      "Coats": {
+        "pool": 868,
+        "first": [
+          "Cordings | Navy Rugby Reefer Coat | Preppy: rugby",
+          "Todd Snyder | Italian Houndstooth Car Coat | Charcoal suits fair skin",
+          "J.Press | Made-in-USA Camelhair Polo Coat | Preppy: polo",
+          "Kith | CDG Homme Wool Sage Stripe Full Parka - Navy / White | Preppy: stripe",
+          "New & Lingwood | Navy Stripe Lined Rain Mac | Preppy: stripe"
+        ]
+      },
+      "Sneakers": {
+        "pool": 1082,
+        "first": [
+          "Todd Snyder | New Balance 1954R Sneaker | Running sneakers",
+          "Kith | adidas BW Army - Shadow Navy / Charcoal | Sneakers",
+          "J.Press | Sperry Red CVO Sneaker Reissued | Court & canvas sneakers",
+          "Johnnie-O | LaRosa Sneaker | Sneakers",
+          "Todd Snyder | Asics Skyhand™ OG Sneaker | Running sneakers"
+        ]
+      },
+      "Hats": {
+        "pool": 2736,
+        "first": [
+          "Todd Snyder | Seersucker Cap | Preppy: seersucker",
+          "Drake's | Red and Orange Multi Stripe Geelongora Purl Stitch Knit Cap | Preppy: stripe",
+          "Aimé Leon Dore | Washed Chino Hat | Preppy: chino",
+          "Criquet | Throwback Hat - Criquet Stripe Embroidery - Navy Waxed Canvas | Preppy: stripe",
+          "Todd Snyder | Selvedge Chino Dad Cap | Preppy: chino"
+        ]
+      }
+    },
+    "aboutYou": {
+      "notSet": {
+        "long": 0,
+        "suitYou": 0,
+        "first": [
+          "Todd Snyder | Denim Dylan Jacket | Denim & trucker",
+          "Turnbull & Asser | Charcoal Houndstooth Flannel Jacket | Flannel",
+          "Reigning Champ | Nylon Oxford Team Jacket | Oxford",
+          "Outerknown | The Woolaroo Vest | Vest",
+          "Todd Snyder | Barbour Waterproof Ursula Jacket | Cotton",
+          "Battenwear | Warm-Up Fleece - Charcoal | Fleece"
+        ]
+      },
+      "shortSlim": {
+        "long": 0,
+        "suitYou": 19,
+        "first": [
+          "Todd Snyder | Italian Suede Grant Jacket | Cropped, good for your height",
+          "Stoffa | Flight Jacket (Mid-Grey Cotton Canvas) | Cropped, good for your height",
+          "Percival | Marcel Cord Jacket | Cotton | Burgundy | Cropped, good for your height",
+          "J.Press | Penn Wool Varsity Jacket | Cropped, good for your height",
+          "Todd Snyder | Denim Dylan Jacket | Cropped, good for your height",
+          "Stoffa | Flight Jacket (Dark Chocolate Lamb Suede) | Cropped, good for your height"
+        ]
+      }
+    },
+    "v18": {
+      "again": {
+        "answered": 8,
+        "waiting": 38,
+        "shownAgain": []
+      },
+      "words": {
+        "read": "184 cm (over 182) · 95 kg (broad build) · fair skin · for a wedding",
+        "styles": [
+          "Tailored",
+          "Wedding"
+        ],
+        "first": [
+          "Todd Snyder | Relaxed Italian Flannel Madison Suit | Tailored: wool, flannel | Charcoal suits fair skin",
+          "Huntsman | Ecru Barathea Shawl Lapel Dinner Jacket | Wedding: tuxedo, dinner | ",
+          "Anglo-Italian | Suit Double Breasted Navy Wool Cavalry Twill | Tailored: wool, suit | Navy suits fair skin",
+          "Richard James | Chapman Suit – Dusky Pink Wool Sharkskin | Tailored: wool, suit | Pink suits fair skin",
+          "Todd Snyder | Portuguese Flannel Pinstripe Wythe Suit | Tailored: wool, flannel | Grey suits fair skin",
+          "Oliver Brown | Carlyle Dinner Jacket - White | Tailored: wool, tuxedo | "
+        ]
+      },
+      "style": {
+        "pool": 557,
+        "soldInPool": 20,
+        "cards": 36,
+        "soldOut": 0,
+        "notShipping": 7
+      },
+      "shop": {
+        "pool": 557,
+        "soldInPool": 20,
+        "cards": 36,
+        "soldOut": 0,
+        "notShipping": 0
+      },
+      "brief": {
+        "saved": true,
+        "text": "Like this: Italian Flannel Houndstooth Sutton Jacket (Todd Snyder)\nPhotos: https://toddsnyder.com/products/flannel-houndstooth-sutton-jacketcream\n\nPiece: Tweed & wool · Blazers\nCloth: Cream · flannel, houndstooth, wool\nDetails: two buttons, side vents\nCut for me: jacket length just covering the seat, a slightly higher button stance and moderate lapels, so the line stays long; close through the chest and waist without pulling; a little structure in the shoulder\n\nFrom the store: Our Sutton Jacket offers a spin on a tailored sports coat — if you’re looking for a suit that doesn’t feel like a suit, you’ve found it. Here, it’s crafted from a lightweight Italian wool. This two-button jacket featur"
+      }
+    },
+    "people": {
+      "before": {
+        "votes": 9,
+        "saved": 2
+      },
+      "dan": {
+        "name": "Dan",
+        "screen": "profile",
+        "votes": 0,
+        "saved": 0,
+        "about": "About Dan",
+        "header": "Dan · Suits · 0 votes",
+        "first": "Todd Snyder | Italian Wool Gingham Wythe Suit | A relaxed cut for your build"
+      },
+      "back": {
+        "name": "Me",
+        "votes": 9,
+        "saved": 2,
+        "people": [
+          "Me",
+          "Dan"
+        ]
+      },
+      "same": true
+    },
+    "v111": {
+      "portrait": {
+        "ok": true,
+        "ms": 1289,
+        "status": 200,
+        "bytes": 379877,
+        "error": ""
+      },
+      "kb": {
+        "1.10": [
+          30,
+          30,
+          30
+        ],
+        "1.11": [
+          18,
+          18,
+          18
+        ],
+        "heavy": [
+          81,
+          81,
+          81
+        ]
+      },
+      "stylist 1.10": {
+        "status": 200,
+        "ms": 7941,
+        "model": "gemma-4-26b-a4b-it",
+        "summary": "Build a wardrobe around medium-contrast neutrals and rich, earthy tones to complement his skin. Focus on slim, structured silhouettes that respect his balanced proportions."
+      },
+      "stylist 1.11": {
+        "status": 200,
+        "ms": 7357,
+        "model": "gemma-4-26b-a4b-it",
+        "summary": "Build a wardrobe around high-contrast neutrals and rich, saturated tones to complement your natural coloring. Focus on slim, structured silhouettes that emphasize your balanced proportions."
+      },
+      "stylist heavy": {
+        "status": 200,
+        "ms": 3958,
+        "model": "gemma-4-26b-a4b-it",
+        "summary": "Build a wardrobe around high-contrast neutrals and earthy tones to complement your natural coloring. Focus on slim, structured silhouettes that emphasize your athletic build."
+      },
+      "photos": [
+        "336x448 34KB",
+        "336x448 34KB",
+        "336x448 34KB"
+      ],
+      "stylist": {
+        "model": "gemma-4-26b-a4b-it",
+        "ms": 10408,
+        "summary": "Build a wardrobe around textured, slim-fitting classics that emphasize vertical lines. Focus on mid-to-high rise trousers and tailored layers to elongate the silhouette.",
+        "best": [
+          "navy",
+          "charcoal",
+          "forest green",
+          "burgundy",
+          "cream",
+          "camel",
+          "slate blue",
+          "olive"
+        ],
+        "less": [
+          "stark white",
+          "neon",
+          "bright yellow",
+          "pale pastels"
+        ],
+        "lookFor": [
+          "slim fit",
+          "tapered leg",
+          "high rise",
+          "pointed collar",
+          "textured fabrics",
+          "monochromatic tones",
+          "mid-weight flannel",
+          "structured shoulders"
+        ],
+        "avoid": [
+          "oversized",
+          "low rise",
+          "longline tees",
+          "wide leg",
+          "heavy fabrics",
+          "horizontal stripes"
+        ],
+        "wallMs": 9009
+      },
+      "cards": [
+        {
+          "piece": "Todd Snyder | Italian Herringbone Sport Coat",
+          "state": "ok",
+          "ms": 5441,
+          "err": "",
+          "waitedMs": 5394
+        },
+        {
+          "piece": "Grayers | Corduroy Stretch Slim Fit Blazer - India Ink",
+          "state": "ok",
+          "ms": 5574,
+          "err": "",
+          "waitedMs": 3,
+          "looks": 1
+        },
+        {
+          "piece": "Haspel | Traveler Navy Knit Blazer - Tailored Fit",
+          "state": "ok",
+          "ms": 2729,
+          "err": "",
+          "waitedMs": 3
+        },
+        {
+          "piece": "Orlebar Brown | Mathis",
+          "state": "ok",
+          "ms": 6044,
+          "err": "",
+          "waitedMs": 777
+        },
+        {
+          "piece": "Todd Snyder | Italian Wool Glen Plaid Sport Coat",
+          "state": "ok",
+          "ms": 5096,
+          "err": "",
+          "waitedMs": 3
+        },
+        {
+          "piece": "Grayers | Burnham Knitted Wool Blazer - Charcoal",
+          "state": "ok",
+          "ms": 5443,
+          "err": "",
+          "waitedMs": 3585
+        }
+      ],
+      "onMe": "ON ME: on   drawn 7, drawing 2, failed 0, median 5443ms   stylist: read 2026-11-01T21:34:44.519Z"
+    },
+    "deployed": {
+      "version": "1.11.1",
+      "firstCardMs": 846,
+      "base": "https://raw.githubusercontent.com/IsraelToledano/Clothes/catalog-data/catalog/",
+      "pool": 557,
+      "catalogFiles": [
+        {
+          "file": "stores.json",
+          "status": 200,
+          "bytes": 94293
+        },
+        {
+          "file": "suits.json",
+          "status": 200,
+          "bytes": 295964
+        },
+        {
+          "file": "details/026.json",
+          "status": 200,
+          "bytes": 315234
+        },
+        {
+          "file": "details/066.json",
+          "status": 200,
+          "bytes": 307456
+        }
+      ],
+      "first": "Todd Snyder | Italian Gabardine Sutton Suit"
+    },
+    "report": "app: 1.11.1   when: 2026-11-01T21:35:07.863Z   person: Me (2 on this phone: Me, Dan)\nscreen: explore\nua: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/130.0.6723.31 Safari/537.36\nai: on   server: https://clothes.srul7022.workers.dev   health: {\"ideas\":true,\"images\":true,\"version\":\"1.3.1\",\"textModel\":\"gemma-4-26b-a4b-it\",\"imageModel\":\"schnell for the first cards, klein after\"}\nai request: idle   last error: none   waiting ideas: 36\nserver version: 1.3.1   (app expects 1.3.1 or newer)\nidea model: gemma (last reply)   server says: gemma-4-26b-a4b-it\ncatalog: 104 stores, updated 2026-11-01T09:18:48.085Z, {\"Accessories\":11934,\"Coats\":868,\"Polos\":4430,\"Shirts\":10051,\"Overshirts\":1096,\"Jackets\":4795,\"Trousers\":5142,\"T-shirts\":5650,\"Knitwear\":5524,\"Sweatshirts\":2746,\"Shoes\":3967,\"Suits\":557,\"Blazers\":971,\"Jeans\":1457,\"Shorts\":1881,\"Swimwear\":1225}   pool for this search: 971   AI words: cropped, slim, tailored, short, structured   avoid: oversized, longline, boxy, wide, relaxed\nlast photo error: none\n\nSEARCH: mode=find a style  type=Blazers (Blazers & sport coats)  styles=-  text=\"\"\nANSWERED BEFORE: 15 answers; 7 of this search's pieces not shown again\nYOUR WORDS READ AS: brands -; styles -; look for -; avoid -; store styles +- --; stores -\nLIKED: Italian Flannel Houndstooth Sutton Jacket; Italian Featherweight Flannel Long Point Collar Dress Shirt; Cotton-Cashmere Sport Shirt\nPREFS: {\"budget\":\"any\",\"size\":\"M\",\"shoe\":\"43\",\"shipIL\":true,\"me\":{\"height\":\"short\",\"build\":\"slim\",\"fit\":\"\",\"skin\":\"fair\"}}\nON ME: on   drawn 7, drawing 2, failed 0, median 5443ms   stylist: read 2026-11-01T21:34:44.519Z\nPHOTOS: 336x448 34KB, 336x448 34KB, 336x448 34KB   LOOKS saved: 1\nSTYLIST (gemma-4-26b-a4b-it, 10408ms): Build a wardrobe around textured, slim-fitting classics that emphasize vertical lines. Focus on mid-to-high rise trousers and tailored layers to elongate the silhouette. | best navy, charcoal, forest green, burgundy, cream, camel, slate blue, olive | less stark white, neon, bright yellow, pale pastels | look for slim fit, tapered leg, high rise, pointed collar, textured fabrics, monochromatic tones, mid-weight flannel, structured shoulders | avoid oversized, low rise, longline tees, wide leg, heavy fabrics, horizontal stripes\nFOR YOU: +1.5 a slimmer cut for your build   cut: T\n\nON SCREEN: Garret Seersucker — Orlebar Brown at Orlebar Brown, £695 [Seersucker, Linen & seersucker] https://orlebarbrown.com/products/garret-seersucker-light-blue-jackets-280663\n  why: \"A slimmer cut for your build\"   search: \"Garret Seersucker\"   photo 1 of 6\nNEXT UP: Herringbone Archie Jacket; Brown Cotton Corduroy Tailored Jacket; Belmont Blazer; Rainer Pique; Italian Cotton-Linen Pinstripe Sutton Jacket\n\nTHIS ROUND (6 votes, oldest first):\n  LATER Italian Herringbone Sport Coat\n  LATER Corduroy Stretch Slim Fit Blazer - India Ink\n  LATER Traveler Navy Knit Blazer - Tailored Fit\n  LATER Mathis\n  LATER Italian Wool Glen Plaid Sport Coat\n  LATER Burnham Knitted Wool Blazer - Charcoal\nAI insight: focusing on slim, proportional cuts\n\nTASTE: more of: Todd Snyder, Slim fit, Flannel, Flannel   less of: -\nPICKS: Italian Flannel Houndstooth Sutton Jacket\nSAVED: Italian Double-Brushed Flannel Shirt; Italian Flannel Houndstooth Sutton Jacket; Corduroy Stretch Slim Fit Blazer - India Ink"
+  }
+}
