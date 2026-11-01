@@ -242,10 +242,30 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
 .screen.roomy .bottom.sticky{margin-left:-16px;margin-right:-16px;padding:16px 16px 0;background:linear-gradient(to bottom,rgba(238,240,243,0),var(--bg) 22px)}
 .chips.small{gap:6px}
 .chips.small .chip{height:38px;padding:0 13px;font-size:14px;border-radius:19px}
-.seg{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--card)}
-.seg button{min-height:48px;border:0;background:transparent;color:var(--muted);font-size:15px;font-weight:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:6px 8px}
-.seg button small{font-size:11.5px;font-weight:400}
-.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--card)}
+.modes button{min-height:48px;border:0;background:transparent;color:var(--muted);font-size:15px;font-weight:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:6px 8px}
+.modes button small{font-size:11.5px;font-weight:400}
+.modes button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.who{margin:0 0 -6px;font-size:14px;color:var(--muted);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.who .link-btn{display:inline-flex;align-items:center;gap:4px;min-height:36px;padding:0}
+.who-btn{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 10px 0 4px;border:1px solid var(--line);border-radius:18px;background:var(--card);color:var(--ink);font-weight:600;font-size:14px}
+.who-btn svg{width:14px;height:14px;transform:rotate(90deg)}
+.av{width:28px;height:28px;border-radius:50%;background:var(--ink);color:var(--bg);display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex:none}
+.people{display:flex;flex-direction:column;gap:8px}
+.person{display:flex;align-items:center;gap:12px;min-height:60px;padding:8px 12px;border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);text-align:left}
+.person.on{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.person .av{width:36px;height:36px;font-size:15px}
+.person .pt{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.person .pt b{font-size:16px}
+.person .pt small{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.person svg{width:18px;height:18px;flex:none}
+.add-person{display:flex;flex-direction:column;gap:6px}
+.add-person .row2{display:flex;gap:8px}
+.add-person input,.people-edit input{flex:1;min-width:0;height:46px;border:1px solid var(--line);border-radius:12px;padding:0 12px;font-size:16px;background:var(--card);color:var(--ink)}
+.add-person .outline-btn{width:auto;padding:0 18px}
+.people-edit{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.people-edit li{display:flex;align-items:center;gap:10px}
+.people-edit .link-btn{min-height:40px;padding:0 4px}
 .mode-note{margin:8px 2px 0;font-size:13px;line-height:1.4;color:var(--muted)}
 .brief{font-family:inherit;overflow-wrap:anywhere;margin:0;padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--bg);font-size:14px;line-height:1.5;color:var(--ink);white-space:pre-wrap;max-height:42vh;overflow:auto}
 .brief b{font-weight:700}
@@ -375,14 +395,26 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "1.8.1";
+const APP_VERSION = "1.9.0";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
 const SERVER_EXPECTED = "1.1.0"; // the worker/worker.js version this app was built with
 
 /* ---------------- storage (on this phone only) ---------------- */
 const LS = "clothes:";
-function load(k, d){ try{ const r = localStorage.getItem(LS + k); return r != null ? JSON.parse(r) : d; }catch(e){ return d; } }
-function save(k, v){ try{ localStorage.setItem(LS + k, JSON.stringify(v)); }catch(e){} }
+// People on this phone: each person has their own About you, sizes, budget, taste, votes, saved and liked
+// pieces and last search; the AI connection, the catalog and the app are shared. The first person ("me")
+// keeps the original keys (clothes:taste...); others are clothes:<id>:taste...
+const PER_PERSON = ["query", "taste", "prefs", "saved", "liked", "picks", "session"];
+const PEOPLE_MAX = 8;
+let PEOPLE = (() => { try{ return JSON.parse(localStorage.getItem(LS + "people")) || null; }catch(e){ return null; } })();
+if (!PEOPLE || !Array.isArray(PEOPLE.list) || !PEOPLE.list.length) PEOPLE = {list:[{id:"me", name:"Me"}], active:"me"};
+if (!PEOPLE.list.some((x) => x.id === PEOPLE.active)) PEOPLE.active = PEOPLE.list[0].id;
+const keyOf = (k, id) => { id = id || PEOPLE.active; return PER_PERSON.includes(k) && id !== "me" ? id + ":" + k : k; };
+const person = () => PEOPLE.list.find((x) => x.id === PEOPLE.active) || PEOPLE.list[0];
+function savePeople(){ try{ localStorage.setItem(LS + "people", JSON.stringify(PEOPLE)); }catch(e){} }
+function load(k, d){ try{ const r = localStorage.getItem(LS + keyOf(k)); return r != null ? JSON.parse(r) : d; }catch(e){ return d; } }
+function save(k, v){ try{ localStorage.setItem(LS + keyOf(k), JSON.stringify(v)); }catch(e){} }
+function loadOf(id, k, d){ try{ const r = localStorage.getItem(LS + keyOf(k, id)); return r != null ? JSON.parse(r) : d; }catch(e){ return d; } }
 
 let AI = Object.assign({url:DEFAULT_WORKER, code:"", on:false, health:null}, load("ai", {}));
 const aiOn = () => !!(AI.on && AI.code && AI.url);
@@ -555,7 +587,7 @@ const styleMode = () => Q.mode !== "shop";
 let TASTE = load("taste", {w:{}, votes:[]});
 let PREFS = load("prefs", {budget:"any", size:"M", shoe:"43", shipIL:true});
 if (!PREFS.me) PREFS.me = {height:"", build:"", fit:""}; // About you (taste profile): what flatters you
-if (PREFS.me.skin === undefined){ PREFS.me.skin = "fair"; save("prefs", PREFS); } // you said: fair skin
+if (PREFS.me.skin === undefined){ PREFS.me.skin = PEOPLE.active === "me" ? "fair" : ""; save("prefs", PREFS); } // you said: fair skin
 const ME_OPTS = {
   height:[["short", "Under 170 cm"], ["average", "170–182 cm"], ["tall", "Over 182 cm"]],
   build:[["slim", "Slim"], ["average", "Average"], ["athletic", "Athletic"], ["broad", "Broad"]],
@@ -1473,8 +1505,9 @@ function restoreSession(){
 function renderStart(){
   return `<main class="screen roomy" aria-labelledby="start-h">
     <header class="top"><span class="brand"><span class="wordmark">drape</span><button type="button" class="ver" data-act="refresh" aria-label="Update the app (version ${APP_VERSION})">v${APP_VERSION} ${ICON.refresh}</button></span>${hbtns(true)}</header>
-    <h1 id="start-h" class="h1">What are you looking for today?</h1>
-    <div><div class="seg" role="group" aria-label="What for">
+    <p class="who">${PEOPLE.list.length > 1 ? `Looking for <button type="button" class="who-btn" data-act="people"><span class="av" aria-hidden="true">${esc((person().name || "?")[0].toUpperCase())}</span>${esc(person().name)} ${ICON.fwd}</button>` : `<button type="button" class="link-btn" data-act="people">+ Someone else? Add a person</button>`}</p>
+    <h1 id="start-h" class="h1">${PEOPLE.list.length > 1 && youName() !== "you" ? "What is " + esc(youName()) + " looking for today?" : "What are you looking for today?"}</h1>
+    <div><div class="modes" role="group" aria-label="What for">
         <button type="button" data-act="mode" data-v="style" aria-pressed="${styleMode()}">Find a style<small>ideas for your tailor</small></button>
         <button type="button" data-act="mode" data-v="shop" aria-pressed="${!styleMode()}">Shop<small>pieces to buy now</small></button></div>
       <p class="mode-note">${styleMode() ? `Every piece we find, sold out too, from ${CAT.stores ? CAT.stores.stores.length : "100+"} stores anywhere. Pick the look; have it made.` : `Only pieces in stock${PREFS.shipIL ? " that ship to Israel" : ""}${PREFS.budget && PREFS.budget !== "any" ? ", in your budget" : ""}${PREFS.sizeSet ? ", in your size first" : ""}.`}</p></div>
@@ -1483,7 +1516,7 @@ function renderStart(){
         <option value="Surprise me"${!Q.type || Q.type === "Surprise me" ? " selected" : ""}>Anything · surprise me</option>
         ${CATEGORIES.map(([g, l]) => `<optgroup label="${esc(g)}">${l.map(([id, lab]) => `<option value="${esc(id)}"${Q.type === id ? " selected" : ""}>${esc(lab || id)}</option>`).join("")}</optgroup>`).join("")}
       </select>${ICON.fwd}</div>
-      <p class="about-line">${PREFS.me.height || PREFS.me.build || PREFS.me.fit || PREFS.me.skin ? `For you: ${esc([meLabel("height"), meLabel("build"), meLabel("fit") && meLabel("fit") + " fit", PREFS.sizeSet ? "size " + PREFS.size : "", PREFS.me.skin ? meLabel("skin").toLowerCase() + " skin" : ""].filter(Boolean).join(" · "))} · <button type="button" class="link-btn" data-act="about">Change</button>` : `<button type="button" class="link-btn" data-act="about">Add your height and build</button> so suggestions suit you`}</p>
+      <p class="about-line">${PREFS.me.height || PREFS.me.build || PREFS.me.fit || PREFS.me.skin ? `For ${esc(youName())}: ${esc([meLabel("height"), meLabel("build"), meLabel("fit") && meLabel("fit") + " fit", PREFS.sizeSet ? "size " + PREFS.size : "", PREFS.me.skin ? meLabel("skin").toLowerCase() + " skin" : ""].filter(Boolean).join(" · "))} · <button type="button" class="link-btn" data-act="about">Change</button>` : `<button type="button" class="link-btn" data-act="about">Add ${youName() === "you" ? "your" : esc(youName()) + "'s"} height and build</button> so suggestions suit ${youName() === "you" ? "you" : "them"}`}</p>
     </div>
     ${STYLE_GROUPS.map(([g, list], k) => `<fieldset><legend class="label">${esc(g)} <span class="hint">· pick any${k ? "" : (Q.styles.length ? " · " + Q.styles.length + " picked" : "")}</span></legend><div class="chips small">${list.map((s) => { const on = Q.styles.includes(s); return `<button type="button" class="chip" data-act="style" data-v="${esc(s)}" aria-pressed="${on}">${on ? ICON.check : ""}${esc(s)}</button>`; }).join("")}</div></fieldset>`).join("")}
     <div><label class="label" for="txt">In your own words <span class="hint">· optional</span></label><textarea id="txt" rows="3" placeholder="e.g. something light to throw over a tee on summer evenings, nothing too sporty">${esc(Q.text)}</textarea></div>
@@ -1506,7 +1539,7 @@ function ideaImage(i){
 
 function metaHtml(){
   const n = S.round.votes.length;
-  return `<span class="meta">${esc(catLabel(Q.type))} · ${n} vote${n === 1 ? "" : "s"}</span>`;
+  return `<span class="meta">${PEOPLE.list.length > 1 ? esc(person().name) + " · " : ""}${esc(catLabel(Q.type))} · ${n} vote${n === 1 ? "" : "s"}</span>`;
 }
 function headCenter(){
   const u = S.toast && S.toast.undo;
@@ -2104,7 +2137,7 @@ function storeLinks(q, budget){
 function renderShop(){
   const i = S.picked, q = searchText(i), shoes = i.type === "Shoes";
   const b = BUDGETS.find((x) => x.id === PREFS.budget);
-  const pills = [b && b.id !== "any" ? b.label : null, "Size " + (shoes ? PREFS.shoe + " EU" : PREFS.size), PREFS.shipIL ? "Ships to Israel" : null].filter(Boolean);
+  const pills = [b && b.id !== "any" ? b.label : null, (shoes ? (PREFS.shoe ? "Size " + PREFS.shoe + " EU" : null) : "Size " + PREFS.size), PREFS.shipIL ? "Ships to Israel" : null].filter(Boolean);
   return `<main class="screen">
     <header class="top"><button type="button" class="icon-btn" data-act="back-explore" aria-label="Back to ideas">${ICON.back}</button><span class="meta">Shopping</span>${hbtns(true)}</header>
     ${steps(2)}
@@ -2134,8 +2167,8 @@ function aboutCard(){
   if (m.skin === "fair") eff.push("near your face, more navy, charcoal, burgundy, bottle green and light blue, less beige, sand and mustard");
   if (m.skin === "olive") eff.push("near your face, more burgundy, navy, cream and rust, less olive, khaki and mustard");
   return `<section class="card" id="about" aria-labelledby="about-h">
-    <h2 id="about-h">About you</h2>
-    <p>So Drape suggests what suits you. Only on this phone.</p>
+    <h2 id="about-h">${youName() === "you" ? "About you" : "About " + esc(youName())}</h2>
+    <p>So Drape suggests what suits ${youName() === "you" ? "you" : "them"}. Only on this phone.</p>
     <fieldset><legend class="mono-label" style="margin-bottom:8px">Height</legend><div class="chips">${chips("height")}</div></fieldset>
     <fieldset><legend class="mono-label" style="margin-bottom:8px">Build</legend><div class="chips">${chips("build")}</div></fieldset>
     <fieldset><legend class="mono-label" style="margin-bottom:8px">Fit you like</legend><div class="chips">${chips("fit")}</div></fieldset>
@@ -2150,9 +2183,10 @@ function renderProfile(){
   const votes = TASTE.votes.slice(-12).reverse();
   const picks = PICKS.slice(-6).reverse();
   return `<main class="screen">
-    <header class="top"><button type="button" class="icon-btn" data-act="profile-back" aria-label="Back">${ICON.back}</button><span class="meta">Your taste</span>${hbtns(false)}</header>
-    <div style="display:flex;flex-direction:column;gap:6px"><h1 class="h1" style="font-size:32px">Your taste so far</h1><span class="mono-label">${TASTE.votes.length} vote${TASTE.votes.length === 1 ? "" : "s"} · ${SAVED.length} saved · ${PICKS.length} pick${PICKS.length === 1 ? "" : "s"}</span></div>
+    <header class="top"><button type="button" class="icon-btn" data-act="profile-back" aria-label="Back">${ICON.back}</button><span class="meta">${youName() === "you" ? "Your taste" : esc(youName()) + "'s taste"}</span>${hbtns(false)}</header>
+    <div style="display:flex;flex-direction:column;gap:6px"><h1 class="h1" style="font-size:32px">${youName() === "you" ? "Your taste so far" : esc(youName()) + "'s taste so far"}</h1><span class="mono-label">${TASTE.votes.length} vote${TASTE.votes.length === 1 ? "" : "s"} · ${SAVED.length} saved · ${PICKS.length} pick${PICKS.length === 1 ? "" : "s"}</span></div>
     ${aboutCard()}
+    ${peopleCard()}
     <section class="card" aria-label="What you like and dislike">
       ${pos.length || neg.length ? `
         ${pos.length ? `<div style="display:flex;flex-direction:column;gap:8px"><span class="mono-label">More of</span><div class="tchips">${pos.map((k) => `<span class="tchip plus">+ ${esc(chipLabel(k))}</span>`).join("")}</div></div>` : ""}
@@ -2207,6 +2241,68 @@ function renderToast(){
   return `<div class="toast${t.undo ? "" : " plain"}" role="status"><span>${esc(t.text)}</span>${t.undo ? `<button type="button" data-act="undo">Undo</button>` : ""}</div>`;
 }
 
+/* ---------------- people on this phone ---------------- */
+// Switching reloads the app as that person (everything per person is read fresh at start-up).
+function switchPerson(id, then){
+  if (!PEOPLE.list.some((x) => x.id === id)) return;
+  try{ saveSession(); }catch(e){}
+  PEOPLE.active = id; savePeople();
+  try{ sessionStorage.setItem("drape:then", then || "start"); }catch(e){}
+  location.reload();
+}
+function addPerson(name){
+  name = String(name || "").trim().slice(0, 24);
+  if (!name) return toast("Type a name first");
+  if (PEOPLE.list.length >= PEOPLE_MAX) return toast("Up to " + PEOPLE_MAX + " people on one phone");
+  const id = "p" + Date.now().toString(36);
+  PEOPLE.list.push({id, name, at:Date.now()}); savePeople();
+  // A fresh start: no About you yet (they fill it in next), no votes, nothing saved.
+  try{ localStorage.setItem(LS + keyOf("prefs", id), JSON.stringify({budget:"any", size:"M", shoe:"", shipIL:true, me:{height:"", build:"", fit:"", skin:""}})); }catch(e){}
+  try{ localStorage.setItem(LS + keyOf("query", id), JSON.stringify({type:"", styles:[], text:"", mode:"style"})); }catch(e){}
+  switchPerson(id, "about");
+}
+function renamePerson(id, name){
+  name = String(name || "").trim().slice(0, 24);
+  const x = PEOPLE.list.find((y) => y.id === id);
+  if (!x || !name || name === x.name) return;
+  x.name = name; savePeople(); render();
+}
+function removePerson(id){
+  const x = PEOPLE.list.find((y) => y.id === id);
+  if (!x || PEOPLE.list.length < 2) return;
+  S.modal = {title:"Remove " + x.name + "?", body:"This deletes " + x.name + "'s About you, votes, saved and liked pieces on this phone. Everyone else stays as they are.", ok:"Remove", run(){
+    for (const k of PER_PERSON) try{ localStorage.removeItem(LS + keyOf(k, id)); }catch(e){}
+    PEOPLE.list = PEOPLE.list.filter((y) => y.id !== id);
+    if (PEOPLE.active === id){ PEOPLE.active = PEOPLE.list[0].id; savePeople(); try{ sessionStorage.setItem("drape:then", "profile"); }catch(e){} location.reload(); return; }
+    savePeople(); toast(x.name + " removed");
+  }};
+  render();
+}
+function personLine(id){
+  const pr = loadOf(id, "prefs", {}) || {}, me = pr.me || {}, sv = (loadOf(id, "saved", []) || []).length, tv = ((loadOf(id, "taste", {}) || {}).votes || []).length;
+  const lab = (k) => { const o = (ME_OPTS[k] || []).find((y) => y[0] === me[k]); return o ? o[1] : ""; };
+  return [lab("height"), lab("build"), pr.sizeSet ? "size " + pr.size : "", me.skin ? lab("skin").toLowerCase() + " skin" : "", tv + " vote" + (tv === 1 ? "" : "s"), sv ? sv + " saved" : ""].filter(Boolean).join(" · ");
+}
+const youName = () => (person().name && !/^me$/i.test(person().name) ? person().name : "you");
+function renderPeopleSheet(){
+  return `<div class="scrim" data-act="scrim"><section class="sheet" role="dialog" aria-modal="true" aria-labelledby="pp-t">
+    <span class="grab" aria-hidden="true"></span>
+    <h2 id="pp-t" style="margin:0;font-size:22px">Who is this for?</h2>
+    <p class="small-note" style="text-align:left">Each person has their own About you, sizes, taste, saved and liked pieces.</p>
+    <div class="people" role="list">${PEOPLE.list.map((x) => `<button type="button" role="listitem" class="person${x.id === PEOPLE.active ? " on" : ""}" data-act="person" data-v="${esc(x.id)}" aria-current="${x.id === PEOPLE.active}"><span class="av" aria-hidden="true">${esc((x.name || "?")[0].toUpperCase())}</span><span class="pt"><b>${esc(x.name)}</b><small>${esc(personLine(x.id))}</small></span>${x.id === PEOPLE.active ? ICON.check : ""}</button>`).join("")}</div>
+    ${PEOPLE.list.length < PEOPLE_MAX ? `<div class="add-person"><label class="label" for="pp-name">Add a person</label><div class="row2"><input id="pp-name" type="text" maxlength="24" placeholder="Name, e.g. Dan" autocomplete="off"><button type="button" class="outline-btn" data-act="person-add">Add</button></div></div>` : ""}
+    <div class="bottom"><button type="button" class="link-btn" data-act="people-edit">Rename or remove people</button><button type="button" class="link-btn" data-act="people-close">Done</button></div>
+  </section></div>`;
+}
+function peopleCard(){
+  return `<section class="card" id="people" aria-labelledby="people-h">
+    <h2 id="people-h">People on this phone</h2>
+    <p>Each one has their own About you, taste and pieces. Tap a name to change it.</p>
+    <ul class="people-edit">${PEOPLE.list.map((x) => `<li><input type="text" class="person-name" data-id="${esc(x.id)}" value="${esc(x.name)}" maxlength="24" aria-label="Name">${x.id === PEOPLE.active ? `<span class="mono-label">Now</span>` : `<button type="button" class="link-btn" data-act="person" data-v="${esc(x.id)}">Switch</button>`}${PEOPLE.list.length > 1 ? `<button type="button" class="link-btn danger" data-act="person-remove" data-v="${esc(x.id)}">Remove</button>` : ""}</li>`).join("")}</ul>
+    ${PEOPLE.list.length < PEOPLE_MAX ? `<button type="button" class="outline-btn" data-act="people">+ Add a person</button>` : ""}
+  </section>`;
+}
+
 /* ---------------- render ---------------- */
 function render(){
   const app = document.getElementById("app");
@@ -2214,11 +2310,12 @@ function render(){
   const dt = document.getElementById("detail"), keepTop = dt && S.detail && dt.dataset.id === S.detail.item.id ? dt.scrollTop : 0;
   let html = S.screen === "explore" ? renderExplore() : S.screen === "shop" ? renderShop() : S.screen === "profile" ? renderProfile() : S.screen === "saved" ? renderSaved() : renderStart();
   if (S.sheet && S.current) html += renderSheet();
+  if (S.people) html += renderPeopleSheet();
   if (S.detail) html += renderDetail();
   if (S.modal) html += renderModal();
   if (S.toast && !S.toast.undo) html += renderToast();
   app.innerHTML = html;
-  document.body.classList.toggle("lock", !!(S.sheet || S.modal || S.detail || Z.open));
+  document.body.classList.toggle("lock", !!(S.sheet || S.people || S.modal || S.detail || Z.open));
   if (S.detail){ const d2 = document.getElementById("detail"); if (d2) d2.scrollTop = keepTop; bindDetail(); }
   if (S.screen === "explore"){ bindSwipe(); if (S.current){ preloadUrl(photoAt(S.current, curPh() + 1, 900)); loadCardMore(S.current); } }
   const f = S.focus && document.querySelector(S.focus);
@@ -2455,7 +2552,13 @@ const ACTIONS = {
     if (S.sheet) setTimeout(() => { S.sheet = false; render(); }, 300);
   },
   broaden(){ Q.type = "Surprise me"; save("query", Q); S.current = nextIdea(); render(); },
-  scrim(el, e){ if (e.target !== el) return; if (S.modal){ S.modal = null; } else S.sheet = false; render(); },
+  scrim(el, e){ if (e.target !== el) return; if (S.modal){ S.modal = null; } else if (S.people){ S.people = false; } else S.sheet = false; render(); },
+  people(){ S.people = true; S.focus = null; render(); },
+  "people-close"(){ S.people = false; render(); },
+  "people-edit"(){ S.people = false; openScreen("profile"); setTimeout(() => { const a = document.getElementById("people"); if (a) a.scrollIntoView({block:"start"}); }, 30); },
+  person(el){ const id = el.dataset.v; if (id === PEOPLE.active){ S.people = false; render(); return; } switchPerson(id, S.screen === "profile" ? "profile" : "start"); },
+  "person-add"(){ const i = document.getElementById("pp-name"); addPerson(i && i.value); },
+  "person-remove"(el){ removePerson(el.dataset.v); },
   "sheet-close"(){ S.sheet = false; render(); },
   mode(el){ Q.mode = el.dataset.v === "shop" ? "shop" : "style"; save("query", Q); render(); },
   "copy-brief"(){ if (S.current) copyText(tailorBrief(S.current), "Brief copied: paste it to your tailor"); },
@@ -2490,6 +2593,7 @@ document.addEventListener("input", (e) => {
   if (e.target.id === "txt"){ Q.text = e.target.value; save("query", Q); }
 });
 document.addEventListener("change", (e) => {
+  if (e.target.classList && e.target.classList.contains("person-name")){ renamePerson(e.target.dataset.id, e.target.value); return; }
   if (e.target.id === "cat"){ Q.type = e.target.value; save("query", Q); return; }
   if (e.target.id === "shipIL"){ PREFS.shipIL = e.target.checked; save("prefs", PREFS); }
 });
@@ -2630,7 +2734,7 @@ async function askCapture(){
 function askSnapshot(){
   const L = [];
   const row = (i) => !i ? "none" : isProduct(i) ? `${i.title} — ${i.brand} at ${i.store}, ${money(i.price, i.currency)}${i.was > i.price ? " (was " + money(i.was, i.currency) + ")" : ""} [${[i.colour, i.fabric, i.kind].filter(Boolean).join(", ")}] ${i.url}` : `${i.title} [${i.type}; ${i.colour}, ${i.fabric}, ${i.fit}, ${i.vibe}; ${(i.styles || []).join("/")}]${isAI(i) ? " (AI)" : " (sample)"}`;
-  L.push(`app: ${APP_VERSION}   when: ${new Date().toISOString()}`);
+  L.push(`app: ${APP_VERSION}   when: ${new Date().toISOString()}   person: ${person().name} (${PEOPLE.list.length} on this phone: ${PEOPLE.list.map((x) => x.name).join(", ")})`);
   L.push(`screen: ${S.screen}${S.sheet ? " + pick sheet" : ""}${S.modal ? " + dialog" : ""}${S.detail ? " + details of \"" + S.detail.item.title + "\" (from " + S.detail.from + ", photo " + ((S.detail.ph || 0) + 1) + " of " + photosOf(S.detail.item).length + ")" : ""}${Z.open ? " + full-screen photo " + (Z.k + 1) + "/" + Z.list.length + " at " + Z.sc.toFixed(2) + "x" : ""}`);
   L.push(`ua: ${navigator.userAgent}`);
   L.push(`ai: ${aiOn() ? "on" : "off"}${S.sampleRound ? " (this round uses sample ideas)" : ""}   server: ${AI.url || DEFAULT_WORKER}   health: ${JSON.stringify(AI.health || null)}`);
@@ -2773,6 +2877,10 @@ if (!LIKED){
   save("liked", LIKED);
 }
 restoreSession();
+(() => { let then = ""; try{ then = sessionStorage.getItem("drape:then") || ""; sessionStorage.removeItem("drape:then"); }catch(e){}
+  if (then === "about" || then === "profile"){ S.screen = "profile"; S.prev = "start"; S.stack = ["start"]; setTimeout(() => { const a = document.getElementById(then === "about" ? "about" : "people"); if (a) a.scrollIntoView({block:"start"}); }, 60); }
+  if (then === "about") setTimeout(() => toast("Now " + person().name + ": add their height, build and size"), 80);
+  else if (then) setTimeout(() => toast("Now looking for " + person().name), 80); })();
 render();
 afterUpdate();
 checkServer();

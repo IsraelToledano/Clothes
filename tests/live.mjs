@@ -277,6 +277,27 @@ try {
       log("1.8", v18);
     } catch (e) { R.app.v18 = Object.assign(R.app.v18 || {}, { error: String((e && e.message) || e) }); }
   }
+  /* ---------- 6b. 1.9: people on this phone ---------- */
+  if (first) {
+    try {
+      const before = await page.evaluate(() => ({ votes: TASTE.votes.length, saved: SAVED.length }));
+      await page.evaluate(() => { S.screen = "start"; render(); });
+      await page.click('[data-act="people"]'); await page.fill("#pp-name", "Dan");
+      await Promise.all([page.waitForNavigation(), page.click('[data-act="person-add"]')]); await page.waitForTimeout(600);
+      const dan = await page.evaluate(() => ({ name: person().name, screen: S.screen, votes: TASTE.votes.length, saved: SAVED.length, about: document.getElementById("about-h").innerText }));
+      await page.click('[data-act="me"][data-k="height"][data-v="tall"]'); await page.click('[data-act="me"][data-k="build"][data-v="broad"]');
+      await page.click('[data-act="profile-back"]'); await page.waitForTimeout(300);
+      await page.selectOption("#cat", "Suits"); await page.click('[data-act="go"]'); await page.waitForSelector("#card img.prod.ok", { timeout: 20000 }); await page.waitForTimeout(500);
+      dan.header = await page.innerText("header .meta"); dan.first = await page.evaluate(() => S.current.store + " | " + S.current.title + " | " + S.current.why);
+      await page.keyboard.press("ArrowLeft"); await page.waitForTimeout(300);
+      await page.screenshot({ path: path.join(OUT, "v19-dan.png") });
+      await page.click('[data-act="home"]'); await page.waitForTimeout(300); await page.click('.who [data-act="people"]');
+      await Promise.all([page.waitForNavigation(), page.click('.person[data-v="me"]')]); await page.waitForTimeout(600);
+      const back = await page.evaluate(() => ({ name: person().name, votes: TASTE.votes.length, saved: SAVED.length, people: PEOPLE.list.map((x) => x.name) }));
+      R.app.people = { before, dan, back, same: back.votes === before.votes && back.saved === before.saved };
+      log("people", R.app.people);
+    } catch (e) { R.app.people = { error: String((e && e.message) || e) }; }
+  }
   /* ---------- 7. the deployed app (GitHub Pages) with the catalog from its branch ---------- */
   if (process.env.SITE) {
     try {
@@ -329,6 +350,7 @@ const md = [
   `1.8 your words (wedding): ${a.v18 && a.v18.words ? a.v18.words.read + " — styles " + a.v18.words.styles.join(", ") + " — " + a.v18.words.first.join(" / ") : "-"}`,
   `1.8 Suits, find a style: ${JSON.stringify(a.v18 && a.v18.style)}   shop: ${JSON.stringify(a.v18 && a.v18.shop)}`,
   `1.8 my style: ${a.v18 && a.v18.brief ? "saved " + a.v18.brief.saved + " — " + a.v18.brief.text.replace(/\n/g, " / ") : "-"}`,
+  `1.9 people: ${JSON.stringify(a.people || null)}`,
   `Deployed app: ${JSON.stringify(a.deployed || null)}`,
   `Errors: ${(a.errors || []).join(" | ") || "none"}`,
   a.stuck ? `STUCK at start: ${JSON.stringify(a.stuck)}` : "",

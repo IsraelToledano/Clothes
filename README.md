@@ -59,6 +59,12 @@ On the phone, tap the version badge next to the logo (or **Update app** in the t
 
 AI-drawn photos on the free plan were too generic and too slow, so Drape shows real products: real photos, prices and links.
 
+### People on this phone (since 1.9)
+
+- **More than one person**: "Someone else? Add a person" at the top of the start screen (later, the name there) opens *Who is this for?*: everyone on this phone, with their About you, votes and saved pieces, and a name field to add someone. A new person starts fresh and lands on *About them* to set height, build, fit, skin and sizes.
+- **Each person has their own** About you, sizes, budget, taste, votes, saved and liked pieces, picks and last search; pieces one person answered don't hide them from another. The AI connection and the catalog are shared. Switching reloads the app as that person; the start screen, the card's header ("Dan · Suits"), the taste screen and the report say who it is.
+- **Rename or remove** in the taste screen (*People on this phone*). Removing someone deletes only their data. Up to 8 people. The first person keeps the storage keys from before 1.9 (`clothes:taste`...), so nothing moves; others are `clothes:<id>:taste`...
+
 ### Find a style (since 1.8)
 
 - **Find a style or Shop** (the switch at the top of the start screen). *Find a style* (the default) is for ideas to have made by a tailor: every piece, sold out too, from every store, whatever it costs or wherever it ships, and your size doesn't count against a piece. *Shop* keeps the old rules: in stock, ships to Israel (if that's on), in your budget, your size first.
