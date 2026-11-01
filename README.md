@@ -62,6 +62,14 @@ On the phone, tap the version badge next to the logo (or **Update app** in the t
 
 AI-drawn photos on the free plan were too generic and too slow, so Drape shows real products: real photos, prices and links.
 
+### On me (since 1.11)
+
+- **See the pieces: On me / On their own** on the start screen. *On me* draws every card on your photo (FLUX.2 klein, through `/tryon`): the card on screen and the next two are drawn ahead, two at a time, so most cards are ready when you reach them; until then the card shows the store's photo and "Putting it on you…". The store's photos stay behind it (tap the sides). Saving an On-me card keeps its picture as a look. *On their own* is the search as before, with *See it on you* for one piece.
+- **Photos** can be added right there (On me without a photo opens the picker); the outlined one is the one pieces are drawn on (tap another to switch). They're made smaller on the phone (448 px, about 15–50 KB; photos from 1.10 are made smaller once).
+- **The stylist reads the photos by itself** whenever the set changes; there's no button. Its reading is under *Photos and stylist* in the taste screen and steers searches as before. If it fails, it says why there, with *Try again*.
+- **"No connection to the AI server"** (a report with three 80 KB photos): the worker now hands the photos to the model as they came instead of decoding and re-encoding them, gives the stylist 50 seconds in all (phones give up on a request after about a minute), and the app waits 55 seconds and then says so.
+- **Cost**: each picture is one FLUX.2 klein call in the free daily allowance; an On-me session draws the cards you reach plus two.
+
 ### Photos, the stylist and try-on (since 1.10)
 
 - **Photos of you** (taste screen → *Stylist*): up to 3 per person, made smaller than 512 px on the phone and kept only there (`clothes:photos`). They go to your Drape AI server only to answer the stylist or a try-on, and the server doesn't keep them.

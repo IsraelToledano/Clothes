@@ -247,6 +247,15 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
 .modes button small{font-size:11.5px;font-weight:400}
 .modes button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
 .ph-row{display:flex;gap:10px;flex-wrap:wrap}
+.ph-row.small .ph-thumb,.ph-row.small .ph-add{width:60px;height:80px;border-radius:10px;padding:0;border:0}
+.ph-row.small .ph-add{border:1.5px dashed var(--line);font-size:11px}
+.ph-row.small .ph-add svg{width:18px;height:18px}
+.ph-thumb.main{box-shadow:0 0 0 2.5px var(--accent)}
+.on-chip{position:absolute;left:10px;bottom:10px;z-index:3;max-width:calc(100% - 20px);display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border-radius:12px;background:rgba(0,0,0,.66);color:#fff;font-size:12.5px;line-height:1.3;pointer-events:none}
+.on-chip.ok{background:rgba(0,0,0,.5);font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;padding:4px 8px}
+.on-chip.err{background:rgba(150,30,30,.8)}
+.spin{width:12px;height:12px;border-radius:50%;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;animation:spin .8s linear infinite;flex:none}
+@keyframes spin{to{transform:rotate(360deg)}}
 .ph-thumb{position:relative;width:84px;height:112px;border-radius:12px;overflow:hidden;background:var(--soft);flex:none}
 .ph-thumb img{width:100%;height:100%;object-fit:cover;display:block}
 .ph-x{position:absolute;top:4px;right:4px;width:28px;height:28px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;display:flex;align-items:center;justify-content:center;padding:0}
@@ -420,9 +429,9 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "1.10.1";
+const APP_VERSION = "1.11.0";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
-const SERVER_EXPECTED = "1.2.0"; // 1.2.1-1.2.2 changed the try-on prompt and take two store photos // the worker/worker.js version this app was built with
+const SERVER_EXPECTED = "1.3.0"; // the worker/worker.js version this app was built with
 
 /* ---------------- storage (on this phone only) ---------------- */
 const LS = "clothes:";
@@ -663,6 +672,7 @@ function applySave(idea, sign){
 }
 function toggleSave(i){
   if (!i) return;
+  { const t = onMe() && isProduct(i) && !isSaved(i.id) && TRY.get(tryKey(i)); if (t && t.blob) keepLook(i, t.blob, t.url); }
   if (isSaved(i.id)){
     SAVED = SAVED.filter((x) => x.id !== i.id); applySave(i, -1);
     save("saved", SAVED); toast("Removed from saved"); return;
@@ -824,11 +834,12 @@ const workerBase = () => String(AI.url || DEFAULT_WORKER).trim().replace(/\/+$/,
 // Never wait forever: the server gives each model a time limit and falls back, and the app gives up
 // after AI_TIMEOUT so a stuck request shows an error with "Try again" instead of an endless spinner.
 const AI_TIMEOUT = 75000;
-async function aiCall(path, body){
+async function aiCall(path, body, ms){
   let r;
-  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), AI_TIMEOUT);
+  ms = ms || AI_TIMEOUT;
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), ms);
   try{ r = await fetch(workerBase() + path, {method:"POST", headers:{"Content-Type":"text/plain"}, body:JSON.stringify(Object.assign({}, body, {code:AI.code})), signal:ctl.signal}); }
-  catch(e){ clearTimeout(t); throw new Error(ctl.signal.aborted ? "The AI didn't answer within " + Math.round(AI_TIMEOUT / 1000) + " seconds." : "No connection to the AI server"); }
+  catch(e){ clearTimeout(t); throw new Error(ctl.signal.aborted ? "The AI didn't answer within " + Math.round(ms / 1000) + " seconds." : "No connection to the AI server"); }
   let j = null; try{ j = await r.json(); }catch(e){}
   clearTimeout(t);
   if (!r.ok) throw new Error((j && j.error) || ("AI server error " + r.status));
@@ -971,7 +982,10 @@ function sized(u, w){
 // Every photo of a piece: up to 8 for a real product, the one AI photo for an idea.
 function photosOf(i){
   if (!i) return [];
-  if (isProduct(i)) return (i.images && i.images.length ? i.images : [i.image]).filter(Boolean);
+  if (isProduct(i)){
+    const l = (i.images && i.images.length ? i.images : [i.image]).filter(Boolean), t = onMe() && TRY.get(tryKey(i));
+    return t && t.url ? [t.url].concat(l) : l;
+  }
   const u = i.image || imgUrl(i);
   return u ? [u] : [];
 }
@@ -1559,6 +1573,13 @@ function renderStart(){
         <button type="button" data-act="mode" data-v="style" aria-pressed="${styleMode()}">Find a style<small>ideas for your tailor</small></button>
         <button type="button" data-act="mode" data-v="shop" aria-pressed="${!styleMode()}">Shop<small>pieces to buy now</small></button></div>
       <p class="mode-note">${styleMode() ? `Every piece we find, sold out too, from ${CAT.stores ? CAT.stores.stores.length : "100+"} stores anywhere. Pick the look; have it made.` : `Only pieces in stock${PREFS.shipIL ? " that ship to Israel" : ""}${PREFS.budget && PREFS.budget !== "any" ? ", in your budget" : ""}${PREFS.sizeSet ? ", in your size first" : ""}.`}</p></div>
+    <div><span class="label">See the pieces</span>
+      <div class="modes" role="group" aria-label="See the pieces">
+        <button type="button" data-act="onme" data-v="1" aria-pressed="${!!Q.onMe}">On ${youName() === "you" ? "me" : esc(youName())}<small>${PHOTOS.length ? "drawn on your photo" : "add a photo"}</small></button>
+        <button type="button" data-act="onme" data-v="0" aria-pressed="${!Q.onMe}">On their own<small>the store's photos</small></button></div>
+      ${Q.onMe ? `<div class="ph-row small" style="margin-top:10px">${PHOTOS.map((x, k) => `<button type="button" class="ph-thumb${k ? "" : " main"}" data-act="photo-main" data-v="${esc(x.id)}" aria-label="${k ? "Use this photo" : "The photo pieces are drawn on"}"><img src="${esc(x.url)}" alt=""></button>`).join("")}${PHOTOS.length < PHOTOS_MAX ? `<button type="button" class="ph-add" data-act="photo-add">${ICON.image}<span>Add a photo</span></button>` : ""}</div>
+      <p class="mode-note">${!aiOn() ? `Needs the AI on: <button type="button" class="link-btn" data-act="profile">turn it on</button>.` : PHOTOS.length ? `Each piece is drawn on ${PHOTOS.length > 1 ? "the outlined photo (tap another to use it)" : "your photo"}, a few seconds a card, ahead of you. An AI picture: fit and length are a guess.` : `Add a photo: full length, standing, facing the camera, in daylight. It stays on this phone.`}</p>` : ""}
+    </div>
     <div><label class="label" for="cat">What kind of piece</label>
       <div class="select-wrap"><select id="cat" class="select">
         <option value="Surprise me"${!Q.type || Q.type === "Surprise me" ? " selected" : ""}>Anything · surprise me</option>
@@ -1681,6 +1702,7 @@ function renderExplore(){
       <div class="idea-img" style="background:${esc(i.tint)}">
         ${np > 1 ? `<div class="bars" aria-hidden="true">${Array.from({length:np}, (_, j) => `<i${j === k ? ' class="on"' : ""}></i>`).join("")}</div>` : ""}
         ${ideaImage(i)}
+        ${onMe() && TRYABLE(i) ? onChip(i) : ""}
         <span class="stamp no" aria-hidden="true">${ICON.close}Not now</span><span class="stamp yes" aria-hidden="true">${ICON.heart}Closer</span>
       </div>
     </article>
@@ -1696,7 +1718,7 @@ function renderExplore(){
     ${S.round.votes.length < 3 && textMeLine() ? `<p class="hint-line">From your words, this search: ${esc(textMeLine())}. About you stays as it is.</p>` : ""}
     ${S.round.recycled ? `<p class="insight-line">${ICON.refresh}<span>You've seen every new piece here; these are ones you passed on before</span></p>` : ""}
     ${insight ? `<p class="insight-line">${ICON.sliders}<span>${esc(insight)}</span></p>` : ""}
-    ${TRYABLE(i) && aiOn() ? `<button type="button" class="outline-btn try-btn" data-act="tryon">${ICON.person}See it on ${youName() === "you" ? "you" : esc(youName())}${PHOTOS.length ? "" : " · add a photo"}</button>` : ""}
+    ${TRYABLE(i) && aiOn() && !onMe() ? `<button type="button" class="outline-btn try-btn" data-act="tryon">${ICON.person}See it on ${youName() === "you" ? "you" : esc(youName())}${PHOTOS.length ? "" : " · add a photo"}</button>` : ""}
     ${(() => { const f = fitForMe(i); return f.bad ? `<p class="fit-note bad">${ICON.sliders}<span>${esc(f.bad[0].toUpperCase() + f.bad.slice(1))}</span></p>` : f.good ? `<p class="fit-note">${ICON.check}<span>${esc(f.good[0].toUpperCase() + f.good.slice(1))}</span></p>` : ""; })()}
     <section class="card-more" aria-label="More about it">
       ${np > 1 ? `<div class="dt-sec"><span class="mono-label">All ${np} photos</span><div class="dt-thumbs flat" role="group" aria-label="All photos">${photosOf(i).map((u, j) => `<button type="button" class="dt-thumb" data-act="card-photo" data-v="${j}" aria-label="Show photo ${j + 1}" aria-current="${j === k}"><img src="${esc(pr ? sized(u, 160) : u)}" alt="" loading="lazy"></button>`).join("")}</div></div>` : ""}
@@ -2304,11 +2326,11 @@ async function shrinkPhoto(file){
   const src = URL.createObjectURL(file);
   try{
     const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => no(new Error("That photo didn't open (try a JPEG or a screenshot of it)")); i.src = src; });
-    const k = Math.min(1, 500 / Math.max(img.naturalWidth, img.naturalHeight));
+    const k = Math.min(1, 448 / Math.max(img.naturalWidth, img.naturalHeight));
     const w = Math.max(16, Math.round(img.naturalWidth * k)), h = Math.max(16, Math.round(img.naturalHeight * k));
     const c = document.createElement("canvas"); c.width = w; c.height = h;
     const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, w, h); g.drawImage(img, 0, 0, w, h);
-    return {url:c.toDataURL("image/jpeg", 0.86), w, h};
+    return {url:c.toDataURL("image/jpeg", 0.8), w, h};
   } finally { URL.revokeObjectURL(src); }
 }
 function storePhotos(list){
@@ -2323,21 +2345,41 @@ async function addPhotos(files){
     try{ const ph = await shrinkPhoto(f); if (storePhotos(PHOTOS.concat([Object.assign(ph, {id:"ph" + Date.now().toString(36) + added, at:Date.now()})]))) added++; }
     catch(e){ toast(e.message); }
   }
-  if (added){ toast(added === 1 ? "Photo added · only on this phone" : added + " photos added · only on this phone"); if (S.tryon && S.tryon.need) tryOn(S.tryon.item); }
+  if (added){ toast(added === 1 ? "Photo added · only on this phone" : added + " photos added · only on this phone"); if (S.tryon && S.tryon.need) tryOn(S.tryon.item); maybeStylist(); }
   render();
 }
+// The file picker lives outside the app's screens, so redrawing a screen never loses a photo being picked.
+const FILE_IN = (() => { const i = document.createElement("input"); i.type = "file"; i.accept = "image/*"; i.multiple = true; i.id = "photo-in"; i.hidden = true;
+  i.addEventListener("change", () => { const f = Array.from(i.files || []); i.value = ""; if (f.length) addPhotos(f); }); document.body.appendChild(i); return i; })();
+// Photos added before 1.11 were bigger (about 80 KB): make them smaller once.
+async function slimPhotos(){
+  if (!PHOTOS.some((x) => x.url.length > 90000)) return;
+  const out = [];
+  for (const x of PHOTOS){
+    if (x.url.length <= 90000){ out.push(x); continue; }
+    try{ const b = await (await fetch(x.url)).blob(); out.push(Object.assign({}, x, await shrinkPhoto(b))); }catch(e){ out.push(x); }
+  }
+  storePhotos(out);
+}
+const photoIds = () => PHOTOS.map((x) => x.id).sort().join(","); // the set, not its order
 async function askStylist(){
-  if (!PHOTOS.length) return toast("Add a photo first");
-  if (!aiOn()) return toast("Turn on AI (below) first");
-  S.stylistBusy = true; S.stylistErr = ""; render();
+  if (!PHOTOS.length || !aiOn() || S.stylistBusy) return;
+  const ids = photoIds(), who = PEOPLE.active;
+  S.stylistBusy = true; S.stylistErr = ""; if (S.screen === "profile") render();
   try{
-    const j = await aiCall("/stylist", {photos:PHOTOS.map((x) => x.url), me:{height:meLabel("height"), build:meLabel("build"), fit:meLabel("fit"), skin:meLabel("skin")}, likes:likedList().slice(0, 8).map((x) => x.title).join("; ")});
-    STYLIST = Object.assign(j, {at:Date.now(), photos:PHOTOS.length});
-    save("stylist", STYLIST); S.brief = null;
-    if (S.pool) refill();
-  }catch(e){ S.stylistErr = e.message; }
-  S.stylistBusy = false; render();
-  setTimeout(() => { const a = document.getElementById("stylist-out"); if (a) a.scrollIntoView({block:"start", behavior:"smooth"}); }, 50);
+    const j = await aiCall("/stylist", {photos:PHOTOS.map((x) => x.url), me:{height:meLabel("height"), build:meLabel("build"), fit:meLabel("fit"), skin:meLabel("skin")}, likes:likedList().slice(0, 8).map((x) => x.title).join("; ")}, 55000);
+    if (who === PEOPLE.active){ STYLIST = Object.assign(j, {at:Date.now(), photos:PHOTOS.length, ids}); save("stylist", STYLIST); S.brief = null; if (S.pool) refill(); }
+  }catch(e){ S.stylistErr = e.message; S.stylistFailed = ids; }
+  S.stylistBusy = false;
+  if (S.screen === "profile" || S.screen === "start") render();
+}
+// Read the photos once whenever they change (not again after a failure until you ask).
+function maybeStylist(){
+  if (!PHOTOS.length || !aiOn() || S.stylistBusy) return;
+  const ids = photoIds();
+  if (STYLIST && (STYLIST.ids || "") === ids) return;
+  if (S.stylistFailed === ids) return;
+  askStylist();
 }
 const COLOUR_HEX = {navy:"#1F2A44", charcoal:"#36393F", black:"#141414", grey:"#8A8F98", gray:"#8A8F98", white:"#FAFAFA", ecru:"#EDE6D6", cream:"#F1E9D2", beige:"#D8C8A8", sand:"#D6C29A", stone:"#BDB4A3", khaki:"#B5A27A", camel:"#B88A55", tan:"#C19A6B", brown:"#6B4A33", chocolate:"#4A3022", rust:"#A2482A", terracotta:"#B8643E", orange:"#E07A2E", mustard:"#C9A227", yellow:"#E6C84A", olive:"#6B6B3A", green:"#3E6B48", "bottle green":"#1F4D3A", "forest green":"#26462F", forest:"#26462F", emerald:"#1E7A5A", sage:"#9CAF88", teal:"#1F6F73", "light blue":"#A9C6E8", "sky blue":"#87B6E0", blue:"#3A6EA5", cobalt:"#1F4FB0", "royal blue":"#2747A6", burgundy:"#6B1E2E", wine:"#5E1A2B", maroon:"#5A1F24", red:"#B32D2D", pink:"#E6A6B8", "dusty pink":"#D4A5A5", lavender:"#B9A8D9", purple:"#5E3A7A", plum:"#5A2F4E", taupe:"#8B7D6B", oatmeal:"#D9CDB5", silver:"#C0C3C8", "slate":"#5B6770"};
 const swatch = (c) => COLOUR_HEX[c] ? `<i class="sw2" style="background:${COLOUR_HEX[c]}"></i>` : "";
@@ -2346,13 +2388,12 @@ function stylistCard(){
   const thumbs = PHOTOS.map((x) => `<span class="ph-thumb"><img src="${esc(x.url)}" alt="Photo of ${esc(who)}"><button type="button" class="ph-x" data-act="photo-remove" data-v="${esc(x.id)}" aria-label="Remove this photo">${ICON.close}</button></span>`).join("");
   const chips = (l, cls) => (l || []).map((c) => `<span class="tchip ${cls}">${swatch(c)}${esc(c)}</span>`).join("");
   return `<section class="card" id="stylist" aria-labelledby="stylist-h">
-    <h2 id="stylist-h">Stylist</h2>
-    <p>Add photos of ${youName() === "you" ? "yourself" : esc(who)}: the stylist reads ${youName() === "you" ? "your" : "their"} colouring and proportions the way stylists do (undertone, contrast, lengths, scale), and pieces can be tried on ${youName() === "you" ? "you" : "them"}.</p>
+    <h2 id="stylist-h">Photos and stylist</h2>
+    <p>With photos of ${youName() === "you" ? "yourself" : esc(who)}, searches can show every piece on ${youName() === "you" ? "you" : "them"} ("On me" on the start screen), and a stylist's reading of ${youName() === "you" ? "your" : "their"} colouring and proportions (undertone, contrast, lengths, scale) steers what comes first.</p>
     <div class="ph-row">${thumbs}${PHOTOS.length < PHOTOS_MAX ? `<button type="button" class="ph-add" data-act="photo-add">${ICON.image}<span>Add a photo</span></button>` : ""}</div>
-    <input type="file" id="photo-in" accept="image/*" multiple hidden>
     <p class="small-note" style="text-align:left">Best: full length, standing, facing the camera, in fitted plain clothes, in daylight. Up to ${PHOTOS_MAX}. They stay on this phone and go to your Drape AI server only to answer, never kept there.</p>
-    ${PHOTOS.length ? (S.stylistBusy ? `<button type="button" class="outline-btn filled" disabled>Looking at ${PHOTOS.length > 1 ? "the photos" : "the photo"}… (about 10–30 s)</button>` : `<button type="button" class="outline-btn filled" data-act="stylist-ask">${ICON.sparkle || ICON.sliders}${st ? "Ask the stylist again" : "Ask the stylist"}</button>`) : ""}
-    ${S.stylistErr ? `<p class="fit-note bad">${esc(S.stylistErr)}</p>` : ""}
+    ${S.stylistBusy ? `<p class="insight-line" style="margin:0">${ICON.sliders}<span>Reading ${PHOTOS.length > 1 ? "the photos" : "the photo"}… about 10–30 seconds</span></p>` : ""}
+    ${S.stylistErr && !S.stylistBusy ? `<p class="fit-note bad" style="margin:0"><span>Couldn't read the photos: ${esc(S.stylistErr)} · <button type="button" class="link-btn" data-act="stylist-ask">Try again</button></span></p>` : ""}
     ${st ? `<div id="stylist-out" class="st-out">
       <p class="st-sum">${esc(st.summary)}</p>
       ${st.colouring || st.undertone ? `<p><b>Colouring:</b> ${esc([st.undertone && st.undertone + " undertone", st.contrast && st.contrast + " contrast"].filter(Boolean).join(", "))}${st.colouring ? ". " + esc(st.colouring) : ""}</p>` : ""}
@@ -2371,28 +2412,74 @@ function stylistCard(){
 }
 // Try a piece on: your photo and the store's photo go to the AI server, which draws you wearing it (FLUX.2 klein).
 const TRYABLE = (i) => isProduct(i) && (i.type !== "Accessories" || /^(Hats|Scarves|Ties|Sunglasses)/.test(i.kind || ""));
+async function tryonFetch(i, ph){
+  const src = (i.images && i.images[0]) || i.image, bare = (u) => String(u).replace(/[?&](width|height|crop)=[^&]*/g, "");
+  const h = Math.round(512 * (ph.h || 4) / (ph.w || 3));
+  const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 58000);
+  try{
+    const r = await fetch(workerBase() + "/tryon", {method:"POST", headers:{"Content-Type":"text/plain"}, signal:ctl.signal,
+      body:JSON.stringify({code:AI.code, photo:ph.url, garment:bare(src), garments:(i.images && i.images.length ? i.images : [src]).slice(0, 2).map(bare), type:i.type, kind:i.kind, title:i.title, colour:i.colour, fit:"in his size, cut the way it is meant to fit", w:512, h})});
+    if (!r.ok){ let j = null; try{ j = await r.json(); }catch(e){} throw new Error((j && j.error) || "AI server error " + r.status); }
+    return await r.blob();
+  }catch(e){ throw ctl.signal.aborted ? new Error("The AI didn't finish in a minute") : e instanceof TypeError ? new Error("No connection to the AI server") : e; }
+  finally{ clearTimeout(timer); }
+}
+// "On me": each card shows the piece drawn on your first photo; the card on screen and the next two are
+// drawn ahead (two at a time), so most are ready when you get to them.
+const TRY = new Map(); let tryBusy = 0;
+const onMe = () => !!Q.onMe && PHOTOS.length > 0 && aiOn();
+const tryKey = (i) => PEOPLE.active + "|" + (PHOTOS[0] ? PHOTOS[0].id : "") + "|" + i.id;
+function tryAhead(){
+  if (!onMe() || S.tryOff) return;
+  for (const i of [S.current].concat(S.queue.slice(0, 2))){
+    if (tryBusy >= 2) break;
+    if (!i || !TRYABLE(i) || TRY.has(tryKey(i))) continue;
+    drawOn(i, tryKey(i));
+  }
+}
+async function drawOn(i, k){
+  const rec = {state:"busy", at:Date.now()}; TRY.set(k, rec); tryBusy++;
+  try{ const b = await tryonFetch(i, PHOTOS[0]); rec.url = URL.createObjectURL(b); rec.blob = b; rec.state = "ok"; rec.ms = Date.now() - rec.at; }
+  catch(e){ rec.state = "err"; rec.err = e.message; if (/allowance|used up/i.test(e.message)) S.tryOff = "today's free AI allowance is used up"; }
+  tryBusy--;
+  // Keep the memory small: the pictures of cards long gone are let go.
+  if (TRY.size > 40) for (const [key, r] of TRY){ if (TRY.size <= 30) break; if (r.state !== "busy" && !(S.current && key === tryKey(S.current))){ if (r.url) URL.revokeObjectURL(r.url); TRY.delete(key); } }
+  if (S.current && tryKey(S.current) === k){
+    if (rec.state === "ok" && S.phFor === S.current.id && S.ph > 0) S.ph++; // the same store photo stays on screen
+    if (!S.dragging && S.screen === "explore" && !S.detail && !Z.open && !S.sheet && !S.tryon) render();
+  }
+  tryAhead();
+}
+function onChip(i){
+  const who = youName() === "you" ? "you" : esc(youName());
+  if (S.tryOff) return `<span class="on-chip err">Not on ${who}: ${esc(S.tryOff)}</span>`;
+  const r = TRY.get(tryKey(i));
+  if (!r || r.state === "busy") return `<span class="on-chip"><i class="spin" aria-hidden="true"></i>Putting it on ${who}…</span>`;
+  if (r.state === "err") return `<span class="on-chip err">Couldn't put it on ${who}: ${esc(r.err)}</span>`;
+  return curPh() === 0 ? `<span class="on-chip ok">On ${who} · AI picture</span>` : "";
+}
 async function tryOn(i, k){
   if (!i) return;
   if (!PHOTOS.length){ S.tryon = {item:i, need:"photo"}; render(); return; }
   if (!aiOn()){ S.tryon = {item:i, state:"err", err:"Turn on AI in the profile first."}; render(); return; }
-  const ph = PHOTOS[Math.min(k || 0, PHOTOS.length - 1)], src = (i.images && i.images[0]) || i.image;
-  const h = Math.round(512 * (ph.h || 4) / (ph.w || 3));
-  if (S.tryon && S.tryon.url) URL.revokeObjectURL(S.tryon.url);
+  const ph = PHOTOS[Math.min(k || 0, PHOTOS.length - 1)];
+  if (S.tryon && S.tryon.url && !S.tryon.kept) URL.revokeObjectURL(S.tryon.url);
   S.tryon = {item:i, state:"busy", at:Date.now(), k:k || 0}; render();
-  const t = S.tryon, ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 100000);
-  try{
-    const r = await fetch(workerBase() + "/tryon", {method:"POST", headers:{"Content-Type":"text/plain"}, signal:ctl.signal,
-      body:JSON.stringify({code:AI.code, photo:ph.url, garment:String(src).replace(/[?&](width|height|crop)=[^&]*/g, ""), garments:(i.images && i.images.length ? i.images : [src]).slice(0, 2).map((u) => String(u).replace(/[?&](width|height|crop)=[^&]*/g, "")), type:i.type, kind:i.kind, title:i.title, colour:i.colour, fit:"in his size, cut the way it is meant to fit", w:512, h})});
-    if (!r.ok){ let j = null; try{ j = await r.json(); }catch(e){} throw new Error((j && j.error) || "AI server error " + r.status); }
-    const blob = await r.blob();
-    if (S.tryon === t) Object.assign(t, {state:"ok", blob, url:URL.createObjectURL(blob), ms:Date.now() - t.at});
-  }catch(e){ if (S.tryon === t) Object.assign(t, {state:"err", err:ctl.signal.aborted ? "The AI didn't finish in 100 seconds. Try again." : e.message}); }
-  clearTimeout(timer);
+  const t = S.tryon;
+  try{ const blob = await tryonFetch(i, ph); if (S.tryon === t) Object.assign(t, {state:"ok", blob, url:URL.createObjectURL(blob), ms:Date.now() - t.at}); }
+  catch(e){ if (S.tryon === t) Object.assign(t, {state:"err", err:e.message}); }
   render();
 }
 // Looks you save are kept in the browser's cache (not in the small storage), one per piece and person.
 const LOOK_CACHE = "drape-looks";
 const lookKey = (id, who) => new URL("__look/" + (who || PEOPLE.active) + "/" + encodeURIComponent(id), location.href).toString();
+async function keepLook(i, blob, url){
+  try{ const c = await caches.open(LOOK_CACHE); await c.put(lookKey(i.id), new Response(blob, {headers:{"Content-Type":blob.type || "image/jpeg"}})); }
+  catch(e){ return false; }
+  LOOKS = [i.id].concat(LOOKS.filter((x) => x !== i.id)).slice(0, 60); save("looks", LOOKS);
+  S.lookUrls = S.lookUrls || {}; S.lookUrls[i.id] = url;
+  return true;
+}
 async function saveLook(){
   const t = S.tryon; if (!t || !t.blob) return;
   try{ const c = await caches.open(LOOK_CACHE); await c.put(lookKey(t.item.id), new Response(t.blob, {headers:{"Content-Type":t.blob.type || "image/jpeg"}})); }
@@ -2414,7 +2501,7 @@ async function loadLooks(){
 }
 function renderTryon(){
   const t = S.tryon, i = t.item;
-  const body = t.need ? `<div class="to-empty"><p>Add a photo of ${youName() === "you" ? "yourself" : esc(youName())} first: full length, standing, facing the camera, in daylight. It stays on this phone.</p><button type="button" class="cta" data-act="photo-add">Add a photo ${ICON.arrow}</button><input type="file" id="photo-in" accept="image/*" hidden></div>`
+  const body = t.need ? `<div class="to-empty"><p>Add a photo of ${youName() === "you" ? "yourself" : esc(youName())} first: full length, standing, facing the camera, in daylight. It stays on this phone.</p><button type="button" class="cta" data-act="photo-add">Add a photo ${ICON.arrow}</button></div>`
     : t.state === "busy" ? `<div class="to-img busy" style="aspect-ratio:${PHOTOS[t.k] ? PHOTOS[t.k].w + "/" + PHOTOS[t.k].h : "3/4"}"><img src="${esc((PHOTOS[t.k] || PHOTOS[0]).url)}" alt=""><span class="to-wait">${ICON.sliders}Drawing ${youName() === "you" ? "you" : esc(youName())} in it… usually 10–30 seconds</span></div>`
     : t.state === "ok" ? `<div class="to-img"><img src="${esc(t.url)}" alt="${esc(i.title)} on ${esc(youName())}"></div><p class="small-note" style="text-align:left">An AI picture from ${youName() === "you" ? "your" : esc(youName()) + "'s"} photo and the store's. Colour and style are close; the exact fit and length are a guess. ${t.ms ? "Drawn in " + Math.round(t.ms / 1000) + " s." : ""}</p>`
     : `<p class="fit-note bad">${esc(t.err || "Something went wrong")}</p>`;
@@ -2510,7 +2597,7 @@ function render(){
   app.innerHTML = html;
   document.body.classList.toggle("lock", !!(S.sheet || S.people || S.tryon || S.modal || S.detail || Z.open));
   if (S.detail){ const d2 = document.getElementById("detail"); if (d2) d2.scrollTop = keepTop; bindDetail(); }
-  if (S.screen === "explore"){ bindSwipe(); if (S.current){ preloadUrl(photoAt(S.current, curPh() + 1, 900)); loadCardMore(S.current); } }
+  if (S.screen === "explore"){ tryAhead(); bindSwipe(); if (S.current){ preloadUrl(photoAt(S.current, curPh() + 1, 900)); loadCardMore(S.current); } }
   const f = S.focus && document.querySelector(S.focus);
   if (f) f.focus();
   S.focus = null;
@@ -2746,9 +2833,11 @@ const ACTIONS = {
   },
   broaden(){ Q.type = "Surprise me"; save("query", Q); S.current = nextIdea(); render(); },
   scrim(el, e){ if (e.target !== el) return; if (S.modal){ S.modal = null; } else if (S.tryon){ if (S.tryon.state !== "busy") S.tryon = null; } else if (S.people){ S.people = false; } else S.sheet = false; render(); },
-  "photo-add"(){ const i = document.getElementById("photo-in"); if (i) i.click(); },
-  "photo-remove"(el){ storePhotos(PHOTOS.filter((x) => x.id !== el.dataset.v)); render(); },
-  "stylist-ask"(){ askStylist(); },
+  "photo-add"(){ FILE_IN.click(); },
+  "photo-remove"(el){ storePhotos(PHOTOS.filter((x) => x.id !== el.dataset.v)); maybeStylist(); render(); },
+  "photo-main"(el){ const x = PHOTOS.find((y) => y.id === el.dataset.v); if (x && PHOTOS[0] !== x){ storePhotos([x].concat(PHOTOS.filter((y) => y !== x))); toast("Pieces will be drawn on this photo"); } render(); },
+  onme(el){ const on = el.dataset.v === "1"; if (on && !PHOTOS.length) FILE_IN.click(); Q.onMe = on; save("query", Q); render(); },
+  "stylist-ask"(){ S.stylistFailed = ""; askStylist(); },
   "stylist-clear"(){ STYLIST = null; save("stylist", null); S.brief = null; if (S.pool) refill(); render(); },
   tryon(){ tryOn(S.current); },
   "tryon-again"(){ tryOn(S.tryon.item, S.tryon.k); },
@@ -2796,7 +2885,6 @@ document.addEventListener("input", (e) => {
 });
 document.addEventListener("change", (e) => {
   if (e.target.classList && e.target.classList.contains("person-name")){ renamePerson(e.target.dataset.id, e.target.value); return; }
-  if (e.target.id === "photo-in"){ addPhotos(e.target.files); return; }
   if (e.target.id === "cat"){ Q.type = e.target.value; save("query", Q); return; }
   if (e.target.id === "shipIL"){ PREFS.shipIL = e.target.checked; save("prefs", PREFS); }
 });
@@ -2953,6 +3041,7 @@ function askSnapshot(){
   try{ const b = briefRead(); L.push(`YOUR WORDS READ AS: brands ${b.brands.join(", ") || "-"}; styles ${b.styles.join(", ") || "-"}; look for ${b.words.join(", ") || "-"}; avoid ${b.avoid.join(", ") || "-"}; store styles +${Object.keys(b.tags).join("/") || "-"} -${Object.keys(b.notTags).join("/") || "-"}; stores ${Object.keys(b.stores).join(", ") || "-"}`); }catch(e){}
   L.push(`LIKED: ${likedList().slice(0, 8).map((x) => x.title).join("; ") || "-"}`);
   L.push(`PREFS: ${JSON.stringify(PREFS)}`);
+  { const tr = [...TRY.values()], ok = tr.filter((r) => r.state === "ok"); L.push(`ON ME: ${Q.onMe ? (onMe() ? "on" : "chosen, but " + (!PHOTOS.length ? "no photo" : "AI off")) : "off"}   drawn ${ok.length}, drawing ${tr.filter((r) => r.state === "busy").length}, failed ${tr.filter((r) => r.state === "err").length}${ok.length ? ", median " + ok.map((r) => r.ms).sort((a, b) => a - b)[Math.floor(ok.length / 2)] + "ms" : ""}${tr.some((r) => r.err) ? "   last error: " + tr.filter((r) => r.err).pop().err : ""}${S.tryOff ? "   stopped: " + S.tryOff : ""}   stylist: ${S.stylistBusy ? "reading" : S.stylistErr ? "failed: " + S.stylistErr : STYLIST ? "read " + new Date(STYLIST.at).toISOString() : "-"}`); }
   L.push(`PHOTOS: ${PHOTOS.length ? PHOTOS.map((x) => x.w + "x" + x.h + " " + Math.round(x.url.length * 0.75 / 1024) + "KB").join(", ") : "none"}   LOOKS saved: ${LOOKS.length}${S.tryon ? "   TRY-ON: " + (S.tryon.need ? "needs a photo" : S.tryon.state + (S.tryon.ms ? " " + S.tryon.ms + "ms" : "") + (S.tryon.err ? " " + S.tryon.err : "")) + " — " + S.tryon.item.title : ""}`);
   if (STYLIST) L.push(`STYLIST (${STYLIST.model || "-"}, ${STYLIST.ms || "-"}ms): ${STYLIST.summary} | best ${(STYLIST.best_colours || []).join(", ")} | less ${(STYLIST.avoid_colours || []).join(", ")} | look for ${(STYLIST.look_for || []).join(", ")} | avoid ${(STYLIST.avoid || []).join(", ")}`);
   if (S.current && isProduct(S.current)){ const f = fitForMe(S.current); L.push(`FOR YOU: ${f.s ? (f.s > 0 ? "+" : "") + f.s + " " + (f.good || f.bad) : "neutral"}   cut: ${S.current.ct || "-"}${S.current.is ? "   inseam " + S.current.is + '"' : ""}`); }
@@ -3082,6 +3171,7 @@ if (!LIKED){
   save("liked", LIKED);
 }
 restoreSession();
+slimPhotos().then(() => setTimeout(maybeStylist, 1500));
 (() => { let then = ""; try{ then = sessionStorage.getItem("drape:then") || ""; sessionStorage.removeItem("drape:then"); }catch(e){}
   if (then === "about" || then === "profile"){ S.screen = "profile"; S.prev = "start"; S.stack = ["start"]; setTimeout(() => { const a = document.getElementById(then === "about" ? "about" : "people"); if (a) a.scrollIntoView({block:"start"}); }, 60); }
   if (then === "about") setTimeout(() => toast("Now " + person().name + ": add their height, build and size"), 80);

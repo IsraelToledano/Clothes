@@ -21,7 +21,7 @@
 // On the free plan Cloudflare blocks requests past that instead of charging.
 
 // Bump with the app version so a report shows whether the server was redeployed.
-const SERVER_VERSION = "1.2.2";
+const SERVER_VERSION = "1.3.0";
 const APP_ORIGIN = "https://israeltoledano.github.io";
 // Gemma 4 26B (4B active) is fast and costs about a sixth of Llama 3.3 70B per idea in the free allowance.
 const TEXT_MODEL = "@cf/google/gemma-4-26b-a4b-it";
@@ -836,7 +836,7 @@ async function tryon(env, b, origin) {
   form.append("width", String(w)); form.append("height", String(h));
   const r = new Response(form);
   const t0 = Date.now();
-  const bytes = await imageBytes(await timeLimit(runAI(env, IMAGE_BACKUP, { multipart: { body: r.body, contentType: r.headers.get("content-type") } }), +env.TRYON_LIMIT_MS || 60000, "FLUX.2 klein"));
+  const bytes = await imageBytes(await timeLimit(runAI(env, IMAGE_BACKUP, { multipart: { body: r.body, contentType: r.headers.get("content-type") } }), +env.TRYON_LIMIT_MS || 50000, "FLUX.2 klein"));
   return new Response(bytes, { headers: { "Content-Type": bytes[0] === 0x89 ? "image/png" : "image/jpeg", "Cache-Control": "no-store", "X-Drape-Image-Model": "flux-2-klein-4b", "X-Drape-Ms": String(Date.now() - t0), "Access-Control-Expose-Headers": "X-Drape-Image-Model, X-Drape-Ms", ...cors(origin) } });
 }
 
@@ -857,23 +857,34 @@ Answer in JSON only, in English:
  "avoid": ["up to 6 words or short phrases to avoid"],
  "patterns": "1 sentence on pattern and texture scale",
  "tips": ["up to 4 short tips"]}`;
+// The photos go to the model as they came (data URLs): no decoding here, so the worker stays far inside
+// the free plan's CPU time per request.
+function photoUrl(x, what) {
+  const s = String(x || "");
+  const m = /^data:image\/(jpeg|jpg|png|webp);base64,([A-Za-z0-9+/=]+)$/.exec(s);
+  if (!m || m[2].length < 200) throw new HttpError(400, what + " isn't a usable photo");
+  if (m[2].length > 400000) throw new HttpError(413, what + " is too big (make it smaller than 512 px)");
+  return s;
+}
 async function stylist(env, b) {
-  const photos = (Array.isArray(b.photos) ? b.photos : []).slice(0, 3).map((x, k) => photoBytes(x, "photo " + (k + 1)));
+  const photos = (Array.isArray(b.photos) ? b.photos : []).slice(0, 3).map((x, k) => photoUrl(x, "Photo " + (k + 1)));
   if (!photos.length) throw new HttpError(400, "Add a photo first");
-  const toUrl = (u8) => { let s = ""; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return "data:image/jpeg;base64," + btoa(s); };
   const me = b.me || {};
   const about = [me.height && "height " + clip(me.height, 30), me.build && "build " + clip(me.build, 20), me.fit && "likes a " + clip(me.fit, 20) + " fit", me.skin && clip(me.skin, 20) + " skin", b.words && "he says: " + clip(b.words, 300), b.likes && "pieces he liked: " + clip(b.likes, 400)].filter(Boolean).join("; ");
-  const content = [{ type: "text", text: (about ? "What he told me: " + about + ".\n" : "") + photos.length + " photo" + (photos.length > 1 ? "s" : "") + " of him follow. JSON only." }].concat(photos.map((u8) => ({ type: "image_url", image_url: { url: toUrl(u8) } })));
+  const content = [{ type: "text", text: (about ? "What he told me: " + about + ".\n" : "") + photos.length + " photo" + (photos.length > 1 ? "s" : "") + " of him follow. JSON only." }].concat(photos.map((u) => ({ type: "image_url", image_url: { url: u } })));
   const messages = [{ role: "system", content: STYLIST_SYSTEM }, { role: "user", content }];
   const tries = [
     [TEXT_MODEL, { messages, max_completion_tokens: 1400, temperature: 0.4, response_format: { type: "json_object" }, chat_template_kwargs: { enable_thinking: false } }],
     [TEXT_MODEL, { messages, max_completion_tokens: 1400, temperature: 0.4 }],
     [VISION_BACKUP, { messages, max_tokens: 1400, temperature: 0.4 }],
   ];
+  // All tries together stay under 50 s: phones give up on a request after about a minute.
   let out = null, used = "", last = null;
-  const t0 = Date.now();
+  const t0 = Date.now(), budget = +env.STYLIST_LIMIT_MS || 50000;
   for (const [model, input] of tries) {
-    try { out = parseJSON(textOf(await timeLimit(runAI(env, model, input), 45000, model.split("/").pop()))); if (out && (out.summary || out.best_colours)) { used = model; break; } }
+    const left = budget - (Date.now() - t0);
+    if (left < 8000) break;
+    try { out = parseJSON(textOf(await timeLimit(runAI(env, model, input), Math.min(left, 35000), model.split("/").pop()))); if (out && (out.summary || out.best_colours)) { used = model; break; } }
     catch (e) { if (e instanceof HttpError && e.status === 429) throw e; last = e; }
   }
   if (!out || !used) throw last || new HttpError(502, "The stylist didn't answer");

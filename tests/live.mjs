@@ -298,50 +298,62 @@ try {
       log("people", R.app.people);
     } catch (e) { R.app.people = { error: String((e && e.message) || e) }; }
   }
-  /* ---------- 6c. 1.10: a photo, the stylist and try-on. The photo is a made-up man the worker draws
-     (/portrait), never a real person. ---------- */
+  /* ---------- 6c. 1.11: photos, the stylist (by itself) and "On me" searches. The photos are a made-up man the
+     worker draws (/portrait), never a real person, with grain added so they weigh what phone photos weigh. ---------- */
   if (first) {
     try {
-      const v = (R.app.v110 = {});
+      const v = (R.app.v111 = {});
       v.portrait = await timed(async () => { const r = await fetch(WORKER + "/portrait?code=" + encodeURIComponent(tok)); const buf = Buffer.from(await r.arrayBuffer()); if (r.ok) fs.writeFileSync(path.join(OUT, "portrait.jpg"), buf); return { status: r.status, bytes: buf.length, error: r.ok ? "" : buf.toString().slice(0, 200) }; });
       if (v.portrait.status === 200) {
+        const b64 = fs.readFileSync(path.join(OUT, "portrait.jpg")).toString("base64");
+        const photos = await page.evaluate(async (b) => {
+          const img = new Image(); img.src = "data:image/jpeg;base64," + b; await img.decode();
+          const make = (side, q, seed, crop) => { const sw = img.width * crop, sh = img.height; const k = side / Math.max(sw, sh); const w = Math.round(sw * k), h = Math.round(sh * k); const c = document.createElement("canvas"); c.width = w; c.height = h; const g = c.getContext("2d"); g.drawImage(img, (img.width - sw) / 2, 0, sw, sh, 0, 0, w, h); const d = g.getImageData(0, 0, w, h); let s = seed; for (let i = 0; i < d.data.length; i += 4) { s = (s * 1103515245 + 12345) & 0x7fffffff; const n = (s % 13) - 6; d.data[i] += n; d.data[i + 1] += n; d.data[i + 2] += n; } g.putImageData(d, 0, 0); return c.toDataURL("image/jpeg", q); };
+          return { old: [1, 2, 3].map((x) => make(500, 0.86, x, 0.75)), now: [1, 2, 3].map((x) => make(448, 0.8, x, 0.75)) };
+        }, b64);
+        v.kb = { "1.10": photos.old.map((u) => Math.round(u.length * 0.75 / 1024)), "1.11": photos.now.map((u) => Math.round(u.length * 0.75 / 1024)) };
+        photos.old.forEach((u, k) => fs.writeFileSync(path.join(OUT, "photo-" + (k + 1) + ".jpg"), Buffer.from(u.split(",")[1], "base64")));
+        // The stylist with three photos of the size 1.10 sent (his report: "no connection") and of the size 1.11 sends, straight from the page.
+        for (const [name, list] of [["1.10", photos.old], ["1.11", photos.now]]) {
+          v["stylist " + name] = await page.evaluate(async ([w, code, l]) => { const t = Date.now(); try { const r = await fetch(w + "/stylist", { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ code, photos: l }) }); const j = await r.json().catch(() => null); return { status: r.status, ms: Date.now() - t, model: j && j.model, error: j && j.error, summary: j && j.summary }; } catch (e) { return { failed: String(e), ms: Date.now() - t }; } }, [WORKER, tok, list]);
+        }
+        // The app: three photos in, the stylist reads them by itself
         await page.evaluate(() => { S.screen = "start"; S.tryon = null; render(); });
         await page.click('header [data-act="profile"]'); await page.waitForSelector("#stylist");
-        await page.setInputFiles("#photo-in", path.join(OUT, "portrait.jpg")); await page.waitForTimeout(1000);
-        v.photo = await page.evaluate(() => PHOTOS.map((x) => x.w + "x" + x.h + " " + Math.round(x.url.length * 0.75 / 1024) + "KB"));
+        await page.setInputFiles("#photo-in", [1, 2, 3].map((k) => path.join(OUT, "photo-" + k + ".jpg"))); await page.waitForTimeout(1500);
+        v.photos = await page.evaluate(() => PHOTOS.map((x) => x.w + "x" + x.h + " " + Math.round(x.url.length * 0.75 / 1024) + "KB"));
         const t1 = Date.now();
-        await page.click('[data-act="stylist-ask"]');
-        await page.waitForFunction(() => !S.stylistBusy, null, { timeout: 100000 });
-        v.stylist = await page.evaluate(() => (STYLIST ? { model: STYLIST.model, ms: STYLIST.ms, summary: STYLIST.summary, colouring: [STYLIST.undertone, STYLIST.contrast, STYLIST.colouring].join(" / "), best: STYLIST.best_colours, less: STYLIST.avoid_colours, lookFor: STYLIST.look_for, avoid: STYLIST.avoid, proportions: STYLIST.proportions, cuts: STYLIST.cuts, tips: STYLIST.tips } : { error: S.stylistErr }));
+        await page.waitForFunction(() => !S.stylistBusy && (STYLIST || S.stylistErr), null, { timeout: 80000 });
+        v.stylist = await page.evaluate(() => (STYLIST ? { model: STYLIST.model, ms: STYLIST.ms, summary: STYLIST.summary, best: STYLIST.best_colours, less: STYLIST.avoid_colours, lookFor: STYLIST.look_for, avoid: STYLIST.avoid } : { error: S.stylistErr }));
         v.stylist.wallMs = Date.now() - t1;
-        await page.evaluate(() => { const a = document.getElementById("stylist"); if (a) a.scrollIntoView(); }); await page.screenshot({ path: path.join(OUT, "v110-stylist.png") });
-        await page.click('[data-act="profile-back"]');
-        v.tryons = [];
-        for (const cat of ["Blazers", "Shirts"]) {
-          const one = { cat };
-          await page.evaluate((c) => { Q.type = c; Q.styles = []; Q.text = ""; Q.mode = "style"; save("query", Q); startRound(); }, cat);
-          await page.waitForSelector("#card img.prod.ok", { timeout: 20000 }); await page.waitForTimeout(500);
-          one.piece = await page.evaluate(() => S.current.store + " | " + S.current.title);
-          one.stylistNotes = await page.evaluate(() => [S.current].concat(S.queue).slice(0, 20).map((i) => fitForMe(i).good || fitForMe(i).bad).filter((x) => /stylist/i.test(x)));
-          const src = await page.evaluate(() => S.current.images[0]);
-          try { const r = await fetch(src + (src.includes("?") ? "&" : "?") + "width=500&height=500"); if (r.ok) fs.writeFileSync(path.join(OUT, "tryon-" + cat.toLowerCase() + "-piece.jpg"), Buffer.from(await r.arrayBuffer())); } catch (e) {}
+        await page.evaluate(() => { const a = document.getElementById("stylist"); if (a) a.scrollIntoView(); }); await page.screenshot({ path: path.join(OUT, "v111-stylist.png") });
+        // On me: each card drawn on the photo, the next two ahead
+        await page.click('[data-act="profile-back"]'); await page.waitForTimeout(300);
+        await page.click('[data-act="onme"][data-v="1"]'); await page.waitForTimeout(200);
+        await page.screenshot({ path: path.join(OUT, "v111-start.png") });
+        await page.evaluate(() => { Q.type = "Blazers"; Q.styles = []; Q.text = ""; Q.mode = "style"; save("query", Q); startRound(); });
+        await page.waitForSelector("#card", { timeout: 20000 });
+        v.cards = [];
+        for (let n = 0; n < 5; n++) {
           const t2 = Date.now();
-          await page.click('[data-act="tryon"]');
-          await page.waitForFunction(() => S.tryon && S.tryon.state && S.tryon.state !== "busy", null, { timeout: 110000 });
-          Object.assign(one, await page.evaluate(() => ({ state: S.tryon.state, ms: S.tryon.ms, err: S.tryon.err || "", bytes: S.tryon.blob ? S.tryon.blob.size : 0 })), { wallMs: Date.now() - t2 });
-          if (one.state === "ok") {
-            const b64 = await page.evaluate(async () => { const b = new Uint8Array(await S.tryon.blob.arrayBuffer()); let x = ""; for (let i = 0; i < b.length; i += 0x8000) x += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(x); });
-            fs.writeFileSync(path.join(OUT, "tryon-" + cat.toLowerCase() + ".jpg"), Buffer.from(b64, "base64"));
-            await page.click('[data-act="look-save"]'); await page.waitForTimeout(600);
-            one.looks = await page.evaluate(() => LOOKS.length);
+          await page.waitForFunction(() => { const r = S.current && TRY.get(tryKey(S.current)); return r && r.state !== "busy"; }, null, { timeout: 70000 }).catch(() => {});
+          const c = await page.evaluate(() => { const r = TRY.get(tryKey(S.current)) || {}; return { piece: S.current.store + " | " + S.current.title, state: r.state || "none", ms: r.ms, err: r.err || "" }; });
+          c.waitedMs = Date.now() - t2;
+          if (c.state === "ok" && n < 3) {
+            const b = await page.evaluate(async () => { const r = TRY.get(tryKey(S.current)); const u = new Uint8Array(await r.blob.arrayBuffer()); let x = ""; for (let i = 0; i < u.length; i += 0x8000) x += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(x); });
+            fs.writeFileSync(path.join(OUT, "onme-" + (n + 1) + ".jpg"), Buffer.from(b, "base64"));
+            const src = await page.evaluate(() => S.current.images[0]);
+            try { const r = await fetch(src + (src.includes("?") ? "&" : "?") + "width=500&height=500"); if (r.ok) fs.writeFileSync(path.join(OUT, "onme-" + (n + 1) + "-piece.jpg"), Buffer.from(await r.arrayBuffer())); } catch (e) {}
           }
-          await page.screenshot({ path: path.join(OUT, "v110-tryon-" + cat.toLowerCase() + ".png") });
-          await page.click('[data-act="tryon-close"]').catch(() => {});
-          v.tryons.push(one);
+          if (n === 0) await page.screenshot({ path: path.join(OUT, "v111-card.png") });
+          if (n === 1 && c.state === "ok") { await page.click('[data-act="save"]'); await page.waitForTimeout(500); c.looks = await page.evaluate(() => LOOKS.length); }
+          v.cards.push(c);
+          await page.keyboard.press("ArrowLeft"); await page.waitForTimeout(1500); // a look at each card
         }
+        v.onMe = await page.evaluate(() => askSnapshot().split("\n").find((l) => l.startsWith("ON ME:")));
       }
-      log("1.10", v);
-    } catch (e) { R.app.v110 = Object.assign(R.app.v110 || {}, { error: String((e && e.message) || e) }); }
+      log("1.11", v);
+    } catch (e) { R.app.v111 = Object.assign(R.app.v111 || {}, { error: String((e && e.message) || e) }); }
   }
   /* ---------- 7. the deployed app (GitHub Pages) with the catalog from its branch ---------- */
   if (process.env.SITE) {
@@ -396,9 +408,11 @@ const md = [
   `1.8 Suits, find a style: ${JSON.stringify(a.v18 && a.v18.style)}   shop: ${JSON.stringify(a.v18 && a.v18.shop)}`,
   `1.8 my style: ${a.v18 && a.v18.brief ? "saved " + a.v18.brief.saved + " — " + a.v18.brief.text.replace(/\n/g, " / ") : "-"}`,
   `1.9 people: ${JSON.stringify(a.people || null)}`,
-  `1.10 portrait: ${JSON.stringify(a.v110 && a.v110.portrait)}   photo: ${JSON.stringify(a.v110 && a.v110.photo)}`,
-  `1.10 stylist: ${JSON.stringify(a.v110 && a.v110.stylist)}`,
-  `1.10 try-on: ${JSON.stringify(a.v110 && (a.v110.tryons || a.v110.error))}`,
+  `1.11 portrait: ${JSON.stringify(a.v111 && a.v111.portrait)}   photo KB: ${JSON.stringify(a.v111 && a.v111.kb)}   in the app: ${JSON.stringify(a.v111 && a.v111.photos)}`,
+  `1.11 stylist straight, 3 photos of 1.10's size: ${JSON.stringify(a.v111 && a.v111["stylist 1.10"])}   of 1.11's size: ${JSON.stringify(a.v111 && a.v111["stylist 1.11"])}`,
+  `1.11 stylist by itself in the app: ${JSON.stringify(a.v111 && (a.v111.stylist || a.v111.error))}`,
+  `1.11 On me cards: ${JSON.stringify(a.v111 && a.v111.cards)}`,
+  `1.11 ${(a.v111 && a.v111.onMe) || "ON ME: -"}`,
   `Deployed app: ${JSON.stringify(a.deployed || null)}`,
   `Errors: ${(a.errors || []).join(" | ") || "none"}`,
   a.stuck ? `STUCK at start: ${JSON.stringify(a.stuck)}` : "",
