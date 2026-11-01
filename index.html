@@ -246,6 +246,31 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
 .modes button{min-height:48px;border:0;background:transparent;color:var(--muted);font-size:15px;font-weight:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:6px 8px}
 .modes button small{font-size:11.5px;font-weight:400}
 .modes button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.ph-row{display:flex;gap:10px;flex-wrap:wrap}
+.ph-thumb{position:relative;width:84px;height:112px;border-radius:12px;overflow:hidden;background:var(--soft);flex:none}
+.ph-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.ph-x{position:absolute;top:4px;right:4px;width:28px;height:28px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;display:flex;align-items:center;justify-content:center;padding:0}
+.ph-x svg{width:14px;height:14px}
+.ph-add{width:84px;height:112px;border-radius:12px;border:1.5px dashed var(--line);background:var(--card);color:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:12.5px;padding:6px;text-align:center}
+.ph-add svg{width:22px;height:22px}
+.st-out{display:flex;flex-direction:column;gap:12px;border-top:1px solid var(--line);padding-top:14px}
+.st-out p{margin:0;color:var(--ink);font-size:14.5px;line-height:1.45}
+.st-sum{font-weight:600;font-size:16px!important}
+.st-sec{display:flex;flex-direction:column;gap:8px}
+.st-list{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:14.5px;line-height:1.4;color:var(--ink)}
+.sw2{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;border:1px solid rgba(0,0,0,.15);vertical-align:-1px}
+.try-btn{margin:0 6px;min-height:46px;display:flex;align-items:center;justify-content:center;gap:8px}
+.try-btn svg{width:18px;height:18px}
+.sheet.tryon{max-height:94vh;overflow:auto}
+.to-img{position:relative;border-radius:16px;overflow:hidden;background:var(--soft);width:100%}
+.to-img img{display:block;width:100%;height:auto}
+.to-img.busy img{filter:blur(2px) brightness(.85)}
+.to-img.busy::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.35) 50%,transparent 70%);background-size:200% 100%;animation:shim 1.4s linear infinite}
+@keyframes shim{from{background-position:120% 0}to{background-position:-80% 0}}
+.to-wait{position:absolute;left:12px;right:12px;bottom:12px;z-index:1;display:flex;gap:8px;align-items:center;padding:10px 12px;border-radius:12px;background:rgba(0,0,0,.66);color:#fff;font-size:13.5px}
+.to-wait svg{width:16px;height:16px;flex:none}
+.to-empty{display:flex;flex-direction:column;gap:12px}
+.on-you{position:absolute;left:8px;bottom:8px;padding:2px 8px;border-radius:10px;background:rgba(0,0,0,.65);color:#fff;font-size:11px;font-family:var(--mono);letter-spacing:.04em;text-transform:uppercase}
 .who{margin:0 0 -6px;font-size:14px;color:var(--muted);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .who .link-btn{display:inline-flex;align-items:center;gap:4px;min-height:36px;padding:0}
 .who-btn{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 10px 0 4px;border:1px solid var(--line);border-radius:18px;background:var(--card);color:var(--ink);font-weight:600;font-size:14px}
@@ -395,16 +420,16 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "1.9.0";
+const APP_VERSION = "1.10.0";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
-const SERVER_EXPECTED = "1.1.0"; // the worker/worker.js version this app was built with
+const SERVER_EXPECTED = "1.2.0"; // the worker/worker.js version this app was built with
 
 /* ---------------- storage (on this phone only) ---------------- */
 const LS = "clothes:";
 // People on this phone: each person has their own About you, sizes, budget, taste, votes, saved and liked
 // pieces and last search; the AI connection, the catalog and the app are shared. The first person ("me")
 // keeps the original keys (clothes:taste...); others are clothes:<id>:taste...
-const PER_PERSON = ["query", "taste", "prefs", "saved", "liked", "picks", "session"];
+const PER_PERSON = ["query", "taste", "prefs", "saved", "liked", "picks", "session", "photos", "stylist", "looks"];
 const PEOPLE_MAX = 8;
 let PEOPLE = (() => { try{ return JSON.parse(localStorage.getItem(LS + "people")) || null; }catch(e){ return null; } })();
 if (!PEOPLE || !Array.isArray(PEOPLE.list) || !PEOPLE.list.length) PEOPLE = {list:[{id:"me", name:"Me"}], active:"me"};
@@ -598,6 +623,9 @@ const meLabel = (k) => { const v = PREFS.me[k], o = (ME_OPTS[k] || []).find((x) 
 let PICKS = load("picks", []);
 let SAVED = load("saved", []); // pieces you kept: full idea + when
 let LIKED = load("liked", null); // real pieces you swiped right on (newest first), so they can be shown again
+let PHOTOS = load("photos", []); // photos of this person (made smaller than 512 px on the phone), for the stylist and try-on
+let STYLIST = load("stylist", null); // the stylist's reading of those photos
+let LOOKS = load("looks", []); // pieces saved with a try-on picture (the pictures are in the "drape-looks" cache)
 const S = {screen:"start", prev:"start", round:{votes:[]}, current:null, picked:null, sheet:false, modal:null, toast:null, busy:false,
   // AI: ideas waiting to be shown, the request in flight, what the AI has learned this round
   queue:[], fetching:null, gen:0, aiErr:null, aiInsight:"", anchor:null, sampleRound:false, checking:false,
@@ -1169,9 +1197,27 @@ function skinFor(p, me){
   else if (g){ out.s = 1; out.good = cap(g[1]) + " " + r.good_t; }
   return out;
 }
+// The stylist's reading (from your photos): colours that suit you and to avoid, and words to look for and avoid
+// (cuts, collars, lengths). Colours count most near the face.
+const colourOf = (p) => { let c = String(p.colour || "").toLowerCase(); if (!c){ const t = /\s[-–:|]\s([^-–:|]+)$/.exec(p.title || ""); c = (t ? t[1] : String(p.title || "")).toLowerCase(); } return c; };
+function stylistFor(p){
+  const st = STYLIST, out = {s:0, good:"", bad:"", colour:false};
+  if (!st || !isProduct(p)) return out;
+  const near = NEAR_FACE.has(p.type) || (p.type === "Accessories" && /^(Scarves|Ties)/.test(p.kind || ""));
+  const col = colourOf(p), want = briefRead().words;
+  const good = (st.best_colours || []).find((c) => wordIn(col, c)), bad = (st.avoid_colours || []).find((c) => wordIn(col, c));
+  if (bad && !good && !want.includes(bad)){ out.s -= near ? 2 : 1; out.bad = "Your stylist: avoid " + bad; out.colour = true; }
+  else if (good && !bad){ out.s += near ? 1.5 : 0.75; out.good = "Your stylist: " + good + " suits you"; out.colour = true; }
+  const hay = (p.title + " " + (p.ptype || "") + " " + (p.tags || []).join(" ") + " " + (p.kind || "") + " " + (p.fit || "")).toLowerCase();
+  const av = (st.avoid || []).find((w) => wordIn(hay, w)), lf = (st.look_for || []).find((w) => wordIn(hay, w));
+  if (av){ out.s -= 2; if (!out.bad) out.bad = "Your stylist: avoid " + av; }
+  else if (lf){ out.s += 2; if (!out.good) out.good = "Your stylist: " + lf; }
+  return out;
+}
 function fitForMe(p){
   const me = meNow(), out = {s:0, good:"", bad:""};
-  const sk = skinFor(p, me);
+  const st = stylistFor(p), sk0 = st.colour ? {s:0, good:"", bad:""} : skinFor(p, me);
+  const sk = {s:st.s + sk0.s, good:st.good || sk0.good, bad:st.bad || sk0.bad};
   if (!isProduct(p) || p.type === "Shoes" || p.type === "Accessories") return sk;
   const t = (p.title + " " + (p.fit || "") + " " + (p.tags || []).join(" ")).toLowerCase(), ct = p.ct || "";
   const coat = ["Jackets", "Coats", "Blazers", "Overshirts", "Knitwear", "Sweatshirts"].includes(p.type);
@@ -1179,6 +1225,9 @@ function fitForMe(p){
   const cropped = ct.includes("C") || CROPPY.test(t) || (p.type === "Jackets" && SHORT_JACKETS.has(p.kind)) || (p.type === "Coats" && ["Peacoat", "Car coat"].includes(p.kind));
   const big = ct.includes("O") || BIGGISH.test(t), trim = ct.includes("T") || TRIMMISH.test(t), relaxed = /\brelaxed\b/.test(t);
   const add = (n, why) => { out.s += n; if (n > 0 && !out.good) out.good = why; if (n < 0 && !out.bad) out.bad = why; };
+  // The stylist's reading (or the skin rules) first: it's the most personal note a card can show.
+  if (st.s) add(st.s, st.s > 0 ? st.good : st.bad);
+  if (sk0.s) add(sk0.s, sk0.s > 0 ? sk0.good : sk0.bad);
   if (me.height === "short"){
     if (long) add(-4, "long for your height");
     else if (cropped && coat) add(1.5, "cropped, good for your height");
@@ -1192,7 +1241,6 @@ function fitForMe(p){
   if (me.fit === "slim"){ if (trim) add(1.5, "the slimmer fit you like"); else if (big) add(-2, "looser than you like"); }
   if (me.fit === "relaxed"){ if (relaxed || big) add(1, "the relaxed fit you like"); else if (/\bskinny\b/.test(t)) add(-1.5, "tighter than you like"); }
   if (me.fit === "regular" && big) add(-1, "looser than you like");
-  if (sk.s) add(sk.s, sk.s > 0 ? sk.good : sk.bad);
   // Your size: letter sizes in stock (S, M, L...) without yours count against a piece; it can't be bought.
   // Only when shopping (an idea for your tailor has no size), and not when your words describe another body.
   const mine = String(p.type === "Shoes" || !PREFS.sizeSet || styleMode() || me.bodyFromText ? "" : PREFS.size || "").toUpperCase(), sz = (p.sizes || []).map((x) => String(x).toUpperCase());
@@ -1648,6 +1696,7 @@ function renderExplore(){
     ${S.round.votes.length < 3 && textMeLine() ? `<p class="hint-line">From your words, this search: ${esc(textMeLine())}. About you stays as it is.</p>` : ""}
     ${S.round.recycled ? `<p class="insight-line">${ICON.refresh}<span>You've seen every new piece here; these are ones you passed on before</span></p>` : ""}
     ${insight ? `<p class="insight-line">${ICON.sliders}<span>${esc(insight)}</span></p>` : ""}
+    ${TRYABLE(i) && aiOn() ? `<button type="button" class="outline-btn try-btn" data-act="tryon">${ICON.person}See it on ${youName() === "you" ? "you" : esc(youName())}${PHOTOS.length ? "" : " · add a photo"}</button>` : ""}
     ${(() => { const f = fitForMe(i); return f.bad ? `<p class="fit-note bad">${ICON.sliders}<span>${esc(f.bad[0].toUpperCase() + f.bad.slice(1))}</span></p>` : f.good ? `<p class="fit-note">${ICON.check}<span>${esc(f.good[0].toUpperCase() + f.good.slice(1))}</span></p>` : ""; })()}
     <section class="card-more" aria-label="More about it">
       ${np > 1 ? `<div class="dt-sec"><span class="mono-label">All ${np} photos</span><div class="dt-thumbs flat" role="group" aria-label="All photos">${photosOf(i).map((u, j) => `<button type="button" class="dt-thumb" data-act="card-photo" data-v="${j}" aria-label="Show photo ${j + 1}" aria-current="${j === k}"><img src="${esc(pr ? sized(u, 160) : u)}" alt="" loading="lazy"></button>`).join("")}</div></div>` : ""}
@@ -1964,12 +2013,15 @@ function preloadUrl(u){ if (u && !PRELOADED.has(u)){ PRELOADED.add(u); const im 
 
 /* ---------------- saved: a grid of everything you kept ---------------- */
 function savedImg(p, w){
+  const lk = S.lookUrls && S.lookUrls[p.id];
+  if (lk) return `<img src="${esc(lk)}" alt="" loading="lazy"><span class="on-you">On ${esc(youName())}</span>`;
   const u = photosOf(p)[0];
   if (isProduct(p)) return u ? `<img src="${esc(sized(u, w))}" alt="" loading="lazy" onerror="this.remove()">` : ICON.image;
   return ICON.image + thumbImg(p.id);
 }
 function likedList(){ return (LIKED || []).filter((x) => isProduct(x)); }
 function renderSaved(){
+  if (LOOKS.length && LOOKS.some((id) => !(S.lookUrls || {})[id])) loadLooks();
   const liked = likedList(), tab = S.savedTab || (SAVED.length || !liked.length ? "saved" : "liked");
   const list = tab === "liked" ? liked : SAVED.slice().reverse(), n = list.length;
   const tabBtn = (id, label, count) => `<button type="button" class="seg-btn" role="tab" data-act="saved-tab" data-v="${id}" aria-selected="${tab === id}">${label} <span class="seg-n">${count}</span></button>`;
@@ -2036,9 +2088,10 @@ function tailorBrief(i){
   if (me.build === "athletic") cut.push("room for the chest and thighs, taken in at the waist");
   if (me.fit === "slim") cut.push("a trim fit overall"); if (me.fit === "relaxed") cut.push("an easy, relaxed fit");
   if (cut.length) L.push("Cut for me: " + cut.join("; "));
-  const sk = skinFor(i, me);
-  if (sk.bad) L.push("Colour: " + sk.bad + "; consider it in navy, charcoal or a deeper shade");
-  else if (sk.good) L.push("Colour: " + sk.good);
+  const sv = stylistFor(i), sk = sv.colour ? sv : skinFor(i, me);
+  if (sk.bad) L.push("Colour: " + sk.bad.replace(/^Your stylist: /, "my stylist says ") + "; consider it in " + (STYLIST && STYLIST.best_colours && STYLIST.best_colours.length ? STYLIST.best_colours.slice(0, 3).join(", ") : "navy, charcoal or a deeper shade"));
+  else if (sk.good) L.push("Colour: " + sk.good.replace(/^Your stylist: /, "my stylist says "));
+  if (STYLIST && STYLIST.proportions) L.push("Proportions (stylist): " + STYLIST.proportions);
   if (tm.occasion === "wedding") L.push("For a wedding (family of the groom)");
   if (desc){ const d = desc.replace(/\s+/g, " ").trim(); L.push(""); L.push("From the store: " + (d.length > 320 ? d.slice(0, 317).replace(/\s\S*$/, "") + "…" : d)); }
   return L.join("\n");
@@ -2053,6 +2106,7 @@ function renderStyleSheet(i){
     <pre class="brief" id="brief">${esc(text)}</pre>
     <div class="bottom">
       <button type="button" class="cta" data-act="copy-brief">Copy the brief ${ICON.arrow}</button>
+      ${TRYABLE(i) && aiOn() ? `<button type="button" class="outline-btn" data-act="tryon">${ICON.person}See it on ${youName() === "you" ? "you" : esc(youName())}</button>` : ""}
       ${navigator.share ? `<button type="button" class="outline-btn" data-act="share-brief">Share it</button>` : ""}
       <a class="outline-btn" href="${esc(i.url)}" target="_blank" rel="noopener" data-act="open-product">See the original at ${esc(i.store)} ${ICON.ext}</a>
       <button type="button" class="link-btn" data-act="sheet-close">Keep exploring</button>
@@ -2186,6 +2240,7 @@ function renderProfile(){
     <header class="top"><button type="button" class="icon-btn" data-act="profile-back" aria-label="Back">${ICON.back}</button><span class="meta">${youName() === "you" ? "Your taste" : esc(youName()) + "'s taste"}</span>${hbtns(false)}</header>
     <div style="display:flex;flex-direction:column;gap:6px"><h1 class="h1" style="font-size:32px">${youName() === "you" ? "Your taste so far" : esc(youName()) + "'s taste so far"}</h1><span class="mono-label">${TASTE.votes.length} vote${TASTE.votes.length === 1 ? "" : "s"} · ${SAVED.length} saved · ${PICKS.length} pick${PICKS.length === 1 ? "" : "s"}</span></div>
     ${aboutCard()}
+    ${stylistCard()}
     ${peopleCard()}
     <section class="card" aria-label="What you like and dislike">
       ${pos.length || neg.length ? `
@@ -2241,6 +2296,141 @@ function renderToast(){
   return `<div class="toast${t.undo ? "" : " plain"}" role="status"><span>${esc(t.text)}</span>${t.undo ? `<button type="button" data-act="undo">Undo</button>` : ""}</div>`;
 }
 
+/* ---------------- your photos: the stylist and try-on ---------------- */
+// Photos are made smaller than 512 px on the phone (the image model's limit for reference photos) and kept
+// only here. They go to your Drape AI server when you ask the stylist or try something on, for that answer only.
+const PHOTOS_MAX = 3;
+async function shrinkPhoto(file){
+  const src = URL.createObjectURL(file);
+  try{
+    const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => no(new Error("That photo didn't open (try a JPEG or a screenshot of it)")); i.src = src; });
+    const k = Math.min(1, 500 / Math.max(img.naturalWidth, img.naturalHeight));
+    const w = Math.max(16, Math.round(img.naturalWidth * k)), h = Math.max(16, Math.round(img.naturalHeight * k));
+    const c = document.createElement("canvas"); c.width = w; c.height = h;
+    const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, w, h); g.drawImage(img, 0, 0, w, h);
+    return {url:c.toDataURL("image/jpeg", 0.86), w, h};
+  } finally { URL.revokeObjectURL(src); }
+}
+function storePhotos(list){
+  try{ localStorage.setItem(LS + keyOf("photos"), JSON.stringify(list)); PHOTOS = list; return true; }
+  catch(e){ toast("The phone's storage is full; remove a photo first"); return false; }
+}
+async function addPhotos(files){
+  const room = PHOTOS_MAX - PHOTOS.length;
+  if (room <= 0) return toast("Up to " + PHOTOS_MAX + " photos: remove one first");
+  let added = 0;
+  for (const f of Array.from(files || []).slice(0, room)){
+    try{ const ph = await shrinkPhoto(f); if (storePhotos(PHOTOS.concat([Object.assign(ph, {id:"ph" + Date.now().toString(36) + added, at:Date.now()})]))) added++; }
+    catch(e){ toast(e.message); }
+  }
+  if (added){ toast(added === 1 ? "Photo added · only on this phone" : added + " photos added · only on this phone"); if (S.tryon && S.tryon.need) tryOn(S.tryon.item); }
+  render();
+}
+async function askStylist(){
+  if (!PHOTOS.length) return toast("Add a photo first");
+  if (!aiOn()) return toast("Turn on AI (below) first");
+  S.stylistBusy = true; S.stylistErr = ""; render();
+  try{
+    const j = await aiCall("/stylist", {photos:PHOTOS.map((x) => x.url), me:{height:meLabel("height"), build:meLabel("build"), fit:meLabel("fit"), skin:meLabel("skin")}, likes:likedList().slice(0, 8).map((x) => x.title).join("; ")});
+    STYLIST = Object.assign(j, {at:Date.now(), photos:PHOTOS.length});
+    save("stylist", STYLIST); S.brief = null;
+    if (S.pool) refill();
+  }catch(e){ S.stylistErr = e.message; }
+  S.stylistBusy = false; render();
+  setTimeout(() => { const a = document.getElementById("stylist-out"); if (a) a.scrollIntoView({block:"start", behavior:"smooth"}); }, 50);
+}
+const COLOUR_HEX = {navy:"#1F2A44", charcoal:"#36393F", black:"#141414", grey:"#8A8F98", gray:"#8A8F98", white:"#FAFAFA", ecru:"#EDE6D6", cream:"#F1E9D2", beige:"#D8C8A8", sand:"#D6C29A", stone:"#BDB4A3", khaki:"#B5A27A", camel:"#B88A55", tan:"#C19A6B", brown:"#6B4A33", chocolate:"#4A3022", rust:"#A2482A", terracotta:"#B8643E", orange:"#E07A2E", mustard:"#C9A227", yellow:"#E6C84A", olive:"#6B6B3A", green:"#3E6B48", "bottle green":"#1F4D3A", "forest green":"#26462F", forest:"#26462F", emerald:"#1E7A5A", sage:"#9CAF88", teal:"#1F6F73", "light blue":"#A9C6E8", "sky blue":"#87B6E0", blue:"#3A6EA5", cobalt:"#1F4FB0", "royal blue":"#2747A6", burgundy:"#6B1E2E", wine:"#5E1A2B", maroon:"#5A1F24", red:"#B32D2D", pink:"#E6A6B8", "dusty pink":"#D4A5A5", lavender:"#B9A8D9", purple:"#5E3A7A", plum:"#5A2F4E", taupe:"#8B7D6B", oatmeal:"#D9CDB5", silver:"#C0C3C8", "slate":"#5B6770"};
+const swatch = (c) => COLOUR_HEX[c] ? `<i class="sw2" style="background:${COLOUR_HEX[c]}"></i>` : "";
+function stylistCard(){
+  const st = STYLIST, who = youName() === "you" ? "you" : youName();
+  const thumbs = PHOTOS.map((x) => `<span class="ph-thumb"><img src="${esc(x.url)}" alt="Photo of ${esc(who)}"><button type="button" class="ph-x" data-act="photo-remove" data-v="${esc(x.id)}" aria-label="Remove this photo">${ICON.close}</button></span>`).join("");
+  const chips = (l, cls) => (l || []).map((c) => `<span class="tchip ${cls}">${swatch(c)}${esc(c)}</span>`).join("");
+  return `<section class="card" id="stylist" aria-labelledby="stylist-h">
+    <h2 id="stylist-h">Stylist</h2>
+    <p>Add photos of ${youName() === "you" ? "yourself" : esc(who)}: the stylist reads ${youName() === "you" ? "your" : "their"} colouring and proportions the way stylists do (undertone, contrast, lengths, scale), and pieces can be tried on ${youName() === "you" ? "you" : "them"}.</p>
+    <div class="ph-row">${thumbs}${PHOTOS.length < PHOTOS_MAX ? `<button type="button" class="ph-add" data-act="photo-add">${ICON.image}<span>Add a photo</span></button>` : ""}</div>
+    <input type="file" id="photo-in" accept="image/*" multiple hidden>
+    <p class="small-note" style="text-align:left">Best: full length, standing, facing the camera, in fitted plain clothes, in daylight. Up to ${PHOTOS_MAX}. They stay on this phone and go to your Drape AI server only to answer, never kept there.</p>
+    ${PHOTOS.length ? (S.stylistBusy ? `<button type="button" class="outline-btn filled" disabled>Looking at ${PHOTOS.length > 1 ? "the photos" : "the photo"}… (about 10–30 s)</button>` : `<button type="button" class="outline-btn filled" data-act="stylist-ask">${ICON.sparkle || ICON.sliders}${st ? "Ask the stylist again" : "Ask the stylist"}</button>`) : ""}
+    ${S.stylistErr ? `<p class="fit-note bad">${esc(S.stylistErr)}</p>` : ""}
+    ${st ? `<div id="stylist-out" class="st-out">
+      <p class="st-sum">${esc(st.summary)}</p>
+      ${st.colouring || st.undertone ? `<p><b>Colouring:</b> ${esc([st.undertone && st.undertone + " undertone", st.contrast && st.contrast + " contrast"].filter(Boolean).join(", "))}${st.colouring ? ". " + esc(st.colouring) : ""}</p>` : ""}
+      ${(st.best_colours || []).length ? `<div class="st-sec"><span class="mono-label">Best colours</span><div class="tchips">${chips(st.best_colours, "plus")}</div></div>` : ""}
+      ${(st.avoid_colours || []).length ? `<div class="st-sec"><span class="mono-label">Less of</span><div class="tchips">${chips(st.avoid_colours, "minus")}</div></div>` : ""}
+      ${st.proportions ? `<p><b>Proportions:</b> ${esc(st.proportions)}</p>` : ""}
+      ${(st.cuts || []).length ? `<ul class="st-list">${st.cuts.map((c) => `<li><b>${esc(cap(c.piece))}:</b> ${esc(c.how)}</li>`).join("")}</ul>` : ""}
+      ${(st.look_for || []).length ? `<div class="st-sec"><span class="mono-label">Look for</span><div class="tchips">${chips(st.look_for, "plus")}</div></div>` : ""}
+      ${(st.avoid || []).length ? `<div class="st-sec"><span class="mono-label">Avoid</span><div class="tchips">${chips(st.avoid, "minus")}</div></div>` : ""}
+      ${st.patterns ? `<p><b>Patterns:</b> ${esc(st.patterns)}</p>` : ""}
+      ${(st.tips || []).length ? `<ul class="st-list">${st.tips.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>` : ""}
+      <p class="small-note" style="text-align:left">From ${st.photos || 1} photo${(st.photos || 1) > 1 ? "s" : ""} · ${new Date(st.at).toLocaleDateString()} · an AI's eye by stylists' rules, not a verdict on how anyone looks. Searches now lean on it, and cards say so ("Your stylist: navy suits you").</p>
+      <button type="button" class="link-btn danger" data-act="stylist-clear">Forget the stylist's reading</button>
+    </div>` : ""}
+  </section>`;
+}
+// Try a piece on: your photo and the store's photo go to the AI server, which draws you wearing it (FLUX.2 klein).
+const TRYABLE = (i) => isProduct(i) && (i.type !== "Accessories" || /^(Hats|Scarves|Ties|Sunglasses)/.test(i.kind || ""));
+async function tryOn(i, k){
+  if (!i) return;
+  if (!PHOTOS.length){ S.tryon = {item:i, need:"photo"}; render(); return; }
+  if (!aiOn()){ S.tryon = {item:i, state:"err", err:"Turn on AI in the profile first."}; render(); return; }
+  const ph = PHOTOS[Math.min(k || 0, PHOTOS.length - 1)], src = (i.images && i.images[0]) || i.image;
+  const h = Math.round(512 * (ph.h || 4) / (ph.w || 3));
+  if (S.tryon && S.tryon.url) URL.revokeObjectURL(S.tryon.url);
+  S.tryon = {item:i, state:"busy", at:Date.now(), k:k || 0}; render();
+  const t = S.tryon, ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 100000);
+  try{
+    const r = await fetch(workerBase() + "/tryon", {method:"POST", headers:{"Content-Type":"text/plain"}, signal:ctl.signal,
+      body:JSON.stringify({code:AI.code, photo:ph.url, garment:String(src).replace(/[?&](width|height|crop)=[^&]*/g, ""), type:i.type, kind:i.kind, title:i.title, colour:i.colour, fit:"in his size, cut the way it is meant to fit", w:512, h})});
+    if (!r.ok){ let j = null; try{ j = await r.json(); }catch(e){} throw new Error((j && j.error) || "AI server error " + r.status); }
+    const blob = await r.blob();
+    if (S.tryon === t) Object.assign(t, {state:"ok", blob, url:URL.createObjectURL(blob), ms:Date.now() - t.at});
+  }catch(e){ if (S.tryon === t) Object.assign(t, {state:"err", err:ctl.signal.aborted ? "The AI didn't finish in 100 seconds. Try again." : e.message}); }
+  clearTimeout(timer);
+  render();
+}
+// Looks you save are kept in the browser's cache (not in the small storage), one per piece and person.
+const LOOK_CACHE = "drape-looks";
+const lookKey = (id, who) => new URL("__look/" + (who || PEOPLE.active) + "/" + encodeURIComponent(id), location.href).toString();
+async function saveLook(){
+  const t = S.tryon; if (!t || !t.blob) return;
+  try{ const c = await caches.open(LOOK_CACHE); await c.put(lookKey(t.item.id), new Response(t.blob, {headers:{"Content-Type":t.blob.type || "image/jpeg"}})); }
+  catch(e){ return toast("Couldn't keep the picture on this phone"); }
+  if (!isSaved(t.item.id)) toggleSave(t.item);
+  LOOKS = [t.item.id].concat(LOOKS.filter((x) => x !== t.item.id)).slice(0, 60); save("looks", LOOKS);
+  S.lookUrls = S.lookUrls || {}; S.lookUrls[t.item.id] = t.url; t.kept = true;
+  toast("Look saved · in Saved, with the piece"); render();
+}
+async function loadLooks(){
+  S.lookUrls = S.lookUrls || {};
+  const want = LOOKS.filter((id) => !S.lookUrls[id]);
+  if (!want.length) return;
+  try{
+    const c = await caches.open(LOOK_CACHE);
+    for (const id of want){ const r = await c.match(lookKey(id)); if (r) S.lookUrls[id] = URL.createObjectURL(await r.blob()); }
+  }catch(e){}
+  if (S.screen === "saved") render();
+}
+function renderTryon(){
+  const t = S.tryon, i = t.item;
+  const body = t.need ? `<div class="to-empty"><p>Add a photo of ${youName() === "you" ? "yourself" : esc(youName())} first: full length, standing, facing the camera, in daylight. It stays on this phone.</p><button type="button" class="cta" data-act="photo-add">Add a photo ${ICON.arrow}</button><input type="file" id="photo-in" accept="image/*" hidden></div>`
+    : t.state === "busy" ? `<div class="to-img busy" style="aspect-ratio:${PHOTOS[t.k] ? PHOTOS[t.k].w + "/" + PHOTOS[t.k].h : "3/4"}"><img src="${esc((PHOTOS[t.k] || PHOTOS[0]).url)}" alt=""><span class="to-wait">${ICON.sliders}Drawing ${youName() === "you" ? "you" : esc(youName())} in it… usually 10–30 seconds</span></div>`
+    : t.state === "ok" ? `<div class="to-img"><img src="${esc(t.url)}" alt="${esc(i.title)} on ${esc(youName())}"></div><p class="small-note" style="text-align:left">An AI picture from ${youName() === "you" ? "your" : esc(youName()) + "'s"} photo and the store's. Colour and style are close; the exact fit and length are a guess. ${t.ms ? "Drawn in " + Math.round(t.ms / 1000) + " s." : ""}</p>`
+    : `<p class="fit-note bad">${esc(t.err || "Something went wrong")}</p>`;
+  return `<div class="scrim" data-act="scrim"><section class="sheet tryon" role="dialog" aria-modal="true" aria-labelledby="to-t">
+    <span class="grab" aria-hidden="true"></span>
+    <div class="picked"><span class="thumb" style="background:#fff">${thumbImg(i.id)}</span><div style="display:flex;flex-direction:column;gap:3px;min-width:0"><span class="mono-label" style="color:var(--accent)">On ${esc(youName())}</span><h2 id="to-t">${esc(i.title)}</h2><span class="sub">${esc(i.store)}</span></div></div>
+    ${body}
+    <div class="bottom">
+      ${t.state === "ok" ? (t.kept ? `<button type="button" class="outline-btn filled" disabled>${ICON.marked}Look saved</button>` : `<button type="button" class="cta" data-act="look-save">Save this look ${ICON.arrow}</button>`) : ""}
+      ${t.state === "ok" || t.state === "err" ? `<button type="button" class="outline-btn" data-act="tryon-again">Try again</button>` : ""}
+      ${t.state === "ok" && PHOTOS.length > 1 ? `<button type="button" class="outline-btn" data-act="tryon-photo">With another photo</button>` : ""}
+      <button type="button" class="link-btn" data-act="tryon-close">${t.state === "busy" ? "Cancel" : "Close"}</button>
+    </div>
+  </section></div>`;
+}
+
 /* ---------------- people on this phone ---------------- */
 // Switching reloads the app as that person (everything per person is read fresh at start-up).
 function switchPerson(id, then){
@@ -2271,6 +2461,8 @@ function removePerson(id){
   const x = PEOPLE.list.find((y) => y.id === id);
   if (!x || PEOPLE.list.length < 2) return;
   S.modal = {title:"Remove " + x.name + "?", body:"This deletes " + x.name + "'s About you, votes, saved and liked pieces on this phone. Everyone else stays as they are.", ok:"Remove", run(){
+    const looks = loadOf(id, "looks", []) || [];
+    caches.open(LOOK_CACHE).then((c) => Promise.all(looks.map((x) => c.delete(lookKey(x, id))))).catch(() => {});
     for (const k of PER_PERSON) try{ localStorage.removeItem(LS + keyOf(k, id)); }catch(e){}
     PEOPLE.list = PEOPLE.list.filter((y) => y.id !== id);
     if (PEOPLE.active === id){ PEOPLE.active = PEOPLE.list[0].id; savePeople(); try{ sessionStorage.setItem("drape:then", "profile"); }catch(e){} location.reload(); return; }
@@ -2311,11 +2503,12 @@ function render(){
   let html = S.screen === "explore" ? renderExplore() : S.screen === "shop" ? renderShop() : S.screen === "profile" ? renderProfile() : S.screen === "saved" ? renderSaved() : renderStart();
   if (S.sheet && S.current) html += renderSheet();
   if (S.people) html += renderPeopleSheet();
+  if (S.tryon) html += renderTryon();
   if (S.detail) html += renderDetail();
   if (S.modal) html += renderModal();
   if (S.toast && !S.toast.undo) html += renderToast();
   app.innerHTML = html;
-  document.body.classList.toggle("lock", !!(S.sheet || S.people || S.modal || S.detail || Z.open));
+  document.body.classList.toggle("lock", !!(S.sheet || S.people || S.tryon || S.modal || S.detail || Z.open));
   if (S.detail){ const d2 = document.getElementById("detail"); if (d2) d2.scrollTop = keepTop; bindDetail(); }
   if (S.screen === "explore"){ bindSwipe(); if (S.current){ preloadUrl(photoAt(S.current, curPh() + 1, 900)); loadCardMore(S.current); } }
   const f = S.focus && document.querySelector(S.focus);
@@ -2552,7 +2745,16 @@ const ACTIONS = {
     if (S.sheet) setTimeout(() => { S.sheet = false; render(); }, 300);
   },
   broaden(){ Q.type = "Surprise me"; save("query", Q); S.current = nextIdea(); render(); },
-  scrim(el, e){ if (e.target !== el) return; if (S.modal){ S.modal = null; } else if (S.people){ S.people = false; } else S.sheet = false; render(); },
+  scrim(el, e){ if (e.target !== el) return; if (S.modal){ S.modal = null; } else if (S.tryon){ if (S.tryon.state !== "busy") S.tryon = null; } else if (S.people){ S.people = false; } else S.sheet = false; render(); },
+  "photo-add"(){ const i = document.getElementById("photo-in"); if (i) i.click(); },
+  "photo-remove"(el){ storePhotos(PHOTOS.filter((x) => x.id !== el.dataset.v)); render(); },
+  "stylist-ask"(){ askStylist(); },
+  "stylist-clear"(){ STYLIST = null; save("stylist", null); S.brief = null; if (S.pool) refill(); render(); },
+  tryon(){ tryOn(S.current); },
+  "tryon-again"(){ tryOn(S.tryon.item, S.tryon.k); },
+  "tryon-photo"(){ tryOn(S.tryon.item, ((S.tryon.k || 0) + 1) % PHOTOS.length); },
+  "tryon-close"(){ if (S.tryon && S.tryon.url && !S.tryon.kept) URL.revokeObjectURL(S.tryon.url); S.tryon = null; render(); },
+  "look-save"(){ saveLook(); },
   people(){ S.people = true; S.focus = null; render(); },
   "people-close"(){ S.people = false; render(); },
   "people-edit"(){ S.people = false; openScreen("profile"); setTimeout(() => { const a = document.getElementById("people"); if (a) a.scrollIntoView({block:"start"}); }, 30); },
@@ -2594,6 +2796,7 @@ document.addEventListener("input", (e) => {
 });
 document.addEventListener("change", (e) => {
   if (e.target.classList && e.target.classList.contains("person-name")){ renamePerson(e.target.dataset.id, e.target.value); return; }
+  if (e.target.id === "photo-in"){ addPhotos(e.target.files); return; }
   if (e.target.id === "cat"){ Q.type = e.target.value; save("query", Q); return; }
   if (e.target.id === "shipIL"){ PREFS.shipIL = e.target.checked; save("prefs", PREFS); }
 });
@@ -2750,6 +2953,8 @@ function askSnapshot(){
   try{ const b = briefRead(); L.push(`YOUR WORDS READ AS: brands ${b.brands.join(", ") || "-"}; styles ${b.styles.join(", ") || "-"}; look for ${b.words.join(", ") || "-"}; avoid ${b.avoid.join(", ") || "-"}; store styles +${Object.keys(b.tags).join("/") || "-"} -${Object.keys(b.notTags).join("/") || "-"}; stores ${Object.keys(b.stores).join(", ") || "-"}`); }catch(e){}
   L.push(`LIKED: ${likedList().slice(0, 8).map((x) => x.title).join("; ") || "-"}`);
   L.push(`PREFS: ${JSON.stringify(PREFS)}`);
+  L.push(`PHOTOS: ${PHOTOS.length ? PHOTOS.map((x) => x.w + "x" + x.h + " " + Math.round(x.url.length * 0.75 / 1024) + "KB").join(", ") : "none"}   LOOKS saved: ${LOOKS.length}${S.tryon ? "   TRY-ON: " + (S.tryon.need ? "needs a photo" : S.tryon.state + (S.tryon.ms ? " " + S.tryon.ms + "ms" : "") + (S.tryon.err ? " " + S.tryon.err : "")) + " — " + S.tryon.item.title : ""}`);
+  if (STYLIST) L.push(`STYLIST (${STYLIST.model || "-"}, ${STYLIST.ms || "-"}ms): ${STYLIST.summary} | best ${(STYLIST.best_colours || []).join(", ")} | less ${(STYLIST.avoid_colours || []).join(", ")} | look for ${(STYLIST.look_for || []).join(", ")} | avoid ${(STYLIST.avoid || []).join(", ")}`);
   if (S.current && isProduct(S.current)){ const f = fitForMe(S.current); L.push(`FOR YOU: ${f.s ? (f.s > 0 ? "+" : "") + f.s + " " + (f.good || f.bad) : "neutral"}   cut: ${S.current.ct || "-"}${S.current.is ? "   inseam " + S.current.is + '"' : ""}`); }
   L.push(`\nON SCREEN: ${row(S.current)}`);
   if (S.current) L.push(`  why: "${S.current.why || ""}"   search: "${S.current.search || ""}"   photo ${curPh() + 1} of ${photosOf(S.current).length}`);

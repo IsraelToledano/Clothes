@@ -1,8 +1,9 @@
 // Drape service worker: makes the app installable and usable offline.
 // Bump CACHE whenever index.html changes so phones pick up the new version.
-const CACHE = "drape-v1.9.0";
+const CACHE = "drape-v1.10.0";
 const IMG_CACHE = "drape-img-v1"; // AI photos: kept across app versions
 const IMG_MAX = 300;
+const LOOK_CACHE = "drape-looks"; // try-on pictures you saved: kept across app versions
 const ASSETS = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", (e) => {
@@ -12,7 +13,7 @@ self.addEventListener("install", (e) => {
 
 self.addEventListener("activate", (e) => {
   e.waitUntil(
-    caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE && k !== IMG_CACHE).map((k) => caches.delete(k))))
+    caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE && k !== IMG_CACHE && k !== LOOK_CACHE).map((k) => caches.delete(k))))
   );
   self.clients.claim();
 });

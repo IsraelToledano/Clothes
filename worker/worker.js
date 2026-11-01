@@ -8,6 +8,11 @@
 //   POST /ideas   → an LLM writes new style ideas from the request and the swipes so far (Gemma 4, Llama 3.3 as backup)
 //   GET  /diag    → a tiny test call to each AI model, with Cloudflare's exact answer (for the Drape report)
 //   GET  /image   → an AI product photo for one idea (FLUX.1 schnell, FLUX.2 klein 4B as backup)
+//   POST /tryon   → you wearing a piece: your photo and the store's photo of it, drawn by FLUX.2 klein 4B
+//   POST /stylist → what suits you, read from your photos by Gemma 4 (vision) the way a stylist would
+//   GET  /portrait → a made-up man's full-length photo, only for the repo's live test of /tryon and /stylist
+//                    (so the test never needs a real person's photo)
+// Photos sent to /tryon and /stylist are used for that one answer and never stored.
 //
 // One setting in the Cloudflare dashboard (Worker → Settings → Variables and Secrets):
 //   ACCESS_CODE  secret: any passcode; type the same one into the app once.
@@ -16,7 +21,7 @@
 // On the free plan Cloudflare blocks requests past that instead of charging.
 
 // Bump with the app version so a report shows whether the server was redeployed.
-const SERVER_VERSION = "1.1.0";
+const SERVER_VERSION = "1.2.0";
 const APP_ORIGIN = "https://israeltoledano.github.io";
 // Gemma 4 26B (4B active) is fast and costs about a sixth of Llama 3.3 70B per idea in the free allowance.
 const TEXT_MODEL = "@cf/google/gemma-4-26b-a4b-it";
@@ -107,6 +112,19 @@ async function handle(req, env) {
         try { body = JSON.parse(await req.text()); } catch (e) { throw new HttpError(400, "Request isn't valid JSON"); }
         await checkCode(env, body && body.code);
         return json(url.pathname === "/products" ? await products(env, body) : await more(env, body), 200, origin);
+      }
+
+      if (req.method === "POST" && (url.pathname === "/tryon" || url.pathname === "/stylist")) {
+        let body;
+        try { body = JSON.parse(await req.text()); } catch (e) { throw new HttpError(400, "Request isn't valid JSON"); }
+        await checkCode(env, body && body.code);
+        return url.pathname === "/tryon" ? await tryon(env, body, origin) : json(await stylist(env, body), 200, origin);
+      }
+
+      if (req.method === "GET" && url.pathname === "/portrait") {
+        await checkCode(env, url.searchParams.get("code"));
+        const bytes = await imageBytes(await timeLimit(runAI(env, IMAGE_MODEL, { prompt: "Full-length photo of a man in his thirties standing straight and facing the camera, arms relaxed at his sides, plain white crew-neck t-shirt, dark blue jeans, white sneakers, in front of a plain light grey wall, soft daylight, photorealistic, sharp, whole body from head to shoes in frame", steps: 4 }), 20000, "schnell"));
+        return new Response(bytes, { headers: { "Content-Type": bytes[0] === 0x89 ? "image/png" : "image/jpeg", "Cache-Control": "no-store", ...cors(origin) } });
       }
 
       if (req.method === "POST" && url.pathname === "/ideas") {
@@ -763,6 +781,105 @@ async function imageBytes(out) {
 /* ---------------- /diag ---------------- */
 // One tiny call per model (a few tokens, one small picture: almost free), each with Cloudflare's exact
 // answer, so a report shows what's really wrong instead of a guess.
+/* ---------------- /tryon and /stylist: your photos ---------------- */
+// A photo from the app: base64 JPEG, already made smaller than 512x512 on the phone (the model's limit for
+// reference images), under 300 KB.
+function photoBytes(b64, what) {
+  const s = String(b64 || "").replace(/^data:image\/[\w+.-]+;base64,/, "");
+  if (s.length < 200) throw new HttpError(400, "Missing " + what);
+  if (s.length > 400000) throw new HttpError(413, what + " is too big (make it smaller than 512 px)");
+  let bin;
+  try { bin = atob(s); } catch (e) { throw new HttpError(400, what + " isn't a valid image"); }
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+// Store photos come from Shopify's image server; it can hand them over already fitted inside 500x500.
+const PIECE_HOSTS = /(^|\.)(cdn\.shopify\.com|shopifycdn\.net)$/i;
+async function piecePhoto(u) {
+  let url;
+  try { url = new URL(String(u || "")); } catch (e) { throw new HttpError(400, "Missing the piece's photo"); }
+  if (url.protocol !== "https:" || !PIECE_HOSTS.test(url.hostname)) throw new HttpError(400, "The piece's photo must come from the store's image server");
+  url.searchParams.set("width", "500"); url.searchParams.set("height", "500"); url.searchParams.delete("crop");
+  const r = await fetch(url.toString(), { headers: { Accept: "image/jpeg,image/png;q=0.9,*/*;q=0.5" } });
+  if (!r.ok) throw new HttpError(502, "The store's photo didn't load (" + r.status + ")");
+  const buf = new Uint8Array(await r.arrayBuffer());
+  if (buf.length < 500 || buf.length > 2e6) throw new HttpError(502, "The store's photo isn't usable");
+  return { bytes: buf, type: (r.headers.get("content-type") || "image/jpeg").split(";")[0] };
+}
+const SLOT = { Shirts: "shirt or top", "T-shirts": "top", Polos: "top", Knitwear: "top or sweater", Sweatshirts: "top", Overshirts: "top layer", Jackets: "top layer, worn over his clothes", Coats: "top layer, worn over his clothes", Blazers: "jacket, worn over his shirt", Suits: "jacket and trousers", Trousers: "trousers", Jeans: "trousers", Shorts: "trousers, as shorts", Swimwear: "trousers, as swim shorts (bare chest is fine)", Shoes: "shoes", Accessories: "accessory" };
+async function tryon(env, b, origin) {
+  const you = photoBytes(b.photo, "your photo");
+  const piece = await piecePhoto(b.garment);
+  const type = Object.keys(SLOT).includes(b.type) ? b.type : "Shirts";
+  const what = clip([b.colour, b.kind && b.kind !== type ? b.kind : "", b.title].filter(Boolean).join(" · "), 160);
+  const dim = (x, d) => Math.max(384, Math.min(768, Math.round((+x || d) / 16) * 16));
+  const w = dim(b.w, 512), h = dim(b.h, 768);
+  const fit = clip(b.fit, 120);
+  const prompt = `Image 0 is a photo of a man. Image 1 is a store photo of a piece of men's clothing (${type}${what ? ": " + what : ""}). ` +
+    `Make a realistic photo of the same man from image 0, with exactly the same face, hair, skin tone, body shape, height and proportions, the same pose, the same background and light, ` +
+    `now wearing the ${type === "Suits" ? "suit" : "piece"} from image 1 as his ${SLOT[type]}. Copy the piece exactly: its colour, fabric and texture, pattern, collar, buttons, pockets, length and cut. ` +
+    `It sits on his body naturally${fit ? ", " + fit : ""}. Keep the rest of his clothes as they are. Nothing from image 1 other than the piece: not the model, not the background. ` +
+    `Photorealistic, sharp, his whole figure in frame. No text, no watermark.`;
+  const form = new FormData();
+  form.append("prompt", prompt);
+  form.append("input_image_0", new Blob([you], { type: "image/jpeg" }), "you.jpg");
+  form.append("input_image_1", new Blob([piece.bytes], { type: piece.type }), "piece." + (/png/.test(piece.type) ? "png" : "jpg"));
+  form.append("width", String(w)); form.append("height", String(h));
+  const r = new Response(form);
+  const t0 = Date.now();
+  const bytes = await imageBytes(await timeLimit(runAI(env, IMAGE_BACKUP, { multipart: { body: r.body, contentType: r.headers.get("content-type") } }), +env.TRYON_LIMIT_MS || 60000, "FLUX.2 klein"));
+  return new Response(bytes, { headers: { "Content-Type": bytes[0] === 0x89 ? "image/png" : "image/jpeg", "Cache-Control": "no-store", "X-Drape-Image-Model": "flux-2-klein-4b", "X-Drape-Ms": String(Date.now() - t0), "Access-Control-Expose-Headers": "X-Drape-Image-Model, X-Drape-Ms", ...cors(origin) } });
+}
+
+const VISION_BACKUP = "@cf/google/gemma-3-12b-it";
+const STYLIST_SYSTEM = `You are an experienced men's stylist at a first fitting. From photos of one man, say what will look best on him, by the principles stylists use:
+- his colouring: skin undertone (warm, cool, neutral, olive) and the contrast between his hair, skin and eyes (low, medium, high), which decide the colours and how much contrast to wear near the face;
+- his proportions: height, shoulders, torso and leg length, build, which decide lengths, rise, lapel and collar size, and how close a cut should be;
+- his face and features: which collars, necklines and lapels frame them.
+Not beauty standards, not guesses about anything personal. Be specific and practical, kind and honest; no flattery. Only what you can see, plus what he tells you.
+Answer in JSON only, in English:
+{"summary": "2 sentences: what to build his wardrobe around",
+ "undertone": "warm|cool|neutral|olive", "contrast": "low|medium|high", "colouring": "1 sentence",
+ "best_colours": ["up to 8 single colour words, e.g. navy, charcoal, burgundy"],
+ "avoid_colours": ["up to 6 single colour words"],
+ "proportions": "1-2 sentences on lengths, rise, how close the cut should be",
+ "cuts": [{"piece": "e.g. jackets", "how": "short advice"}],
+ "look_for": ["up to 8 words or short phrases to search for in a menswear catalog, e.g. 'spread collar', 'high rise', 'cropped', 'peak lapel'"],
+ "avoid": ["up to 6 words or short phrases to avoid"],
+ "patterns": "1 sentence on pattern and texture scale",
+ "tips": ["up to 4 short tips"]}`;
+async function stylist(env, b) {
+  const photos = (Array.isArray(b.photos) ? b.photos : []).slice(0, 3).map((x, k) => photoBytes(x, "photo " + (k + 1)));
+  if (!photos.length) throw new HttpError(400, "Add a photo first");
+  const toUrl = (u8) => { let s = ""; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return "data:image/jpeg;base64," + btoa(s); };
+  const me = b.me || {};
+  const about = [me.height && "height " + clip(me.height, 30), me.build && "build " + clip(me.build, 20), me.fit && "likes a " + clip(me.fit, 20) + " fit", me.skin && clip(me.skin, 20) + " skin", b.words && "he says: " + clip(b.words, 300), b.likes && "pieces he liked: " + clip(b.likes, 400)].filter(Boolean).join("; ");
+  const content = [{ type: "text", text: (about ? "What he told me: " + about + ".\n" : "") + photos.length + " photo" + (photos.length > 1 ? "s" : "") + " of him follow. JSON only." }].concat(photos.map((u8) => ({ type: "image_url", image_url: { url: toUrl(u8) } })));
+  const messages = [{ role: "system", content: STYLIST_SYSTEM }, { role: "user", content }];
+  const tries = [
+    [TEXT_MODEL, { messages, max_completion_tokens: 1400, temperature: 0.4, response_format: { type: "json_object" }, chat_template_kwargs: { enable_thinking: false } }],
+    [TEXT_MODEL, { messages, max_completion_tokens: 1400, temperature: 0.4 }],
+    [VISION_BACKUP, { messages, max_tokens: 1400, temperature: 0.4 }],
+  ];
+  let out = null, used = "", last = null;
+  const t0 = Date.now();
+  for (const [model, input] of tries) {
+    try { out = parseJSON(textOf(await timeLimit(runAI(env, model, input), 45000, model.split("/").pop()))); if (out && (out.summary || out.best_colours)) { used = model; break; } }
+    catch (e) { if (e instanceof HttpError && e.status === 429) throw e; last = e; }
+  }
+  if (!out || !used) throw last || new HttpError(502, "The stylist didn't answer");
+  const words = (a, n, len) => (Array.isArray(a) ? a : []).map((x) => clip(String(typeof x === "object" && x ? x.piece || x.name || "" : x).toLowerCase().replace(/[^a-z0-9 '&-]/g, " ").replace(/\s+/g, " ").trim(), len || 30)).filter((x) => x.length > 1).slice(0, n);
+  const pick = (x, list) => (list.includes(String(x || "").toLowerCase()) ? String(x).toLowerCase() : "");
+  return {
+    summary: clip(out.summary, 320), undertone: pick(out.undertone, ["warm", "cool", "neutral", "olive"]), contrast: pick(out.contrast, ["low", "medium", "high"]), colouring: clip(out.colouring, 220),
+    best_colours: words(out.best_colours, 8, 20), avoid_colours: words(out.avoid_colours, 6, 20), proportions: clip(out.proportions, 320),
+    cuts: (Array.isArray(out.cuts) ? out.cuts : []).filter((x) => x && typeof x === "object").slice(0, 6).map((x) => ({ piece: clip(x.piece, 30), how: clip(x.how, 200) })).filter((x) => x.piece && x.how),
+    look_for: words(out.look_for, 8), avoid: words(out.avoid, 6), patterns: clip(out.patterns, 220), tips: (Array.isArray(out.tips) ? out.tips : []).map((x) => clip(x, 160)).filter(Boolean).slice(0, 4),
+    model: used.split("/").pop(), ms: Date.now() - t0,
+  };
+}
+
 async function diag(env) {
   const out = { version: SERVER_VERSION, at: new Date().toISOString() };
   const msg = [{ role: "user", content: "Reply with the word ok." }];

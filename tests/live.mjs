@@ -298,6 +298,51 @@ try {
       log("people", R.app.people);
     } catch (e) { R.app.people = { error: String((e && e.message) || e) }; }
   }
+  /* ---------- 6c. 1.10: a photo, the stylist and try-on. The photo is a made-up man the worker draws
+     (/portrait), never a real person. ---------- */
+  if (first) {
+    try {
+      const v = (R.app.v110 = {});
+      v.portrait = await timed(async () => { const r = await fetch(WORKER + "/portrait?code=" + encodeURIComponent(tok)); const buf = Buffer.from(await r.arrayBuffer()); if (r.ok) fs.writeFileSync(path.join(OUT, "portrait.jpg"), buf); return { status: r.status, bytes: buf.length, error: r.ok ? "" : buf.toString().slice(0, 200) }; });
+      if (v.portrait.status === 200) {
+        await page.evaluate(() => { S.screen = "start"; S.tryon = null; render(); });
+        await page.click('header [data-act="profile"]'); await page.waitForSelector("#stylist");
+        await page.setInputFiles("#photo-in", path.join(OUT, "portrait.jpg")); await page.waitForTimeout(1000);
+        v.photo = await page.evaluate(() => PHOTOS.map((x) => x.w + "x" + x.h + " " + Math.round(x.url.length * 0.75 / 1024) + "KB"));
+        const t1 = Date.now();
+        await page.click('[data-act="stylist-ask"]');
+        await page.waitForFunction(() => !S.stylistBusy, null, { timeout: 100000 });
+        v.stylist = await page.evaluate(() => (STYLIST ? { model: STYLIST.model, ms: STYLIST.ms, summary: STYLIST.summary, colouring: [STYLIST.undertone, STYLIST.contrast, STYLIST.colouring].join(" / "), best: STYLIST.best_colours, less: STYLIST.avoid_colours, lookFor: STYLIST.look_for, avoid: STYLIST.avoid, proportions: STYLIST.proportions, cuts: STYLIST.cuts, tips: STYLIST.tips } : { error: S.stylistErr }));
+        v.stylist.wallMs = Date.now() - t1;
+        await page.evaluate(() => { const a = document.getElementById("stylist"); if (a) a.scrollIntoView(); }); await page.screenshot({ path: path.join(OUT, "v110-stylist.png") });
+        await page.click('[data-act="profile-back"]');
+        v.tryons = [];
+        for (const cat of ["Blazers", "Shirts"]) {
+          const one = { cat };
+          await page.evaluate((c) => { Q.type = c; Q.styles = []; Q.text = ""; Q.mode = "style"; save("query", Q); startRound(); }, cat);
+          await page.waitForSelector("#card img.prod.ok", { timeout: 20000 }); await page.waitForTimeout(500);
+          one.piece = await page.evaluate(() => S.current.store + " | " + S.current.title);
+          one.stylistNotes = await page.evaluate(() => [S.current].concat(S.queue).slice(0, 20).map((i) => fitForMe(i).good || fitForMe(i).bad).filter((x) => /stylist/i.test(x)));
+          const src = await page.evaluate(() => S.current.images[0]);
+          try { const r = await fetch(src + (src.includes("?") ? "&" : "?") + "width=500&height=500"); if (r.ok) fs.writeFileSync(path.join(OUT, "tryon-" + cat.toLowerCase() + "-piece.jpg"), Buffer.from(await r.arrayBuffer())); } catch (e) {}
+          const t2 = Date.now();
+          await page.click('[data-act="tryon"]');
+          await page.waitForFunction(() => S.tryon && S.tryon.state && S.tryon.state !== "busy", null, { timeout: 110000 });
+          Object.assign(one, await page.evaluate(() => ({ state: S.tryon.state, ms: S.tryon.ms, err: S.tryon.err || "", bytes: S.tryon.blob ? S.tryon.blob.size : 0 })), { wallMs: Date.now() - t2 });
+          if (one.state === "ok") {
+            const b64 = await page.evaluate(async () => { const b = new Uint8Array(await S.tryon.blob.arrayBuffer()); let x = ""; for (let i = 0; i < b.length; i += 0x8000) x += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(x); });
+            fs.writeFileSync(path.join(OUT, "tryon-" + cat.toLowerCase() + ".jpg"), Buffer.from(b64, "base64"));
+            await page.click('[data-act="look-save"]'); await page.waitForTimeout(600);
+            one.looks = await page.evaluate(() => LOOKS.length);
+          }
+          await page.screenshot({ path: path.join(OUT, "v110-tryon-" + cat.toLowerCase() + ".png") });
+          await page.click('[data-act="tryon-close"]').catch(() => {});
+          v.tryons.push(one);
+        }
+      }
+      log("1.10", v);
+    } catch (e) { R.app.v110 = Object.assign(R.app.v110 || {}, { error: String((e && e.message) || e) }); }
+  }
   /* ---------- 7. the deployed app (GitHub Pages) with the catalog from its branch ---------- */
   if (process.env.SITE) {
     try {
@@ -351,6 +396,9 @@ const md = [
   `1.8 Suits, find a style: ${JSON.stringify(a.v18 && a.v18.style)}   shop: ${JSON.stringify(a.v18 && a.v18.shop)}`,
   `1.8 my style: ${a.v18 && a.v18.brief ? "saved " + a.v18.brief.saved + " — " + a.v18.brief.text.replace(/\n/g, " / ") : "-"}`,
   `1.9 people: ${JSON.stringify(a.people || null)}`,
+  `1.10 portrait: ${JSON.stringify(a.v110 && a.v110.portrait)}   photo: ${JSON.stringify(a.v110 && a.v110.photo)}`,
+  `1.10 stylist: ${JSON.stringify(a.v110 && a.v110.stylist)}`,
+  `1.10 try-on: ${JSON.stringify(a.v110 && (a.v110.tryons || a.v110.error))}`,
   `Deployed app: ${JSON.stringify(a.deployed || null)}`,
   `Errors: ${(a.errors || []).join(" | ") || "none"}`,
   a.stuck ? `STUCK at start: ${JSON.stringify(a.stuck)}` : "",

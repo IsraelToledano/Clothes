@@ -33,6 +33,9 @@ Everything you do is saved on the phone (`localStorage`, keys prefixed `clothes:
 | `POST /ideas` | Writes new ideas from the brief, today's swipes and long-term taste | Gemma 4 26B (`@cf/google/gemma-4-26b-a4b-it`); Llama 3.3 70B as backup |
 | `GET /diag` | One tiny test call per model with Cloudflare's exact answer ("Run a quick AI check" in the app; the result goes into the Drape report) | all three |
 | `GET /image` | Draws a product photo for one idea (the garment alone on an invisible mannequin, no person) | First five cards of a search: FLUX.1 schnell (1–2s, about 150 neurons). The rest: FLUX.2 klein 4B at 512×768 (9–14s, about 50 neurons), drawn ahead while you look at the current card. Each is the other's backup. |
+| `POST /tryon` | You wearing a piece: your photo and the store's photo of it (fitted inside 500×500 by Shopify's image server) go in as reference images 0 and 1 | FLUX.2 klein 4B (about 10–30 s) |
+| `POST /stylist` | Reads up to 3 photos of you the way a stylist does (undertone, contrast, proportions) and answers in JSON: best colours, colours to avoid, cuts, words to look for and avoid, patterns, tips | Gemma 4 26B with vision; Gemma 3 12B as backup |
+| `GET /portrait` | A made-up man's full-length photo, only for the live test of `/tryon` and `/stylist` (so the test never uses a real person's photo) | FLUX.1 schnell |
 | `GET /health` | Checks the access code | — |
 
 ### Setup
@@ -58,6 +61,12 @@ On the phone, tap the version badge next to the logo (or **Update app** in the t
 ## Real products (since 1.0)
 
 AI-drawn photos on the free plan were too generic and too slow, so Drape shows real products: real photos, prices and links.
+
+### Photos, the stylist and try-on (since 1.10)
+
+- **Photos of you** (taste screen → *Stylist*): up to 3 per person, made smaller than 512 px on the phone and kept only there (`clothes:photos`). They go to your Drape AI server only to answer the stylist or a try-on, and the server doesn't keep them.
+- **The stylist** reads them the way a stylist would at a first fitting: undertone and the contrast between hair, skin and eyes (which colours, and how much contrast near the face), proportions (lengths, rise, how close a cut), and the face (collars, lapels). No beauty standard and no guesses about anything personal; it's an AI's eye by stylists' rules. The answer (best colours, colours to wear less, cuts, words to look for and avoid, patterns, tips) is kept per person and steers every search: its colours count most near the face, its words (cropped, spread collar, high rise...) count for a piece, and cards say so ("Your stylist: navy suits you"). It replaces the general skin rules where it has an opinion. The tailor's brief adds its proportions.
+- **See it on you** (under a card, and on *My style*): your photo and the store's photo go to FLUX.2 klein, which draws you wearing the piece, in 10–30 seconds. *Save this look* saves the piece and keeps the picture on the phone (in the browser cache `drape-looks`, kept across app updates); Saved shows it "On you". The picture is a guess at fit and length, not a measurement. About 100–200 neurons each.
 
 ### People on this phone (since 1.9)
 
