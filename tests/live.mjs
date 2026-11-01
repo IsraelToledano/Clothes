@@ -308,13 +308,13 @@ try {
         const b64 = fs.readFileSync(path.join(OUT, "portrait.jpg")).toString("base64");
         const photos = await page.evaluate(async (b) => {
           const img = new Image(); img.src = "data:image/jpeg;base64," + b; await img.decode();
-          const make = (side, q, seed, crop) => { const sw = img.width * crop, sh = img.height; const k = side / Math.max(sw, sh); const w = Math.round(sw * k), h = Math.round(sh * k); const c = document.createElement("canvas"); c.width = w; c.height = h; const g = c.getContext("2d"); g.drawImage(img, (img.width - sw) / 2, 0, sw, sh, 0, 0, w, h); const d = g.getImageData(0, 0, w, h); let s = seed; for (let i = 0; i < d.data.length; i += 4) { s = (s * 1103515245 + 12345) & 0x7fffffff; const n = (s % 13) - 6; d.data[i] += n; d.data[i + 1] += n; d.data[i + 2] += n; } g.putImageData(d, 0, 0); return c.toDataURL("image/jpeg", q); };
-          return { old: [1, 2, 3].map((x) => make(500, 0.86, x, 0.75)), now: [1, 2, 3].map((x) => make(448, 0.8, x, 0.75)) };
+          const make = (side, q, seed, crop, amp) => { const sw = img.width * crop, sh = img.height; const k = side / Math.max(sw, sh); const w = Math.round(sw * k), h = Math.round(sh * k); const c = document.createElement("canvas"); c.width = w; c.height = h; const g = c.getContext("2d"); g.drawImage(img, (img.width - sw) / 2, 0, sw, sh, 0, 0, w, h); const d = g.getImageData(0, 0, w, h); let s = seed; for (let i = 0; i < d.data.length; i += 4) { s = (s * 1103515245 + 12345) & 0x7fffffff; const n = (s % (2 * (amp || 6) + 1)) - (amp || 6); d.data[i] += n; d.data[i + 1] += n; d.data[i + 2] += n; } g.putImageData(d, 0, 0); return c.toDataURL("image/jpeg", q); };
+          return { old: [1, 2, 3].map((x) => make(500, 0.86, x, 0.75)), now: [1, 2, 3].map((x) => make(448, 0.8, x, 0.75)), heavy: [1, 2, 3].map((x) => make(500, 0.9, x, 0.75, 24)) };
         }, b64);
-        v.kb = { "1.10": photos.old.map((u) => Math.round(u.length * 0.75 / 1024)), "1.11": photos.now.map((u) => Math.round(u.length * 0.75 / 1024)) };
+        v.kb = { "1.10": photos.old.map((u) => Math.round(u.length * 0.75 / 1024)), "1.11": photos.now.map((u) => Math.round(u.length * 0.75 / 1024)), heavy: photos.heavy.map((u) => Math.round(u.length * 0.75 / 1024)) };
         photos.old.forEach((u, k) => fs.writeFileSync(path.join(OUT, "photo-" + (k + 1) + ".jpg"), Buffer.from(u.split(",")[1], "base64")));
         // The stylist with three photos of the size 1.10 sent (his report: "no connection") and of the size 1.11 sends, straight from the page.
-        for (const [name, list] of [["1.10", photos.old], ["1.11", photos.now]]) {
+        for (const [name, list] of [["1.10", photos.old], ["1.11", photos.now], ["heavy", photos.heavy]]) {
           v["stylist " + name] = await page.evaluate(async ([w, code, l]) => { const t = Date.now(); try { const r = await fetch(w + "/stylist", { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ code, photos: l }) }); const j = await r.json().catch(() => null); return { status: r.status, ms: Date.now() - t, model: j && j.model, error: j && j.error, summary: j && j.summary }; } catch (e) { return { failed: String(e), ms: Date.now() - t }; } }, [WORKER, tok, list]);
         }
         // The app: three photos in, the stylist reads them by itself
@@ -410,6 +410,7 @@ const md = [
   `1.9 people: ${JSON.stringify(a.people || null)}`,
   `1.11 portrait: ${JSON.stringify(a.v111 && a.v111.portrait)}   photo KB: ${JSON.stringify(a.v111 && a.v111.kb)}   in the app: ${JSON.stringify(a.v111 && a.v111.photos)}`,
   `1.11 stylist straight, 3 photos of 1.10's size: ${JSON.stringify(a.v111 && a.v111["stylist 1.10"])}   of 1.11's size: ${JSON.stringify(a.v111 && a.v111["stylist 1.11"])}`,
+  `1.11 stylist straight, 3 heavy photos (like the report's 80 KB): ${JSON.stringify(a.v111 && a.v111["stylist heavy"])}`,
   `1.11 stylist by itself in the app: ${JSON.stringify(a.v111 && (a.v111.stylist || a.v111.error))}`,
   `1.11 On me cards: ${JSON.stringify(a.v111 && a.v111.cards)}`,
   `1.11 ${(a.v111 && a.v111.onMe) || "ON ME: -"}`,
