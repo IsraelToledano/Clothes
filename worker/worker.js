@@ -21,7 +21,7 @@
 // On the free plan Cloudflare blocks requests past that instead of charging.
 
 // Bump with the app version so a report shows whether the server was redeployed.
-const SERVER_VERSION = "1.3.0";
+const SERVER_VERSION = "1.3.1";
 const APP_ORIGIN = "https://israeltoledano.github.io";
 // Gemma 4 26B (4B active) is fast and costs about a sixth of Llama 3.3 70B per idea in the free allowance.
 const TEXT_MODEL = "@cf/google/gemma-4-26b-a4b-it";
@@ -116,7 +116,16 @@ async function handle(req, env) {
 
       if (req.method === "POST" && (url.pathname === "/tryon" || url.pathname === "/stylist")) {
         let body;
-        try { body = JSON.parse(await req.text()); } catch (e) { throw new HttpError(400, "Request isn't valid JSON"); }
+        // The app (1.11.1+) sends try-ons as a form with the photo as a file: parsed natively, no decoding in JS.
+        if (/multipart\/form-data/i.test(req.headers.get("Content-Type") || "")) {
+          const fd = await req.formData().catch(() => { throw new HttpError(400, "Request isn't a valid form"); });
+          body = {};
+          for (const k of ["code", "type", "kind", "title", "colour", "fit", "w", "h", "garment"]) body[k] = fd.get(k) || "";
+          body.garments = fd.getAll("garments").map(String);
+          body.photoFile = fd.get("photo");
+        } else {
+          try { body = JSON.parse(await req.text()); } catch (e) { throw new HttpError(400, "Request isn't valid JSON"); }
+        }
         await checkCode(env, body && body.code);
         return url.pathname === "/tryon" ? await tryon(env, body, origin) : json(await stylist(env, body), 200, origin);
       }
@@ -771,6 +780,7 @@ async function imageBytes(out) {
   if (b64 && typeof b64 === "object" && b64.image) b64 = b64.image;
   if (typeof b64 !== "string" || !b64) throw new HttpError(502, "The image model returned nothing usable (" + Object.keys(out || {}).join(",") + ")");
   b64 = b64.replace(/^data:image\/\w+;base64,/, "");
+  if (typeof Uint8Array.fromBase64 === "function") { const u = Uint8Array.fromBase64(b64); if (u.length < 100) throw new HttpError(502, "The image model returned an empty image"); return u; }
   const bin = atob(b64);
   if (bin.length < 100) throw new HttpError(502, "The image model returned an empty image");
   const bytes = new Uint8Array(bin.length);
@@ -788,6 +798,7 @@ function photoBytes(b64, what) {
   const s = String(b64 || "").replace(/^data:image\/[\w+.-]+;base64,/, "");
   if (s.length < 200) throw new HttpError(400, "Missing " + what);
   if (s.length > 400000) throw new HttpError(413, what + " is too big (make it smaller than 512 px)");
+  if (typeof Uint8Array.fromBase64 === "function") { try { return Uint8Array.fromBase64(s); } catch (e) { throw new HttpError(400, what + " isn't a valid image"); } }
   let bin;
   try { bin = atob(s); } catch (e) { throw new HttpError(400, what + " isn't a valid image"); }
   const out = new Uint8Array(bin.length);
@@ -803,13 +814,21 @@ async function piecePhoto(u) {
   url.searchParams.set("width", "500"); url.searchParams.set("height", "500"); url.searchParams.delete("crop");
   const r = await fetch(url.toString(), { headers: { Accept: "image/jpeg,image/png;q=0.9,*/*;q=0.5" } });
   if (!r.ok) throw new HttpError(502, "The store's photo didn't load (" + r.status + ")");
-  const buf = new Uint8Array(await r.arrayBuffer());
-  if (buf.length < 500 || buf.length > 2e6) throw new HttpError(502, "The store's photo isn't usable");
-  return { bytes: buf, type: (r.headers.get("content-type") || "image/jpeg").split(";")[0] };
+  const blob = await r.blob();
+  if (blob.size < 500 || blob.size > 2e6) throw new HttpError(502, "The store's photo isn't usable");
+  return { blob, type: (r.headers.get("content-type") || "image/jpeg").split(";")[0] };
 }
 const SLOT = { Shirts: "shirt or top", "T-shirts": "top", Polos: "top", Knitwear: "top or sweater", Sweatshirts: "top", Overshirts: "top layer", Jackets: "top layer, worn over his clothes", Coats: "top layer, worn over his clothes", Blazers: "jacket, worn over his shirt", Suits: "jacket and trousers", Trousers: "trousers", Jeans: "trousers", Shorts: "trousers, as shorts", Swimwear: "trousers, as swim shorts (bare chest is fine)", Shoes: "shoes", Accessories: "accessory" };
+// Kept far inside the free plan's CPU time per request (10 ms, and a cold worker runs plain JavaScript slowly):
+// no byte-by-byte work at all. The photo arrives as a file, the store's photos stay blobs, and the picture goes
+// back as the model gave it (base64 in JSON); the phone turns it into an image.
 async function tryon(env, b, origin) {
-  const you = photoBytes(b.photo, "your photo");
+  let you;
+  if (b.photoFile && typeof b.photoFile === "object" && "size" in b.photoFile) {
+    if (b.photoFile.size < 1000) throw new HttpError(400, "Missing your photo");
+    if (b.photoFile.size > 300000) throw new HttpError(413, "Your photo is too big (make it smaller than 512 px)");
+    you = b.photoFile;
+  } else you = new Blob([photoBytes(b.photo, "your photo")], { type: "image/jpeg" });
   // Up to two of the store's photos (the first is sometimes a close-up of the collar or the fabric).
   const urls = (Array.isArray(b.garments) && b.garments.length ? b.garments : [b.garment]).slice(0, 2);
   const pieces = [];
@@ -831,13 +850,22 @@ async function tryon(env, b, origin) {
     `Photorealistic, sharp, his whole figure in frame. No text, no watermark.`;
   const form = new FormData();
   form.append("prompt", prompt);
-  form.append("input_image_0", new Blob([you], { type: "image/jpeg" }), "you.jpg");
-  pieces.forEach((pc, k) => form.append("input_image_" + (k + 1), new Blob([pc.bytes], { type: pc.type }), "piece" + (k + 1) + "." + (/png/.test(pc.type) ? "png" : "jpg")));
+  form.append("input_image_0", you, "you.jpg");
+  pieces.forEach((pc, k) => form.append("input_image_" + (k + 1), pc.blob, "piece" + (k + 1) + "." + (/png/.test(pc.type) ? "png" : "jpg")));
   form.append("width", String(w)); form.append("height", String(h));
   const r = new Response(form);
   const t0 = Date.now();
-  const bytes = await imageBytes(await timeLimit(runAI(env, IMAGE_BACKUP, { multipart: { body: r.body, contentType: r.headers.get("content-type") } }), +env.TRYON_LIMIT_MS || 50000, "FLUX.2 klein"));
-  return new Response(bytes, { headers: { "Content-Type": bytes[0] === 0x89 ? "image/png" : "image/jpeg", "Cache-Control": "no-store", "X-Drape-Image-Model": "flux-2-klein-4b", "X-Drape-Ms": String(Date.now() - t0), "Access-Control-Expose-Headers": "X-Drape-Image-Model, X-Drape-Ms", ...cors(origin) } });
+  const out = await timeLimit(runAI(env, IMAGE_BACKUP, { multipart: { body: r.body, contentType: r.headers.get("content-type") } }), +env.TRYON_LIMIT_MS || 50000, "FLUX.2 klein");
+  const ms = Date.now() - t0, head = { "Cache-Control": "no-store", "X-Drape-Image-Model": "flux-2-klein-4b", "X-Drape-Ms": String(ms), "Access-Control-Expose-Headers": "X-Drape-Image-Model, X-Drape-Ms", ...cors(origin) };
+  let b64 = out && (out.image || out.result);
+  if (b64 && typeof b64 === "object" && b64.image) b64 = b64.image;
+  if (typeof b64 === "string" && b64.length > 100) {
+    b64 = b64.replace(/^data:image\/\w+;base64,/, "");
+    return new Response(JSON.stringify({ image: b64, type: b64.startsWith("iVBOR") ? "image/png" : "image/jpeg", model: "flux-2-klein-4b", ms }), { headers: { "Content-Type": "application/json", ...head } });
+  }
+  // Bytes already (a stream or a buffer): pass them on as they are.
+  if (out instanceof ReadableStream || out instanceof ArrayBuffer || ArrayBuffer.isView(out)) return new Response(out, { headers: { "Content-Type": "image/jpeg", ...head } });
+  throw new HttpError(502, "The image model returned nothing usable (" + Object.keys(out || {}).join(",") + ")");
 }
 
 const VISION_BACKUP = "@cf/google/gemma-3-12b-it";

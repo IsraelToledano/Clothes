@@ -312,7 +312,7 @@ try {
           return { old: [1, 2, 3].map((x) => make(500, 0.86, x, 0.75)), now: [1, 2, 3].map((x) => make(448, 0.8, x, 0.75)), heavy: [1, 2, 3].map((x) => make(500, 0.9, x, 0.75, 24)) };
         }, b64);
         v.kb = { "1.10": photos.old.map((u) => Math.round(u.length * 0.75 / 1024)), "1.11": photos.now.map((u) => Math.round(u.length * 0.75 / 1024)), heavy: photos.heavy.map((u) => Math.round(u.length * 0.75 / 1024)) };
-        photos.old.forEach((u, k) => fs.writeFileSync(path.join(OUT, "photo-" + (k + 1) + ".jpg"), Buffer.from(u.split(",")[1], "base64")));
+        photos.heavy.forEach((u, k) => fs.writeFileSync(path.join(OUT, "photo-" + (k + 1) + ".jpg"), Buffer.from(u.split(",")[1], "base64"))); // phone-weight photos into the app
         // The stylist with three photos of the size 1.10 sent (his report: "no connection") and of the size 1.11 sends, straight from the page.
         for (const [name, list] of [["1.10", photos.old], ["1.11", photos.now], ["heavy", photos.heavy]]) {
           v["stylist " + name] = await page.evaluate(async ([w, code, l]) => { const t = Date.now(); try { const r = await fetch(w + "/stylist", { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ code, photos: l }) }); const j = await r.json().catch(() => null); return { status: r.status, ms: Date.now() - t, model: j && j.model, error: j && j.error, summary: j && j.summary }; } catch (e) { return { failed: String(e), ms: Date.now() - t }; } }, [WORKER, tok, list]);
@@ -334,7 +334,7 @@ try {
         await page.evaluate(() => { Q.type = "Blazers"; Q.styles = []; Q.text = ""; Q.mode = "style"; save("query", Q); startRound(); });
         await page.waitForSelector("#card", { timeout: 20000 });
         v.cards = [];
-        for (let n = 0; n < 5; n++) {
+        for (let n = 0; n < 6; n++) {
           const t2 = Date.now();
           await page.waitForFunction(() => { const r = S.current && TRY.get(tryKey(S.current)); return r && r.state !== "busy"; }, null, { timeout: 70000 }).catch(() => {});
           const c = await page.evaluate(() => { const r = TRY.get(tryKey(S.current)) || {}; return { piece: S.current.store + " | " + S.current.title, state: r.state || "none", ms: r.ms, err: r.err || "" }; });
