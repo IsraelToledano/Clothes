@@ -21,7 +21,7 @@
 // On the free plan Cloudflare blocks requests past that instead of charging.
 
 // Bump with the app version so a report shows whether the server was redeployed.
-const SERVER_VERSION = "1.2.1";
+const SERVER_VERSION = "1.2.2";
 const APP_ORIGIN = "https://israeltoledano.github.io";
 // Gemma 4 26B (4B active) is fast and costs about a sixth of Llama 3.3 70B per idea in the free allowance.
 const TEXT_MODEL = "@cf/google/gemma-4-26b-a4b-it";
@@ -810,22 +810,29 @@ async function piecePhoto(u) {
 const SLOT = { Shirts: "shirt or top", "T-shirts": "top", Polos: "top", Knitwear: "top or sweater", Sweatshirts: "top", Overshirts: "top layer", Jackets: "top layer, worn over his clothes", Coats: "top layer, worn over his clothes", Blazers: "jacket, worn over his shirt", Suits: "jacket and trousers", Trousers: "trousers", Jeans: "trousers", Shorts: "trousers, as shorts", Swimwear: "trousers, as swim shorts (bare chest is fine)", Shoes: "shoes", Accessories: "accessory" };
 async function tryon(env, b, origin) {
   const you = photoBytes(b.photo, "your photo");
-  const piece = await piecePhoto(b.garment);
+  // Up to two of the store's photos (the first is sometimes a close-up of the collar or the fabric).
+  const urls = (Array.isArray(b.garments) && b.garments.length ? b.garments : [b.garment]).slice(0, 2);
+  const pieces = [];
+  for (const u of urls) { try { pieces.push(await piecePhoto(u)); } catch (e) { if (!pieces.length && u === urls[urls.length - 1]) throw e; } }
+  if (!pieces.length) throw new HttpError(400, "Missing the piece's photo");
+  const t0s = String(b.title || "").toLowerCase();
+  const sleeves = /short[- ]sleeve|\bs\/s\b/.test(t0s) ? "It has short sleeves." : /long[- ]sleeve|\bl\/s\b/.test(t0s) || ["Shirts", "Knitwear", "Sweatshirts", "Overshirts", "Jackets", "Coats", "Blazers", "Suits"].includes(b.type) ? "It has long sleeves." : "";
   const type = Object.keys(SLOT).includes(b.type) ? b.type : "Shirts";
   const what = clip([b.colour, b.kind && b.kind !== type ? b.kind : "", b.title].filter(Boolean).join(" · "), 160);
   const dim = (x, d) => Math.max(384, Math.min(768, Math.round((+x || d) / 16) * 16));
   const w = dim(b.w, 512), h = dim(b.h, 768);
   const fit = clip(b.fit, 120);
-  const prompt = `Image 0 is a photo of a man. Image 1 is a store photo of a piece of men's clothing (${type}${what ? ": " + what : ""}). ` +
+  const refs = pieces.length > 1 ? "Images 1 and 2 are store photos of one piece of men's clothing" : "Image 1 is a store photo of a piece of men's clothing";
+  const prompt = `Image 0 is a photo of a man. ${refs} (${type}${what ? ": " + what : ""}). ${sleeves} ` +
     `Make a realistic photo of the same man from image 0, with exactly the same face, hair, skin tone, body shape, height and proportions, the same pose, the same background and light, ` +
-    `now wearing the ${type === "Suits" ? "suit" : "piece"} from image 1 as his ${SLOT[type]}. Copy the piece exactly as image 1 shows it: its colour, fabric and texture, pattern and stripe width, collar, sleeves (long sleeves stay long, short stay short), buttons, pockets, length and cut. ` +
-    `Add nothing that isn't in image 1: no extra pockets, flaps, epaulettes or trims. ` +
-    `It sits on his body naturally${fit ? ", " + fit : ""}. Keep the rest of his clothes as they are. Nothing from image 1 other than the piece: not the model, not the background. ` +
+    `now wearing the ${type === "Suits" ? "suit" : "piece"} from ${pieces.length > 1 ? "images 1 and 2" : "image 1"} as his ${SLOT[type]}. Copy the piece exactly as the store shows it: its colour, fabric and texture, pattern and stripe width, collar, sleeves (long sleeves stay long, short stay short), buttons, pockets, length and cut. ` +
+    `Add nothing the store's photos don't show: no extra pockets, flaps, epaulettes or trims. ` +
+    `It sits on his body naturally${fit ? ", " + fit : ""}. Keep the rest of his clothes as they are. Take only the piece from the store's photos: not their model, not their background. ` +
     `Photorealistic, sharp, his whole figure in frame. No text, no watermark.`;
   const form = new FormData();
   form.append("prompt", prompt);
   form.append("input_image_0", new Blob([you], { type: "image/jpeg" }), "you.jpg");
-  form.append("input_image_1", new Blob([piece.bytes], { type: piece.type }), "piece." + (/png/.test(piece.type) ? "png" : "jpg"));
+  pieces.forEach((pc, k) => form.append("input_image_" + (k + 1), new Blob([pc.bytes], { type: pc.type }), "piece" + (k + 1) + "." + (/png/.test(pc.type) ? "png" : "jpg")));
   form.append("width", String(w)); form.append("height", String(h));
   const r = new Response(form);
   const t0 = Date.now();

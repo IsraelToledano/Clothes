@@ -1,6 +1,6 @@
 // Drape service worker: makes the app installable and usable offline.
 // Bump CACHE whenever index.html changes so phones pick up the new version.
-const CACHE = "drape-v1.10.0";
+const CACHE = "drape-v1.10.1";
 const IMG_CACHE = "drape-img-v1"; // AI photos: kept across app versions
 const IMG_MAX = 300;
 const LOOK_CACHE = "drape-looks"; // try-on pictures you saved: kept across app versions
