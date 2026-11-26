@@ -399,6 +399,7 @@ try {
       log("1.12", v);
       // 1.13: Claude's update for the shirt (with two store photos, in through /img), a try-on of it, the cloud backup and back
       const w = (R.app.v113 = {});
+      w.task = await page.evaluate(async () => { const t = await claudeTask(); const l = t ? JSON.parse(t.split("PIECES: ")[1]) : []; return { pending: claudePending().length, inReport: l.length, withPhoto: l.filter((x) => x.photo).length }; });
       const urls = await page.evaluate(() => CAT.lists.Shirts.filter((p) => p.images && p.images.length > 1).slice(3, 4).flatMap((p) => p.images.slice(0, 2)));
       w.update = await page.evaluate(async ([id, photos]) => { await claudePaste(JSON.stringify({ kind: "drape-closet-update", person: person().name, items: [{ id, set: { model: "Test model 1", brand: "Test brand" }, info: "From the live test.", photos }] })); const before = CLOSET.find((x) => x.id === id).photos; await claudeApply(); const it = CLOSET.find((x) => x.id === id); return { before, after: it.photos, web: it.web, model: it.model }; }, [sid, urls]);
       await page.click(`[data-act="closet-open"][data-v="${sid}"]`); await page.waitForSelector("#ci-t"); await page.waitForTimeout(800);
@@ -488,7 +489,7 @@ const md = [
   `1.12 closet, what I'm wearing: ${JSON.stringify(a.v112 && a.v112.worn)}`,
   `1.12 closet: ${JSON.stringify(a.v112 && { closet: a.v112.closet, idbPhotos: a.v112.idbPhotos, sheetPhotos: a.v112.sheetPhotos, linked: a.v112.linked, error: a.v112.error })}`,
   `1.12 find it online: ${JSON.stringify(a.v112 && a.v112.find)}`,
-  `1.13 Claude's update: ${JSON.stringify(a.v113 && a.v113.update)}   sheet photos ${a.v113 && a.v113.sheetPhotos}`,
+  `1.13 Claude's task (by itself): ${JSON.stringify(a.v113 && a.v113.task)}   update: ${JSON.stringify(a.v113 && a.v113.update)}   sheet photos ${a.v113 && a.v113.sheetPhotos}`,
   `1.13 try on a closet piece: ${JSON.stringify(a.v113 && a.v113.tryon)}`,
   `1.13 cloud backup: ${JSON.stringify(a.v113 && a.v113.backup)}   list: ${JSON.stringify(a.v113 && a.v113.list)}   restored: ${JSON.stringify(a.v113 && a.v113.restored)}`,
   `Deployed app: ${JSON.stringify(a.deployed || null)}`,

@@ -467,7 +467,7 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "1.13.0";
+const APP_VERSION = "1.13.1";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
 const SERVER_EXPECTED = "1.5.0"; // the worker/worker.js version this app was built with
 
@@ -2674,7 +2674,7 @@ async function closetSave(){
     for (const u of shots){ try{ await IDB.put(cKey(it, it.photos), await dataBlob(u)); it.photos++; }catch(e){} }
     added.push(it);
   }
-  CLOSET = added.concat(CLOSET); save("closet", CLOSET); cloudDirty();
+  CLOSET = added.concat(CLOSET); save("closet", CLOSET); cloudDirty(); claudeTask().then((t) => { S.claudeTask = t; });
   S.cadd = null; S.cgroup = "All";
   toast(added.length === 1 ? "Added to your closet" : added.length + " pieces added to your closet");
   if (S.screen !== "closet") openScreen("closet"); else render();
@@ -2879,12 +2879,16 @@ async function thumbOf(it){
     const k = Math.min(1, 256 / Math.max(img.naturalWidth, img.naturalHeight)), c = document.createElement("canvas"); c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
     c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(u); return c.toDataURL("image/jpeg", 0.7); }catch(e){ return ""; }
 }
+// Every piece goes to Claude once, by itself (the ones it hasn't done yet), ten at a time; a piece it has done
+// goes again only when you ask ("Improve again with Claude"), first in line.
+const CLAUDE_BATCH = 10;
+const claudePending = () => CLOSET.filter((x) => x.claude === "asked").concat(CLOSET.filter((x) => !x.claude));
 async function claudeTask(){
-  const want = CLOSET.filter((x) => x.claude === "asked");
+  const all = claudePending(), want = all.slice(0, CLAUDE_BATCH);
   if (!want.length) return "";
   const list = [];
   for (const it of want) list.push({id:it.id, name:it.name, type:it.type, kind:it.kind, colour:it.colour, pattern:it.pattern, fabric:it.fabric, brand:it.brand, size:it.size, fit:it.fit, details:it.details, notes:it.notes, linked:it.match ? it.match.url : "", photo:await thumbOf(it)});
-  return "\nCLAUDE TASK (improve these closet pieces): find each one's exact model online (brand, model name, colourway), what it's made of and other facts, and 2-4 product photo addresses (https, the photo files themselves). Answer with one JSON block for the app's \"Paste Claude's update\":\n" +
+  return "\nCLAUDE TASK (improve these " + want.length + " closet pieces" + (all.length > want.length ? "; " + (all.length - want.length) + " more come in the next report" : "") + "): find each one's exact model online (brand, model name, colourway), what it's made of and other facts, and 2-4 product photo addresses (https, the photo files themselves). A piece you can't identify: include it with \"tried\":true and what you could tell, so it isn't sent again. Answer with one JSON block for the app's \"Paste Claude's update\":\n" +
     '{"kind":"drape-closet-update","person":"' + person().name + '","items":[{"id":"…","set":{"name":"…","brand":"…","model":"…","colour":"…","fabric":"…","details":["…"]},"info":"2-3 sentences","links":[{"title":"…","url":"…"}],"photos":["https://…"]}]}\n' +
     "PIECES: " + JSON.stringify(list) + "\n";
 }
@@ -2972,7 +2976,7 @@ function renderCloset(){
     </div>
     ${CLOSET.length ? `<div class="chips small" role="group" aria-label="Show">${chip("All", CLOSET.length)}${CLOSET_GROUPS.filter(([g]) => by[g]).map(([g]) => chip(g, by[g])).join("")}${by.Other ? chip("Other", by.Other) : ""}</div>
     <ul class="sv-grid">${list.map((it) => `<li><button type="button" class="sv-card" data-act="closet-open" data-v="${esc(it.id)}"><span class="sv-ph" style="background:var(--soft)">${cImg(it) ? `<img src="${esc(cImg(it))}" alt="" loading="lazy">` : `<span class="c-ph">${ICON.hanger}</span>`}${it.match ? `<span class="on-you">Linked</span>` : ""}</span><span class="sv-t">${esc(it.name || it.kind || it.type)}</span><span class="sv-s">${swatch(String(it.colour || "").split(" ").pop())}${esc([it.colour, it.brand || it.type].filter(Boolean).join(" · "))}</span></button></li>`).join("")}</ul>` : ""}
-    ${CLOSET.some((x) => x.claude === "asked") ? `<section class="card" aria-label="Claude"><h2>Waiting for Claude</h2><p>${CLOSET.filter((x) => x.claude === "asked").length} piece(s) marked. Send the report (the ✦ button at the top) to Claude, ask it to improve your closet pieces, then paste its answer here.</p>
+    ${claudePending().length ? `<section class="card" aria-label="Claude"><h2>For Claude to improve</h2><p>${claudePending().length} piece${claudePending().length === 1 ? "" : "s"} Claude hasn't done yet (the exact model, more about it, photos of it). Send the report to Claude and ask it to improve your closet pieces, then paste its answer here.${claudePending().length > CLAUDE_BATCH ? " " + CLAUDE_BATCH + " go in each report." : ""}</p>
       <div class="row2"><button type="button" class="outline-btn filled" data-act="ask-report">Send to Claude</button><button type="button" class="outline-btn" data-act="claude-paste">Paste Claude's update</button></div></section>` : ""}
     <section class="card" aria-label="Backup"><h2>Backup</h2><p class="${CLOUD.err ? "bad-text" : ""}">${esc(cloudLine())}</p>
       <div class="row2"><button type="button" class="outline-btn" data-act="cloud-now"${cloudOn() && !S.cloudBusy ? "" : " disabled"}>Back up now</button><button type="button" class="outline-btn" data-act="cloud-list"${cloudOn() ? "" : " disabled"}>Bring one back</button></div>
@@ -3028,7 +3032,7 @@ function renderClosetItem(){
     ${it.info ? `<p class="small-note" style="text-align:left;margin:0">${esc(it.info)}</p>` : ""}
     ${(it.links || []).length ? `<p class="small-note" style="text-align:left;margin:0">${it.links.map((l) => `<a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.title)}</a>`).join(" · ")}</p>` : ""}
     <div class="row2"><button type="button" class="outline-btn" data-act="closet-label">${ICON.camera}Photo of its label</button><button type="button" class="outline-btn" data-act="closet-find">${f && f.state === "busy" ? "Looking…" : "Find it online"}</button></div>
-    <div class="row2"><button type="button" class="outline-btn${it.claude === "asked" ? " filled" : ""}" data-act="closet-claude">${it.claude === "asked" ? "Marked for Claude ✓" : it.claude === "done" ? "Improve again with Claude" : "Improve with Claude"}</button>${PHOTOS.length && aiOn() && (it.photos || 0) ? `<button type="button" class="outline-btn" data-act="closet-tryon">${ICON.person}See it on ${youName() === "you" ? "you" : esc(youName())}</button>` : ""}</div>
+    <div class="row2">${it.claude === "done" ? `<button type="button" class="outline-btn" data-act="closet-claude">Improve again with Claude</button>` : `<button type="button" class="outline-btn filled" data-act="closet-claude" disabled>${it.claude === "asked" ? "Claude does it again next" : "Claude improves it next"}</button>`}${PHOTOS.length && aiOn() && (it.photos || 0) ? `<button type="button" class="outline-btn" data-act="closet-tryon">${ICON.person}See it on ${youName() === "you" ? "you" : esc(youName())}</button>` : ""}</div>
     ${f ? `<div class="st-sec"><span class="mono-label">${f.state === "busy" && !f.cat.length ? "Looking in the catalog and the stores…" : "Is it one of these?"}</span>
       ${f.cat.length || f.web.length ? `<ul class="cm-list">${f.cat.map((p, k) => prod(p, k, "cat")).join("")}${f.web.map((p, k) => prod(p, k, "web")).join("")}</ul>` : f.state === "done" ? `<p class="small-note" style="text-align:left;margin:0">Nothing close${f.searched ? " in the catalog or at " + esc(f.searched.join(", ")) : " in the catalog"}. Add the brand (or a photo of the label) and look again.</p>` : ""}
       ${f.err ? `<p class="small-note" style="text-align:left;margin:0">The stores' search didn't answer: ${esc(f.err)}</p>` : ""}</div>` : ""}
@@ -3375,7 +3379,7 @@ const ACTIONS = {
   "cloud-now"(){ cloudBackup(true); },
   "cloud-list"(){ if (S.cloudList) { S.cloudList = null; render(); } else cloudList(); },
   "cloud-restore"(el){ cloudRestore(el.dataset.v); },
-  "closet-claude"(){ const it = CLOSET.find((x) => x.id === S.citem); if (!it) return; closetUpdate(it.id, {claude:it.claude === "asked" ? "" : "asked"}); toast(it.claude === "asked" ? "Marked. When you're done marking, send the report to Claude" : "Not marked"); claudeTask().then((t) => { S.claudeTask = t; }); render(); },
+  "closet-claude"(){ const it = CLOSET.find((x) => x.id === S.citem); if (!it || it.claude !== "done") return; closetUpdate(it.id, {claude:"asked"}); toast("It goes to Claude again with the next report"); claudeTask().then((t) => { S.claudeTask = t; }); render(); },
   async "claude-paste"(){ let t = ""; try{ t = await navigator.clipboard.readText(); }catch(e){} if (t && t.includes("drape-closet-update")) claudePaste(t); else { S.cpaste = true; render(); } },
   "claude-paste-go"(){ const t = document.getElementById("cp-text"); S.cpaste = false; claudePaste(t && t.value); },
   "claude-paste-close"(){ S.cpaste = false; render(); },
@@ -3628,6 +3632,7 @@ function askData(meta){
   return `DRAPE REPORT\n\n${snap}\n\nMETA: ${JSON.stringify(meta)}\n\n--- FULL DATA ---\n${JSON.stringify(full)}`;
 }
 async function askFiles(){
+  try{ S.claudeTask = await Promise.race([claudeTask(), new Promise((ok) => setTimeout(() => ok(S.claudeTask || ""), 2500))]); }catch(e){}
   const stamp = askStamp(), files = [];
   const meta = {screen:S.screen, viewport:{w:window.innerWidth, h:window.innerHeight, scrollY:Math.round(window.scrollY)}};
   try{
@@ -3735,7 +3740,7 @@ if (!LIKED){
 restoreSession();
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden" && CLOUD.dirty) cloudBackup(true); });
 setTimeout(() => cloudBackup(), 8000);
-if (CLOSET.some((x) => x.claude === "asked")) setTimeout(() => claudeTask().then((t) => { S.claudeTask = t; }), 1500);
+if (claudePending().length) setTimeout(() => claudeTask().then((t) => { S.claudeTask = t; }), 1500);
 slimPhotos().then(() => setTimeout(maybeStylist, 1500));
 (() => { let then = ""; try{ then = sessionStorage.getItem("drape:then") || ""; sessionStorage.removeItem("drape:then"); }catch(e){}
   if (then === "about" || then === "profile"){ S.screen = "profile"; S.prev = "start"; S.stack = ["start"]; setTimeout(() => { const a = document.getElementById(then === "about" ? "about" : "people"); if (a) a.scrollIntoView({block:"start"}); }, 60); }
