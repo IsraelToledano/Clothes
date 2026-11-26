@@ -29,7 +29,7 @@
 // On the free plan Cloudflare blocks requests past that instead of charging.
 
 // Bump with the app version so a report shows whether the server was redeployed.
-const SERVER_VERSION = "1.6.0";
+const SERVER_VERSION = "1.6.1";
 const APP_ORIGIN = "https://israeltoledano.github.io";
 // Gemma 4 26B (4B active) is fast and costs about a sixth of Llama 3.3 70B per idea in the free allowance.
 const TEXT_MODEL = "@cf/google/gemma-4-26b-a4b-it";
@@ -177,28 +177,26 @@ async function handle(req, env) {
       if (url.pathname === "/inbox") {
         if (!env.DRAPE) throw new HttpError(503, "The inbox needs the worker's KV storage (DRAPE)");
         const who = await owner(env, url.searchParams.get("code") || req.headers.get("X-Drape-Code"));
-        const base = "i:" + who + ":" + personKey(url.searchParams.get("person")) + ":";
+        // One value per person holds the waiting updates (a list of keys would lag behind a new one by up to a minute).
+        const key = "i:" + who + ":" + personKey(url.searchParams.get("person"));
+        const read = async () => { try { return JSON.parse((await env.DRAPE.get(key)) || "[]"); } catch (e) { return []; } };
         if (req.method === "PUT") {
           const text = await req.text();
-          if (text.length < 20 || text.length > 256 * 1024) throw new HttpError(400, "An update is 20 bytes to 256 KB");
-          if (!text.includes('"drape-closet-update"')) throw new HttpError(400, "Not a closet update");
-          const key = base + Date.now();
-          await env.DRAPE.put(key, text, { expirationTtl: 30 * 86400, metadata: { at: new Date().toISOString(), bytes: text.length } });
-          return json({ ok: true, key: key.slice(base.length) }, 200, origin);
+          if (text.length < 20 || text.length > 200 * 1024) throw new HttpError(400, "An update is 20 bytes to 200 KB");
+          let body;
+          try { body = JSON.parse(text); } catch (e) { throw new HttpError(400, "The update isn't valid JSON"); }
+          if (!body || body.kind !== "drape-closet-update" || !Array.isArray(body.items)) throw new HttpError(400, "Not a closet update");
+          const list = (await read()).slice(-9), k = String(Date.now());
+          list.push({ key: k, at: new Date().toISOString(), body });
+          await env.DRAPE.put(key, JSON.stringify(list), { expirationTtl: 30 * 86400 });
+          return json({ ok: true, key: k, waiting: list.length }, 200, origin);
         }
-        if (req.method === "GET") {
-          // the updates as they were put (no parsing here), oldest first
-          const l = await env.DRAPE.list({ prefix: base });
-          const keys = l.keys.map((k) => k.name).sort().slice(0, 10);
-          const parts = [];
-          for (const k of keys) { const v = await env.DRAPE.get(k); if (v) parts.push('{"key":' + JSON.stringify(k.slice(base.length)) + ',"body":' + v + "}"); }
-          return new Response('{"updates":[' + parts.join(",") + "]}", { headers: { "Content-Type": "application/json", "Cache-Control": "no-store", ...cors(origin) } });
-        }
+        if (req.method === "GET") return json({ updates: await read() }, 200, origin);
         if (req.method === "DELETE") {
           const k = String(url.searchParams.get("key") || "");
-          if (!/^\d{10,16}$/.test(k)) throw new HttpError(400, "Which update?");
-          await env.DRAPE.delete(base + k);
-          return json({ ok: true }, 200, origin);
+          const list = (await read()).filter((u) => u.key !== k);
+          if (list.length) await env.DRAPE.put(key, JSON.stringify(list), { expirationTtl: 30 * 86400 }); else await env.DRAPE.delete(key);
+          return json({ ok: true, waiting: list.length }, 200, origin);
         }
         throw new HttpError(405, "Use PUT, GET or DELETE");
       }

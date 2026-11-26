@@ -478,9 +478,9 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "1.14.0";
+const APP_VERSION = "1.14.1";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
-const SERVER_EXPECTED = "1.6.0"; // the worker/worker.js version this app was built with
+const SERVER_EXPECTED = "1.6.0"; // 1.6.1: the inbox in one value per person // the worker/worker.js version this app was built with
 
 /* ---------------- storage (on this phone only) ---------------- */
 const LS = "clothes:";
@@ -2929,9 +2929,14 @@ async function addWebPhoto(it, url){
 // Claude's updates come in by themselves: Claude sends them to your AI server's inbox (the repo's claude-inbox
 // workflow); the app looks when it opens, when it comes back to the front and when the closet opens, applies
 // each one (what you typed, like the size, stays) and takes it out of the inbox.
-async function checkInbox(force){
-  if (!cloudOn() || S.inboxBusy) return;
-  if (!force && Date.now() - (S.inboxAt || 0) < 30000) return;
+function checkInbox(force){
+  if (!cloudOn()) return Promise.resolve();
+  if (S.inboxP) return force ? S.inboxP.then(() => checkInbox(true)) : S.inboxP;
+  if (!force && Date.now() - (S.inboxAt || 0) < 30000) return Promise.resolve();
+  S.inboxP = inboxOnce().finally(() => { S.inboxP = null; });
+  return S.inboxP;
+}
+async function inboxOnce(){
   S.inboxBusy = true; S.inboxAt = Date.now();
   try{
     const base = workerBase() + "/inbox?person=" + encodeURIComponent(person().name);
