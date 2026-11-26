@@ -37,6 +37,8 @@ Everything you do is saved on the phone (`localStorage`, keys prefixed `clothes:
 | `POST /stylist` | Reads up to 3 photos of you the way a stylist does (undertone, contrast, proportions) and answers in JSON: best colours, colours to avoid, cuts, words to look for and avoid, patterns, tips | Gemma 4 26B with vision; Gemma 3 12B as backup |
 | `POST /closet` | Your own clothes from a photo: one piece, an outfit you're wearing (each piece, with where it is), or a label (brand, size, composition, care), as JSON fields | Gemma 4 26B with vision; Gemma 3 12B as backup |
 | `POST /find` | One of your pieces in up to 6 stores' own search (the stores the app names), sold-out pieces too | — (the stores' public search) |
+| `PUT /backup`, `GET /backup`, `GET /backups` | Your backup in Workers KV (binding `DRAPE`, created on deploy), per person, under a hash of the access code: put as it came, no parsing | — |
+| `GET /img` | A photo from any https address passed through (for photos Claude found), so the phone can make it smaller and keep it | — |
 | `GET /portrait` | A made-up man's full-length photo, only for the live test of `/tryon` and `/stylist` (so the test never uses a real person's photo) | FLUX.1 schnell |
 | `GET /health` | Checks the access code | — |
 
@@ -63,6 +65,12 @@ On the phone, tap the version badge next to the logo (or **Update app** in the t
 ## Real products (since 1.0)
 
 AI-drawn photos on the free plan were too generic and too slow, so Drape shows real products: real photos, prices and links.
+
+### Claude improves a piece; the closet in the cloud (since 1.13)
+
+- **Improve with Claude** (in a piece of your closet): mark the pieces you want improved, then send the report (the ✦ button) to Claude and ask it to improve your closet pieces. The report carries a CLAUDE TASK: each marked piece's fields and a small photo. Claude (in the chat, with its own web search, no AI allowance of yours) finds the exact model, what it's made of and other facts, and 2–4 photos of it, and answers with a block (`"kind":"drape-closet-update"`) you copy. **Paste Claude's update** in the closet reads it from the clipboard (or a box to paste into, or a file), shows what changes (old → new) and the photos, and **Use it** applies it: the fields, a few lines about the piece, links, and the photos, which come in through your AI server (`/img`), are made smaller and kept with the piece. Your own fields (the size you typed) stay unless the update names them.
+- **See it on you** (in a piece of your closet, when you have a photo of yourself): the try-on with the piece's own photos, the store's first (`/tryon` takes them as files).
+- **Backup in the cloud**: the closet with its photos, your photos, the stylist's reading, taste, saved and liked pieces and About you go to Cloudflare Workers KV through your AI server (`PUT /backup`), one file per person, under a hash of your access code. It goes up by itself about 20 seconds after a change (at most every few minutes) and when you leave the app; the first backup each day is also kept as that day's copy for 30 days. **Bring one back** lists them (`/backups`) and brings one in: missing pieces with their photos, and the rest wherever this phone has none yet. The file backup is still there. Free plan: 1 GB, 1,000 writes a day, 24 MB a backup (a few hundred pieces).
 
 ### Your closet (since 1.12)
 

@@ -161,7 +161,7 @@ async function handle(req, env) {
         }
         if (req.method === "GET" && url.pathname === "/backups") {
           const l = await env.DRAPE.list({ prefix: base });
-          return json({ backups: l.keys.map((k) => ({ at: k.name.slice(base.length), ...(k.metadata || {}) })).sort((a, b) => (a.at === "latest" ? -1 : b.at === "latest" ? 1 : b.at.localeCompare(a.at))) }, 200, origin);
+          return json({ backups: l.keys.map((k) => ({ ...(k.metadata || {}), key: k.name.slice(base.length) })).sort((a, b) => (a.key === "latest" ? -1 : b.key === "latest" ? 1 : b.key.localeCompare(a.key))) }, 200, origin);
         }
         if (req.method === "GET") {
           const at = /^(latest|\d{4}-\d{2}-\d{2})$/.test(url.searchParams.get("at") || "") ? url.searchParams.get("at") : "latest";

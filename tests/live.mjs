@@ -397,6 +397,32 @@ try {
       await page.click('[data-act="closet-close"]').catch(() => {});
       v.report = await page.evaluate(() => askSnapshot().split("\n").find((l) => l.startsWith("CLOSET:")));
       log("1.12", v);
+      // 1.13: Claude's update for the shirt (with two store photos, in through /img), a try-on of it, the cloud backup and back
+      const w = (R.app.v113 = {});
+      const urls = await page.evaluate(() => CAT.lists.Shirts.filter((p) => p.images && p.images.length > 1).slice(3, 4).flatMap((p) => p.images.slice(0, 2)));
+      w.update = await page.evaluate(async ([id, photos]) => { await claudePaste(JSON.stringify({ kind: "drape-closet-update", person: person().name, items: [{ id, set: { model: "Test model 1", brand: "Test brand" }, info: "From the live test.", photos }] })); const before = CLOSET.find((x) => x.id === id).photos; await claudeApply(); const it = CLOSET.find((x) => x.id === id); return { before, after: it.photos, web: it.web, model: it.model }; }, [sid, urls]);
+      await page.click(`[data-act="closet-open"][data-v="${sid}"]`); await page.waitForSelector("#ci-t"); await page.waitForTimeout(800);
+      w.sheetPhotos = await page.locator(".ci-pics img").count();
+      if (await page.locator('[data-act="closet-tryon"]').count()) {
+        const t4 = Date.now(); await page.click('[data-act="closet-tryon"]');
+        await page.waitForFunction(() => S.tryon && S.tryon.state !== "busy", null, { timeout: 70000 });
+        w.tryon = await page.evaluate(() => ({ state: S.tryon.state, ms: S.tryon.ms, err: S.tryon.err || "" })); w.tryon.wallMs = Date.now() - t4;
+        if (w.tryon.state === "ok") { const b = await page.evaluate(async () => { const u = new Uint8Array(await S.tryon.blob.arrayBuffer()); let x = ""; for (let i = 0; i < u.length; i += 0x8000) x += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(x); }); fs.writeFileSync(path.join(OUT, "closet-tryon.jpg"), Buffer.from(b, "base64")); }
+        await page.screenshot({ path: path.join(OUT, "v113-tryon.png") });
+        await page.click('[data-act="tryon-close"]').catch(() => {});
+      } else { w.tryon = "no button (no photo of the person)"; await page.click('[data-act="closet-close"]').catch(() => {}); }
+      await page.evaluate(() => { S.screen = "closet"; S.citem = null; render(); });
+      const t5 = Date.now(); await page.click('[data-act="cloud-now"]');
+      await page.waitForFunction(() => !S.cloudBusy && (CLOUD.at > 0 || CLOUD.err), null, { timeout: 60000 });
+      w.backup = await page.evaluate(() => ({ line: cloudLine(), bytes: CLOUD.bytes, err: CLOUD.err })); w.backup.ms = Date.now() - t5;
+      const n0 = await page.evaluate(() => [CLOSET.length, CLOSET.reduce((a, x) => a + (x.photos || 0), 0)]);
+      await page.evaluate(async () => { for (const k of await IDB.keys()) await IDB.del(k); CLOSET = []; save("closet", CLOSET); S.cimg = {}; render(); });
+      await page.click('[data-act="cloud-list"]'); await page.waitForFunction(() => S.cloudList && S.cloudList.state === "done", null, { timeout: 20000 });
+      w.list = await page.evaluate(() => S.cloudList);
+      if (w.list.list && w.list.list.length) { await page.click('[data-act="cloud-restore"][data-v="latest"]'); await page.waitForFunction(() => CLOSET.length > 0 || (S.cloudList && S.cloudList.err), null, { timeout: 30000 }); await page.waitForTimeout(800); }
+      w.restored = { before: n0, after: await page.evaluate(() => [CLOSET.length, CLOSET.reduce((a, x) => a + (x.photos || 0), 0)]), idb: await page.evaluate(() => IDB.keys().then((k) => k.length)) };
+      await page.screenshot({ path: path.join(OUT, "v113-closet.png") });
+      log("1.13", w);
     } catch (e) { R.app.v112 = Object.assign(R.app.v112 || {}, { error: String((e && e.message) || e) }); }
   }
   /* ---------- 7. the deployed app (GitHub Pages) with the catalog from its branch ---------- */
@@ -462,6 +488,9 @@ const md = [
   `1.12 closet, what I'm wearing: ${JSON.stringify(a.v112 && a.v112.worn)}`,
   `1.12 closet: ${JSON.stringify(a.v112 && { closet: a.v112.closet, idbPhotos: a.v112.idbPhotos, sheetPhotos: a.v112.sheetPhotos, linked: a.v112.linked, error: a.v112.error })}`,
   `1.12 find it online: ${JSON.stringify(a.v112 && a.v112.find)}`,
+  `1.13 Claude's update: ${JSON.stringify(a.v113 && a.v113.update)}   sheet photos ${a.v113 && a.v113.sheetPhotos}`,
+  `1.13 try on a closet piece: ${JSON.stringify(a.v113 && a.v113.tryon)}`,
+  `1.13 cloud backup: ${JSON.stringify(a.v113 && a.v113.backup)}   list: ${JSON.stringify(a.v113 && a.v113.list)}   restored: ${JSON.stringify(a.v113 && a.v113.restored)}`,
   `Deployed app: ${JSON.stringify(a.deployed || null)}`,
   `Errors: ${(a.errors || []).join(" | ") || "none"}`,
   a.stuck ? `STUCK at start: ${JSON.stringify(a.stuck)}` : "",
