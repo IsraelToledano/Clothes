@@ -13,6 +13,9 @@
 //   POST /closet  → your own clothes, from a photo (one piece, an outfit you're wearing, or a label), read by
 //                   Gemma 4 (vision) into the fields of your closet: name, type, colour, fabric, brand...
 //   POST /find    → a piece of yours in stores' own search (the stores the app names), sold-out pieces too
+//   PUT  /backup  → your backup (closet with photos, taste, saved...) kept in Cloudflare KV, per person;
+//   GET  /backup  → it back (?at=latest or a day); GET /backups → which ones there are
+//   GET  /img     → a photo from a store's site, passed through (so the phone can make it smaller and keep it)
 //   GET  /portrait → a made-up man's full-length photo, only for the repo's live test of /tryon and /stylist
 //                    (so the test never needs a real person's photo)
 // Photos sent to /tryon and /stylist are used for that one answer and never stored.
@@ -24,7 +27,7 @@
 // On the free plan Cloudflare blocks requests past that instead of charging.
 
 // Bump with the app version so a report shows whether the server was redeployed.
-const SERVER_VERSION = "1.4.1";
+const SERVER_VERSION = "1.5.0";
 const APP_ORIGIN = "https://israeltoledano.github.io";
 // Gemma 4 26B (4B active) is fast and costs about a sixth of Llama 3.3 70B per idea in the free allowance.
 const TEXT_MODEL = "@cf/google/gemma-4-26b-a4b-it";
@@ -46,8 +49,8 @@ const STYLES = ["Relaxed", "Minimal", "Smart-casual", "Streetwear", "Vintage", "
 
 const cors = (origin) => ({
   "Access-Control-Allow-Origin": origin === APP_ORIGIN || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin || "") ? origin : APP_ORIGIN,
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, X-Drape-Code",
   "Access-Control-Max-Age": "86400",
   "Vary": "Origin",
 });
@@ -132,12 +135,55 @@ async function handle(req, env) {
           body = {};
           for (const k of ["code", "type", "kind", "title", "colour", "fit", "w", "h", "garment"]) body[k] = fd.get(k) || "";
           body.garments = fd.getAll("garments").map(String);
+          body.garmentFiles = fd.getAll("garment_files").filter((f) => f && typeof f === "object" && "size" in f && f.size > 500 && f.size < 400000).slice(0, 2);
           body.photoFile = fd.get("photo");
         } else {
           try { body = JSON.parse(await req.text()); } catch (e) { throw new HttpError(400, "Request isn't valid JSON"); }
         }
         await checkCode(env, body && body.code);
         return url.pathname === "/tryon" ? await tryon(env, body, origin) : json(await stylist(env, body), 200, origin);
+      }
+
+      if (url.pathname === "/backup" || url.pathname === "/backups") {
+        if (!env.DRAPE) throw new HttpError(503, "Backups need the worker's KV storage (DRAPE); it isn't set up yet");
+        const who = await owner(env, url.searchParams.get("code") || req.headers.get("X-Drape-Code"));
+        const base = "b:" + who + ":" + personKey(url.searchParams.get("person")) + ":";
+        if (req.method === "PUT" && url.pathname === "/backup") {
+          // The file goes in as it came: no reading it here (the free plan's CPU time is short), only its size.
+          const buf = await req.arrayBuffer();
+          if (buf.byteLength < 20) throw new HttpError(400, "Empty backup");
+          if (buf.byteLength > 24 * 1024 * 1024) throw new HttpError(413, "Backup over 24 MB: too big for one piece of KV storage");
+          const day = new Date().toISOString().slice(0, 10), meta = { at: new Date().toISOString(), bytes: buf.byteLength, items: +url.searchParams.get("items") || 0, app: clip(url.searchParams.get("app"), 12) };
+          await env.DRAPE.put(base + "latest", buf, { metadata: meta });
+          // one copy per day, kept 30 days (one more write, only the first backup of the day)
+          if (url.searchParams.get("daily") === "1") await env.DRAPE.put(base + day, buf, { metadata: meta, expirationTtl: 30 * 86400 });
+          return json({ ok: true, ...meta }, 200, origin);
+        }
+        if (req.method === "GET" && url.pathname === "/backups") {
+          const l = await env.DRAPE.list({ prefix: base });
+          return json({ backups: l.keys.map((k) => ({ at: k.name.slice(base.length), ...(k.metadata || {}) })).sort((a, b) => (a.at === "latest" ? -1 : b.at === "latest" ? 1 : b.at.localeCompare(a.at))) }, 200, origin);
+        }
+        if (req.method === "GET") {
+          const at = /^(latest|\d{4}-\d{2}-\d{2})$/.test(url.searchParams.get("at") || "") ? url.searchParams.get("at") : "latest";
+          const v = await env.DRAPE.get(base + at, { type: "stream" });
+          if (!v) throw new HttpError(404, "No backup " + (at === "latest" ? "yet" : "from " + at));
+          return new Response(v, { headers: { "Content-Type": "application/json", "Cache-Control": "no-store", ...cors(origin) } });
+        }
+        throw new HttpError(405, "Use PUT or GET");
+      }
+
+      if (req.method === "GET" && url.pathname === "/img") {
+        await checkCode(env, url.searchParams.get("code"));
+        let u;
+        try { u = new URL(url.searchParams.get("u") || ""); } catch (e) { throw new HttpError(400, "Missing the photo's address"); }
+        if (u.protocol !== "https:") throw new HttpError(400, "Only https photos");
+        const r = await fetch(u.toString(), { headers: { Accept: "image/avif,image/webp,image/jpeg,image/png,*/*;q=0.5", "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1" }, redirect: "follow" });
+        const ct = (r.headers.get("content-type") || "").split(";")[0];
+        if (!r.ok) throw new HttpError(502, "The photo didn't load (" + r.status + ")");
+        if (!/^image\//.test(ct)) throw new HttpError(415, "That address isn't a photo (" + (ct || "no type") + ")");
+        const n = +r.headers.get("content-length") || 0;
+        if (n > 8e6) throw new HttpError(413, "That photo is too big");
+        return new Response(r.body, { headers: { "Content-Type": ct, "Cache-Control": "private, max-age=86400", ...cors(origin) } });
       }
 
       if (req.method === "GET" && url.pathname === "/portrait") {
@@ -161,6 +207,14 @@ async function handle(req, env) {
   }
 }
 
+// Whose backups: a hash of the access code (the code itself is never stored); the live test gets its own.
+async function owner(env, code) {
+  await checkCode(env, code);
+  if (String(code).trim() !== String(env.ACCESS_CODE).trim()) return "test";
+  const d = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode("drape:" + String(code).trim())));
+  return Array.from(d.slice(0, 8), (b) => b.toString(16).padStart(2, "0")).join("");
+}
+const personKey = (x) => String(x || "me").toLowerCase().replace(/[^a-z0-9\u0590-\u05ff]+/g, "-").replace(/^-|-$/g, "").slice(0, 32) || "me";
 async function checkCode(env, code) {
   if (!env.ACCESS_CODE) throw new HttpError(503, "Set ACCESS_CODE in the worker's settings first");
   if (code && String(code).trim() === String(env.ACCESS_CODE).trim()) return;
@@ -840,9 +894,14 @@ async function tryon(env, b, origin) {
     you = b.photoFile;
   } else you = new Blob([photoBytes(b.photo, "your photo")], { type: "image/jpeg" });
   // Up to two of the store's photos (the first is sometimes a close-up of the collar or the fabric).
-  const urls = (Array.isArray(b.garments) && b.garments.length ? b.garments : [b.garment]).slice(0, 2);
   const pieces = [];
-  for (const u of urls) { try { pieces.push(await piecePhoto(u)); } catch (e) { if (!pieces.length && u === urls[urls.length - 1]) throw e; } }
+  if (b.garmentFiles && b.garmentFiles.length) {
+    // photos of a piece from your closet, made smaller on the phone
+    for (const f of b.garmentFiles) pieces.push({ blob: f, type: f.type || "image/jpeg" });
+  } else {
+    const urls = (Array.isArray(b.garments) && b.garments.length ? b.garments : [b.garment]).slice(0, 2);
+    for (const u of urls) { try { pieces.push(await piecePhoto(u)); } catch (e) { if (!pieces.length && u === urls[urls.length - 1]) throw e; } }
+  }
   if (!pieces.length) throw new HttpError(400, "Missing the piece's photo");
   const t0s = String(b.title || "").toLowerCase();
   const sleeves = /short[- ]sleeve|\bs\/s\b/.test(t0s) ? "It has short sleeves." : /long[- ]sleeve|\bl\/s\b/.test(t0s) || ["Shirts", "Knitwear", "Sweatshirts", "Overshirts", "Jackets", "Coats", "Blazers", "Suits"].includes(b.type) ? "It has long sleeves." : "";

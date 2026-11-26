@@ -14,6 +14,11 @@ keep_vars = true
 [ai]
 binding = "AI"
 
+# Backups (your closet with its photos, taste, saved...) in Workers KV: free plan, 1 GB, 1,000 writes a day.
+# No id: Wrangler creates the namespace on the first deploy (automatic provisioning, wrangler 4.45+).
+[[kv_namespaces]]
+binding = "DRAPE"
+
 # The one secret, ACCESS_CODE, is set in the Cloudflare dashboard, not here.
 
 # Request logs (one line per request, no secrets) in the dashboard: Workers → clothes → Observability.
