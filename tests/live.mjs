@@ -355,6 +355,50 @@ try {
       log("1.11", v);
     } catch (e) { R.app.v111 = Object.assign(R.app.v111 || {}, { error: String((e && e.message) || e) }); }
   }
+  /* ---------- 6d. 1.12: the closet. A store's photo of a shirt as "a piece", the made-up man (/portrait) as "what
+     I'm wearing"; then the piece found in the catalog and in the stores' own search. ---------- */
+  if (first) {
+    try {
+      const v = (R.app.v112 = {});
+      const shirt = await page.evaluate(() => loadTypes(["Shirts"]).then(() => { const p = CAT.lists.Shirts.find((x) => /oxford/i.test(x.title) && x.images && x.images.length) || CAT.lists.Shirts[0]; return { src: p.images[0], title: p.store + " | " + p.title }; }));
+      v.pieceSource = shirt.title;
+      const r = await fetch(shirt.src + (shirt.src.includes("?") ? "&" : "?") + "width=900");
+      fs.writeFileSync(path.join(OUT, "closet-piece.jpg"), Buffer.from(await r.arrayBuffer()));
+      if (!fs.existsSync(path.join(OUT, "portrait.jpg"))) { const q = await fetch(WORKER + "/portrait?code=" + encodeURIComponent(tok)); if (q.ok) fs.writeFileSync(path.join(OUT, "portrait.jpg"), Buffer.from(await q.arrayBuffer())); }
+      await page.evaluate(() => { S.screen = "start"; S.tryon = null; S.sheet = false; render(); });
+      await page.click('header [data-act="closet"]'); await page.waitForTimeout(400);
+      const add = async (mode, file) => {
+        const t = Date.now();
+        await page.evaluate((m) => { CLOSET_IN.dataset.mode = m; }, mode);
+        await page.setInputFiles("#closet-in", file);
+        await page.waitForFunction(() => S.cadd && S.cadd.state === "review", null, { timeout: 70000 });
+        const res = await page.evaluate(() => ({ model: S.cadd.model, ms: S.cadd.ms, err: S.cadd.err || "", items: S.cadd.items.map((x) => [x.name, x.type, x.kind, x.colour, x.fabric, x.brand, x.formality, x.box ? x.box.join(",") : "-"].join(" | ")) }));
+        res.wallMs = Date.now() - t;
+        await page.screenshot({ path: path.join(OUT, "v112-review-" + mode + ".png") });
+        await page.click('[data-act="closet-save"]'); await page.waitForTimeout(1200);
+        return res;
+      };
+      v.piece = await add("piece", path.join(OUT, "closet-piece.jpg"));
+      if (fs.existsSync(path.join(OUT, "portrait.jpg"))) v.worn = await add("worn", path.join(OUT, "portrait.jpg"));
+      v.closet = await page.evaluate(() => ({ n: CLOSET.length, groups: closetSummary(), photos: CLOSET.reduce((a, x) => a + (x.photos || 0), 0) }));
+      v.idbPhotos = await page.evaluate(() => IDB.keys().then((k) => k.length));
+      await page.screenshot({ path: path.join(OUT, "v112-closet.png") });
+      // find the shirt
+      const sid = await page.evaluate(() => (CLOSET.find((x) => x.type === "Shirts") || CLOSET[CLOSET.length - 1]).id);
+      await page.click(`[data-act="closet-open"][data-v="${sid}"]`); await page.waitForSelector("#ci-t");
+      v.sheetPhotos = await page.locator(".ci-pics img").count();
+      const t3 = Date.now();
+      await page.click('[data-act="closet-find"]');
+      await page.waitForFunction(() => S.cfound && S.cfound.state === "done", null, { timeout: 45000 });
+      v.find = await page.evaluate(() => ({ catalog: S.cfound.cat.map((p) => p.store + " | " + p.title).slice(0, 4), stores: S.cfound.web.map((p) => p.store + " | " + p.title).slice(0, 4), searched: S.cfound.searched, err: S.cfound.err || "" }));
+      v.find.wallMs = Date.now() - t3;
+      await page.screenshot({ path: path.join(OUT, "v112-find.png") });
+      if (v.find.catalog.length) { await page.click('[data-act="closet-link"][data-from="cat"][data-v="0"]'); await page.waitForTimeout(300); v.linked = await page.evaluate((id) => (CLOSET.find((x) => x.id === id).match || {}).title, sid); }
+      await page.click('[data-act="closet-close"]').catch(() => {});
+      v.report = await page.evaluate(() => askSnapshot().split("\n").find((l) => l.startsWith("CLOSET:")));
+      log("1.12", v);
+    } catch (e) { R.app.v112 = Object.assign(R.app.v112 || {}, { error: String((e && e.message) || e) }); }
+  }
   /* ---------- 7. the deployed app (GitHub Pages) with the catalog from its branch ---------- */
   if (process.env.SITE) {
     try {
@@ -414,6 +458,10 @@ const md = [
   `1.11 stylist by itself in the app: ${JSON.stringify(a.v111 && (a.v111.stylist || a.v111.error))}`,
   `1.11 On me cards: ${JSON.stringify(a.v111 && a.v111.cards)}`,
   `1.11 ${(a.v111 && a.v111.onMe) || "ON ME: -"}`,
+  `1.12 closet, a piece: ${JSON.stringify(a.v112 && a.v112.piece)}   (the store's photo of: ${a.v112 && a.v112.pieceSource})`,
+  `1.12 closet, what I'm wearing: ${JSON.stringify(a.v112 && a.v112.worn)}`,
+  `1.12 closet: ${JSON.stringify(a.v112 && { closet: a.v112.closet, idbPhotos: a.v112.idbPhotos, sheetPhotos: a.v112.sheetPhotos, linked: a.v112.linked, error: a.v112.error })}`,
+  `1.12 find it online: ${JSON.stringify(a.v112 && a.v112.find)}`,
   `Deployed app: ${JSON.stringify(a.deployed || null)}`,
   `Errors: ${(a.errors || []).join(" | ") || "none"}`,
   a.stuck ? `STUCK at start: ${JSON.stringify(a.stuck)}` : "",

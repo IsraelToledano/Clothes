@@ -49,6 +49,7 @@ fieldset{border:0;margin:0;padding:0;min-width:0}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{height:44px;padding:0 16px;border-radius:22px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:15px;display:inline-flex;align-items:center;justify-content:center;gap:6px}
 .chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:500}
+.chip[aria-pressed="true"] .seg-n{background:rgba(255,255,255,.22);color:#fff}
 .chip svg{width:14px;height:14px}
 textarea{display:block;width:100%;min-height:92px;resize:none;padding:12px 14px;border-radius:16px;border:1px solid var(--line);background:var(--card);font-size:16px;line-height:1.4}
 textarea::placeholder{color:#686E79}
@@ -247,6 +248,36 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
 .modes button small{font-size:11.5px;font-weight:400}
 .modes button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
 .ph-row{display:flex;gap:10px;flex-wrap:wrap}
+.add-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 16px}
+.add-btn{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-height:104px;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);text-align:left}
+.add-btn svg{width:22px;height:22px}
+.add-btn b{font-size:14.5px;line-height:1.2}
+.add-btn small{font-size:11.5px;color:var(--muted);line-height:1.3}
+.c-ph{display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:var(--muted)}
+.c-ph svg{width:34%;height:34%}
+.cadd-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.cadd{border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:10px;background:var(--card)}
+.cadd.off{opacity:.55}
+.cadd-top{display:flex;gap:12px;align-items:flex-start}
+.cadd-img{width:72px;height:96px;object-fit:cover;border-radius:10px;background:var(--soft);flex:none}
+.cadd-head{display:flex;flex-direction:column;gap:3px;min-width:0}
+.cadd-head b{font-size:15px}.cadd-head small{font-size:12.5px;color:var(--muted)}
+.cadd-on{display:flex;gap:6px;align-items:center;font-size:13.5px;margin-top:4px}
+.cf-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cf{display:flex;flex-direction:column;gap:3px;min-width:0}
+.cf.wide{grid-column:1/-1}
+.cf span{font-size:11.5px;color:var(--muted);font-family:var(--mono);letter-spacing:.04em;text-transform:uppercase}
+.cf input,.cf select,.cf textarea{width:100%;min-height:42px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font:inherit;font-size:16px;background:var(--bg);color:var(--ink)}
+.ci-pics{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory}
+.ci-pics img{height:240px;border-radius:12px;scroll-snap-align:start;flex:none;object-fit:cover;background:var(--soft)}
+.cm-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.cm{display:flex;gap:10px;align-items:flex-start}
+.cm img{width:64px;height:80px;object-fit:cover;border-radius:8px;background:#fff;flex:none}
+.cm div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.cm b{font-size:14px;line-height:1.3}.cm small{font-size:12px;color:var(--muted)}
+.cm-act{display:flex;gap:14px}.cm-act .link-btn{min-height:34px;padding:0;display:inline-flex;align-items:center;gap:4px}
+.cm-act svg{width:13px;height:13px}
+.row2{display:flex;gap:8px}.row2 > *{flex:1}
 .ph-row.small .ph-thumb,.ph-row.small .ph-add{width:60px;height:80px;border-radius:10px;padding:0;border:0}
 .ph-row.small .ph-add{border:1.5px dashed var(--line);font-size:11px}
 .ph-row.small .ph-add svg{width:18px;height:18px}
@@ -429,16 +460,16 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "1.11.1";
+const APP_VERSION = "1.12.0";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
-const SERVER_EXPECTED = "1.3.1"; // the worker/worker.js version this app was built with
+const SERVER_EXPECTED = "1.4.0"; // the worker/worker.js version this app was built with
 
 /* ---------------- storage (on this phone only) ---------------- */
 const LS = "clothes:";
 // People on this phone: each person has their own About you, sizes, budget, taste, votes, saved and liked
 // pieces and last search; the AI connection, the catalog and the app are shared. The first person ("me")
 // keeps the original keys (clothes:taste...); others are clothes:<id>:taste...
-const PER_PERSON = ["query", "taste", "prefs", "saved", "liked", "picks", "session", "photos", "stylist", "looks"];
+const PER_PERSON = ["query", "taste", "prefs", "saved", "liked", "picks", "session", "photos", "stylist", "looks", "closet"];
 const PEOPLE_MAX = 8;
 let PEOPLE = (() => { try{ return JSON.parse(localStorage.getItem(LS + "people")) || null; }catch(e){ return null; } })();
 if (!PEOPLE || !Array.isArray(PEOPLE.list) || !PEOPLE.list.length) PEOPLE = {list:[{id:"me", name:"Me"}], active:"me"};
@@ -601,6 +632,9 @@ const ICON = {
   image: sv('<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/>', {w:1.6}),
   later: sv('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
   mark: sv('<path d="M6 3h12v18l-6-4-6 4V3z"/>'),
+  hanger: sv('<path d="M12 7.5a2 2 0 1 0-2-2"/><path d="M12 7.5v1.2L3.6 15a1.4 1.4 0 0 0 .8 2.5h15.2a1.4 1.4 0 0 0 .8-2.5L12 8.7"/>'),
+  camera: sv('<path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/>'),
+  pen: sv('<path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/>'),
   marked: sv('<path d="M6 3h12v18l-6-4-6 4V3z"/>', {fill:"currentColor"}),
   check: sv('<path d="M5 12l5 5 9-10"/>', {w:3}),
   ext: sv('<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>', {w:2.2}),
@@ -634,6 +668,7 @@ let SAVED = load("saved", []); // pieces you kept: full idea + when
 let LIKED = load("liked", null); // real pieces you swiped right on (newest first), so they can be shown again
 let PHOTOS = load("photos", []); // photos of this person (made smaller than 512 px on the phone), for the stylist and try-on
 let STYLIST = load("stylist", null); // the stylist's reading of those photos
+let CLOSET = load("closet", []); // your own clothes (their photos are in IndexedDB "drape", store "img")
 let LOOKS = load("looks", []); // pieces saved with a try-on picture (the pictures are in the "drape-looks" cache)
 const S = {screen:"start", prev:"start", round:{votes:[]}, current:null, picked:null, sheet:false, modal:null, toast:null, busy:false,
   // AI: ideas waiting to be shown, the request in flight, what the AI has learned this round
@@ -1064,10 +1099,13 @@ async function moreOf(i){
   if (m && m.mi && i.images && !m.mi.some((u) => i.images.includes(u))) i.images = i.images.concat(m.mi);
   return m;
 }
-async function loadCatalog(){
-  const def = catDef(Q.type), want = def.files;
+async function loadTypes(want){
   await loadStores();
   await Promise.all(want.filter((t) => !CAT.lists[t]).map((t) => fetch(typeFile(t), {cache:"no-cache"}).then((r) => (r.ok ? r.json() : [])).then((l) => { CAT.lists[t] = l.filter((x) => !/\b(wmns|womens|women's)\b|^spacer\b/i.test(x.t)).map((x) => fromCat(x, t)); }).catch(() => { CAT.lists[t] = []; })));
+}
+async function loadCatalog(){
+  const def = catDef(Q.type), want = def.files;
+  await loadTypes(want);
   const pool = want.flatMap((t) => CAT.lists[t] || []);
   return def.kinds ? pool.filter((p) => def.kinds.includes(p.kind)) : pool;
 }
@@ -2538,6 +2576,279 @@ function renderTryon(){
   </section></div>`;
 }
 
+/* ---------------- your closet ---------------- */
+// Your own clothes, per person: add them from a photo of a piece, a photo of you wearing an outfit (each piece
+// in it), or by typing. The AI reads each photo into fields (name, type, colour, fabric, brand...), and the app
+// looks for the piece in the catalog and in the stores' own search, so you can link it to its store page.
+// The list is small and lives in localStorage ("closet"); photos live in IndexedDB (much more room).
+const CLOSET_GROUPS = [["Tops", ["Shirts", "T-shirts", "Polos", "Knitwear", "Sweatshirts", "Overshirts"]], ["Tailoring", ["Suits", "Blazers"]], ["Outerwear", ["Jackets", "Coats"]], ["Bottoms", ["Trousers", "Jeans", "Shorts", "Swimwear"]], ["Shoes", ["Shoes"]], ["Accessories", ["Accessories"]]];
+const groupOf = (t) => (CLOSET_GROUPS.find((g) => g[1].includes(t)) || ["Other"])[0];
+const IDB = {
+  db:null,
+  open(){ if (this.db) return this.db; this.db = new Promise((ok, no) => { const r = indexedDB.open("drape", 1); r.onupgradeneeded = () => r.result.createObjectStore("img"); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); }); return this.db; },
+  async run(mode, fn){ const db = await this.open(); return new Promise((ok, no) => { const tx = db.transaction("img", mode), st = tx.objectStore("img"); const r = fn(st); tx.oncomplete = () => ok(r && "result" in r ? r.result : undefined); tx.onerror = () => no(tx.error); }); },
+  put(k, blob){ return this.run("readwrite", (st) => st.put(blob, k)); },
+  get(k){ return this.run("readonly", (st) => st.get(k)); },
+  del(k){ return this.run("readwrite", (st) => st.delete(k)); },
+  keys(){ return this.run("readonly", (st) => st.getAllKeys()); },
+};
+const cKey = (item, n, who) => (who || PEOPLE.active) + "|" + item.id + "|" + n;
+S.cimg = S.cimg || {};
+async function closetImgs(items){
+  const want = [];
+  for (const it of items) for (let n = 0; n < (it.photos || 0); n++){ const k = cKey(it, n); if (!(k in S.cimg)) want.push(k); }
+  if (!want.length) return;
+  for (const k of want) S.cimg[k] = "";
+  try{ for (const k of want){ const b = await IDB.get(k); if (b) S.cimg[k] = URL.createObjectURL(b); } }catch(e){}
+  if (S.screen === "closet" || S.citem || S.cadd) render();
+}
+const cImg = (it, n) => S.cimg[cKey(it, n || 0)] || "";
+const dataBlob = async (url) => (await fetch(url)).blob();
+// Cut one piece out of a photo of you wearing an outfit (the AI says where it is); a bit of margin around it.
+async function cropPhoto(url, box){
+  const img = new Image(); img.src = url; await img.decode();
+  const W = img.naturalWidth, H = img.naturalHeight, m = 0.04;
+  const x0 = Math.max(0, (box[0] - m) * W), y0 = Math.max(0, (box[1] - m) * H), x1 = Math.min(W, (box[2] + m) * W), y1 = Math.min(H, (box[3] + m) * H);
+  if ((x1 - x0) * (y1 - y0) < W * H * 0.03) return null;
+  const c = document.createElement("canvas"); c.width = Math.round(x1 - x0); c.height = Math.round(y1 - y0);
+  c.getContext("2d").drawImage(img, x0, y0, x1 - x0, y1 - y0, 0, 0, c.width, c.height);
+  return c.toDataURL("image/jpeg", 0.85);
+}
+const CLOSET_IN = (() => { const i = document.createElement("input"); i.type = "file"; i.accept = "image/*"; i.id = "closet-in"; i.hidden = true;
+  i.addEventListener("change", async () => {
+    const f = Array.from(i.files || []), mode = i.dataset.mode || "piece"; i.value = "";
+    if (!f.length) return;
+    if (mode === "label"){ const it = CLOSET.find((x) => x.id === S.citem); if (it) closetLabel(it, f[0]); return; }
+    if (mode === "manual-photo"){ if (S.cadd){ try{ S.cadd.items[0].src = (await shrinkPhoto(f[0])).url; }catch(e){ toast(e.message); } render(); } return; }
+    closetFromPhotos(f, mode);
+  }); document.body.appendChild(i); return i; })();
+const BACKUP_IN = (() => { const i = document.createElement("input"); i.type = "file"; i.accept = "application/json,.json"; i.id = "backup-in"; i.hidden = true;
+  i.addEventListener("change", () => { const f = i.files && i.files[0]; i.value = ""; if (f) closetImport(f); }); document.body.appendChild(i); return i; })();
+function closetPick(mode, multiple){ CLOSET_IN.dataset.mode = mode; CLOSET_IN.multiple = !!multiple; CLOSET_IN.click(); }
+const blankPiece = () => ({name:"", type:"", kind:"", colour:"", colours:[], pattern:"", fabric:"", brand:"", size:"", fit:"", details:[], formality:3, seasons:[], notes:"", on:true});
+// Photos in: each is made smaller (448 px), read by the AI, and shown for review before anything is added.
+async function closetFromPhotos(files, mode){
+  for (const f of files.slice(0, 6)){
+    let ph;
+    try{ ph = await shrinkPhoto(f); }catch(e){ toast(e.message); continue; }
+    const job = {mode, photo:ph, state:"reading", items:[], at:Date.now()};
+    S.cadd = job; render();
+    if (!aiOn()){ Object.assign(job, {state:"review", err:"The AI is off, so fill it in yourself (turn it on in the profile to have photos read).", items:[Object.assign(blankPiece(), {src:ph.url})]}); render(); return; }
+    try{
+      const j = await aiCall("/closet", {photo:ph.url, mode}, 55000);
+      const items = (j.items || []).map((x) => Object.assign(blankPiece(), x, {on:true}));
+      for (const it of items){ it.src = ph.url; if (mode === "worn" && it.box){ try{ it.src = (await cropPhoto(ph.url, it.box)) || ph.url; }catch(e){} } }
+      Object.assign(job, {state:"review", items:items.length ? items : [Object.assign(blankPiece(), {src:ph.url})], err:items.length ? "" : "No clothes found in this photo: fill it in yourself, or try another photo.", model:j.model, ms:j.ms});
+    }catch(e){ Object.assign(job, {state:"review", err:"Couldn't read the photo (" + e.message + "). Fill it in yourself, or try again.", items:[Object.assign(blankPiece(), {src:ph.url})]}); }
+    if (S.cadd === job) render();
+    if (files.length > 1) return toast("One photo at a time: add the next after this one");
+  }
+}
+async function closetSave(){
+  const job = S.cadd; if (!job) return;
+  const keep = job.items.filter((x) => x.on && (x.name || x.kind || x.type));
+  if (!keep.length) return toast("Give it a name or a type first");
+  const added = [];
+  for (const [k, x] of keep.entries()){
+    const it = {id:"c" + Date.now().toString(36) + k, at:Date.now(), name:x.name || cap(x.kind) || x.type, type:x.type, kind:x.kind, colour:x.colour, colours:x.colours || [], pattern:x.pattern, fabric:x.fabric, brand:x.brand, size:x.size || "", fit:x.fit, details:x.details || [], formality:x.formality || 3, seasons:x.seasons || [], notes:x.notes || "", src:job.mode, photos:0, match:null};
+    const shots = uniq([x.src, job.mode === "worn" ? job.photo && job.photo.url : ""].filter(Boolean));
+    for (const u of shots){ try{ await IDB.put(cKey(it, it.photos), await dataBlob(u)); it.photos++; }catch(e){} }
+    added.push(it);
+  }
+  CLOSET = added.concat(CLOSET); save("closet", CLOSET);
+  S.cadd = null; S.cgroup = "All";
+  toast(added.length === 1 ? "Added to your closet" : added.length + " pieces added to your closet");
+  if (S.screen !== "closet") openScreen("closet"); else render();
+  closetImgs(added);
+}
+function closetUpdate(id, patch){
+  const it = CLOSET.find((x) => x.id === id); if (!it) return;
+  Object.assign(it, patch); save("closet", CLOSET);
+}
+async function closetRemove(id){
+  const it = CLOSET.find((x) => x.id === id); if (!it) return;
+  S.modal = {title:"Remove " + (it.name || "this piece") + "?", body:"It leaves your closet and its photos are deleted from this phone.", ok:"Remove", async run(){
+    for (let n = 0; n < (it.photos || 0); n++) try{ await IDB.del(cKey(it, n)); }catch(e){}
+    CLOSET = CLOSET.filter((x) => x.id !== id); save("closet", CLOSET); S.citem = null; toast("Removed"); render();
+  }};
+  render();
+}
+// A label photo (brand, size, composition) fills those fields in.
+async function closetLabel(it, file){
+  try{
+    const ph = await shrinkPhoto(file);
+    await IDB.put(cKey(it, it.photos || 0), await dataBlob(ph.url)); closetUpdate(it.id, {photos:(it.photos || 0) + 1}); closetImgs([it]);
+    if (!aiOn()) return;
+    S.cbusy = "Reading the label…"; render();
+    const j = await aiCall("/closet", {photo:ph.url, mode:"label"}, 55000), l = j.label || {};
+    const patch = {};
+    if (l.brand) patch.brand = l.brand; if (l.size) patch.size = l.size; if (l.fabric) patch.fabric = l.fabric;
+    if (l.made_in || l.care) patch.notes = [it.notes, l.made_in && "Made in " + l.made_in, l.care && "Care: " + l.care].filter(Boolean).join("\n");
+    closetUpdate(it.id, patch);
+    toast(Object.keys(patch).length ? "From the label: " + Object.keys(patch).map((k) => k === "notes" ? "care" : k).join(", ") : "Couldn't read much on that label");
+    if (patch.brand) S.cfound = null;
+  }catch(e){ toast("Couldn't read the label: " + e.message); }
+  S.cbusy = ""; render();
+}
+// The same piece (or the closest) in the catalog: brand, kind, colour, fabric and the name's words.
+const CSTOP = new Set("the and with for men mens man's his a an in of on to by from new classic".split(" "));
+function closetWords(it){ return uniq((it.name + " " + it.kind + " " + it.colour + " " + it.fabric + " " + it.pattern).toLowerCase().split(/[^a-z]+/).filter((w) => w.length > 2 && !CSTOP.has(w))); }
+async function closetCatalogMatch(it){
+  const types = it.type ? [it.type] : [];
+  if (!types.length) return [];
+  await loadTypes(types);
+  const words = closetWords(it), brand = String(it.brand || "").toLowerCase().trim(), col = String(it.colour || "").toLowerCase();
+  const out = [];
+  for (const p of CAT.lists[it.type] || []){
+    const hay = (p.title + " " + p.kind + " " + (p.colour || "") + " " + (p.fabric || "")).toLowerCase();
+    let sc = 0;
+    if (brand && (p.brand + " " + p.store).toLowerCase().includes(brand)) sc += 6;
+    for (const w of words) if (wordIn(hay, w)) sc += 1;
+    if (col && wordIn(hay, col.split(" ").pop())) sc += 1.5;
+    if (it.kind && wordIn(hay, it.kind.split(" ").pop())) sc += 1;
+    if (sc >= 3) out.push([p, sc]);
+  }
+  return out.sort((a, b) => b[1] - a[1]).slice(0, 6).map((x) => x[0]);
+}
+// And in the stores' own search (sold-out pieces too): the brand's store if we know it, else stores of its kind.
+function closetStores(it){
+  const st = (CAT.stores && CAT.stores.stores) || [], brand = String(it.brand || "").toLowerCase().trim();
+  const own = brand ? st.filter((s) => s.name.toLowerCase().includes(brand) || brand.includes(s.name.toLowerCase())) : [];
+  const want = it.formality >= 4 ? ["tailored", "classic", "luxe"] : it.formality <= 2 ? ["streetwear", "surf", "sporty", "workwear"] : ["smart", "minimal", "preppy", "classic"];
+  const rest = st.filter((s) => !own.includes(s) && (s.tags || []).some((t) => want.includes(t)));
+  const seed = hashStr(it.id);
+  rest.sort((a, b) => hashStr(a.d + seed) - hashStr(b.d + seed));
+  return own.slice(0, 2).concat(rest).slice(0, 5);
+}
+async function closetFind(it){
+  const f = S.cfound = {id:it.id, state:"busy", cat:[], web:[]};
+  render();
+  try{ f.cat = await closetCatalogMatch(it); }catch(e){}
+  if (S.cfound === f) render();
+  if (aiOn()){
+    try{
+      const st = closetStores(it), q = [it.brand && !st.some((s) => s.name.toLowerCase() === String(it.brand).toLowerCase()) ? it.brand : "", it.colour, it.kind || it.name].filter(Boolean).join(" ");
+      const j = await aiCall("/find", {q, stores:st.map((s) => ({d:s.d, name:s.name, cur:s.cur}))}, 30000);
+      const seen = new Set(f.cat.map((p) => p.url));
+      f.web = (j.products || []).filter((p) => !seen.has(p.url)).slice(0, 8);
+      f.searched = st.map((s) => s.name);
+    }catch(e){ f.err = e.message; }
+  }
+  f.state = "done";
+  if (S.cfound === f) render();
+}
+function closetLink(it, p){
+  const patch = {match:{store:p.store, title:p.title, url:p.url, image:p.image || (p.images && p.images[0]) || "", price:p.price, currency:p.currency, id:p.id}};
+  if (!it.brand && p.brand) patch.brand = p.brand;
+  if (!it.fabric && p.fabric) patch.fabric = String(p.fabric).toLowerCase();
+  closetUpdate(it.id, patch); toast("Linked to " + p.store); render();
+}
+// A backup file of the whole closet (photos too), and back in from one: a phone can lose a web app's storage.
+async function closetExport(){
+  const photos = {};
+  for (const it of CLOSET) for (let n = 0; n < (it.photos || 0); n++){
+    try{ const b = await IDB.get(cKey(it, n)); if (b) photos[it.id + "|" + n] = await new Promise((ok) => { const r = new FileReader(); r.onload = () => ok(r.result); r.readAsDataURL(b); }); }catch(e){}
+  }
+  const data = {app:"drape", kind:"closet", version:1, person:person().name, at:new Date().toISOString(), items:CLOSET, photos};
+  const blob = new Blob([JSON.stringify(data)], {type:"application/json"}), a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = "drape-closet-" + person().name.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + new Date().toISOString().slice(0, 10) + ".json";
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+  toast("Backup made: " + CLOSET.length + " pieces");
+  S.lastExport = {n:CLOSET.length, bytes:blob.size};
+}
+async function closetImport(file){
+  try{
+    const d = JSON.parse(await file.text());
+    if (!d || d.kind !== "closet" || !Array.isArray(d.items)) throw new Error("not a Drape closet backup");
+    const have = new Set(CLOSET.map((x) => x.id)), add = d.items.filter((x) => x && x.id && !have.has(x.id));
+    for (const it of add){
+      let n = 0;
+      for (let k = 0; k < (it.photos || 0); k++){ const u = (d.photos || {})[it.id + "|" + k]; if (u) try{ await IDB.put(cKey(it, n), await dataBlob(u)); n++; }catch(e){} }
+      it.photos = n;
+    }
+    CLOSET = CLOSET.concat(add); save("closet", CLOSET);
+    toast(add.length ? add.length + " pieces back in your closet" : "Nothing new in that backup"); closetImgs(add); render();
+  }catch(e){ toast("Couldn't read that file: " + e.message); }
+}
+function closetSummary(){
+  const by = {};
+  for (const it of CLOSET){ const g = groupOf(it.type); by[g] = (by[g] || 0) + 1; }
+  return by;
+}
+const TYPE_OPTS = (cur) => `<option value="">Type…</option>` + CLOSET_GROUPS.map(([g, ts]) => `<optgroup label="${g}">${ts.map((t) => `<option value="${t}"${t === cur ? " selected" : ""}>${t}</option>`).join("")}</optgroup>`).join("");
+function renderCloset(){
+  closetImgs(CLOSET);
+  const by = closetSummary(), grp = S.cgroup || "All";
+  const list = CLOSET.filter((it) => grp === "All" || groupOf(it.type) === grp);
+  const chip = (g, n) => `<button type="button" class="chip${grp === g ? " on" : ""}" data-act="closet-group" data-v="${g}" aria-pressed="${grp === g}">${g}${n != null ? ` <span class="seg-n">${n}</span>` : ""}</button>`;
+  const who = youName() === "you" ? "Your" : esc(youName()) + "'s";
+  return `<main class="screen">
+    <header class="top"><button type="button" class="icon-btn" data-act="closet-back" aria-label="Back">${ICON.back}</button><span class="meta">${who} closet</span>${hbtns(true)}</header>
+    <section class="hero" style="padding-top:4px"><h1 class="h1" style="font-size:32px">${who} closet</h1>
+      <p class="sub">${CLOSET.length ? CLOSET.length + " piece" + (CLOSET.length === 1 ? "" : "s") + " · " + CLOSET_GROUPS.filter(([g]) => by[g]).map(([g]) => by[g] + " " + g.toLowerCase()).join(" · ") : "Add the clothes you have: from a photo of a piece, a photo of you wearing an outfit, or by typing."}</p></section>
+    <div class="add-row">
+      <button type="button" class="add-btn" data-act="closet-add" data-v="piece">${ICON.camera}<b>A piece</b><small>photo of it, flat or on a hanger</small></button>
+      <button type="button" class="add-btn" data-act="closet-add" data-v="worn">${ICON.person}<b>What I'm wearing</b><small>every piece in the photo</small></button>
+      <button type="button" class="add-btn" data-act="closet-add" data-v="manual">${ICON.pen}<b>Type it in</b><small>name, type, colour…</small></button>
+    </div>
+    ${CLOSET.length ? `<div class="chips small" role="group" aria-label="Show">${chip("All", CLOSET.length)}${CLOSET_GROUPS.filter(([g]) => by[g]).map(([g]) => chip(g, by[g])).join("")}${by.Other ? chip("Other", by.Other) : ""}</div>
+    <ul class="sv-grid">${list.map((it) => `<li><button type="button" class="sv-card" data-act="closet-open" data-v="${esc(it.id)}"><span class="sv-ph" style="background:var(--soft)">${cImg(it) ? `<img src="${esc(cImg(it))}" alt="" loading="lazy">` : `<span class="c-ph">${ICON.hanger}</span>`}${it.match ? `<span class="on-you">Linked</span>` : ""}</span><span class="sv-t">${esc(it.name || it.kind || it.type)}</span><span class="sv-s">${swatch(String(it.colour || "").split(" ").pop())}${esc([it.colour, it.brand || it.type].filter(Boolean).join(" · "))}</span></button></li>`).join("")}</ul>` : ""}
+    <section class="card" aria-label="Backup"><h2>Keep a copy</h2><p>Your closet lives only on this phone. Make a backup file now and then (save it to Files or iCloud), and bring it back in on a new phone.</p>
+      <div class="row2"><button type="button" class="outline-btn" data-act="closet-export"${CLOSET.length ? "" : " disabled"}>Make a backup</button><button type="button" class="outline-btn" data-act="closet-import">Bring one back</button></div></section>
+  </main>`;
+}
+function pieceFields(x, k){
+  const f = (name, label, ph) => `<label class="cf"><span>${label}</span><input type="text" data-cf="${name}" data-k="${k}" value="${esc(x[name] || "")}" placeholder="${ph || ""}" autocomplete="off"></label>`;
+  return `<div class="cf-grid">
+    <label class="cf wide"><span>Name</span><input type="text" data-cf="name" data-k="${k}" value="${esc(x.name || "")}" placeholder="e.g. Navy oxford shirt" autocomplete="off"></label>
+    <label class="cf"><span>Type</span><select data-cf="type" data-k="${k}">${TYPE_OPTS(x.type)}</select></label>
+    ${f("kind", "Kind", "e.g. oxford shirt")}${f("colour", "Colour", "e.g. navy")}${f("fabric", "Fabric", "e.g. cotton oxford")}${f("brand", "Brand", "if you know it")}${f("size", "Size", "e.g. M, 48, 32/30")}
+  </div>`;
+}
+function renderClosetAdd(){
+  const j = S.cadd, n = j.items.filter((x) => x.on).length;
+  const body = j.state === "reading"
+    ? `<div class="to-img busy" style="aspect-ratio:${j.photo.w}/${j.photo.h};max-height:46vh"><img src="${esc(j.photo.url)}" alt="" style="height:100%;width:100%;object-fit:contain"><span class="to-wait">${ICON.sliders}Reading the photo… about 5–20 seconds</span></div>`
+    : `${j.err ? `<p class="fit-note bad" style="margin:0">${esc(j.err)}</p>` : `<p class="small-note" style="text-align:left;margin:0">${j.items.length > 1 ? "Found " + j.items.length + " pieces. Untick any you don't want, fix anything wrong, then add them." : "Check it, fix anything wrong, then add it."}</p>`}
+      <ul class="cadd-list">${j.items.map((x, k) => `<li class="cadd${x.on ? "" : " off"}">
+        <div class="cadd-top">${x.src ? `<img src="${esc(x.src)}" alt="" class="cadd-img">` : `<span class="cadd-img c-ph">${ICON.hanger}</span>`}
+          <div class="cadd-head"><b>${esc(x.name || "New piece")}</b><small>${esc([x.colour, x.pattern && x.pattern !== "solid" ? x.pattern : "", x.fabric].filter(Boolean).join(" · "))}</small>${j.items.length > 1 ? `<label class="cadd-on"><input type="checkbox" data-cf="on" data-k="${k}"${x.on ? " checked" : ""}> Add this</label>` : ""}</div></div>
+        ${x.on ? pieceFields(x, k) : ""}</li>`).join("")}</ul>`;
+  return `<div class="scrim" data-act="scrim"><section class="sheet tryon" role="dialog" aria-modal="true" aria-labelledby="ca-t">
+    <span class="grab" aria-hidden="true"></span>
+    <h2 id="ca-t" style="margin:0;font-size:22px">${j.mode === "worn" ? "What you're wearing" : j.mode === "manual" ? "Add a piece" : "A piece of yours"}</h2>
+    ${body}
+    <div class="bottom">
+      ${j.state === "review" ? `<button type="button" class="cta" data-act="closet-save"${n ? "" : " disabled"}>${n > 1 ? "Add " + n + " pieces" : "Add to my closet"} ${ICON.arrow}</button>` : ""}
+      ${j.state === "review" && j.mode === "manual" && !j.items[0].src ? `<button type="button" class="outline-btn" data-act="closet-manual-photo">${ICON.camera}Add a photo of it</button>` : ""}
+      <button type="button" class="link-btn" data-act="closet-cancel">Cancel</button>
+    </div>
+  </section></div>`;
+}
+function renderClosetItem(){
+  const it = CLOSET.find((x) => x.id === S.citem);
+  if (!it){ S.citem = null; return ""; }
+  const f = S.cfound && S.cfound.id === it.id ? S.cfound : null;
+  const prod = (p, k, from) => `<li class="cm"><img src="${esc(sized(p.image || (p.images && p.images[0]) || "", 300))}" alt="" loading="lazy"><div><b>${esc(p.title)}</b><small>${esc(p.store)}${p.price ? " · " + esc(money(p.price, p.currency)) : ""}${p.sold || p.available === false ? " · sold out" : ""}</small>
+      <span class="cm-act"><button type="button" class="link-btn" data-act="closet-link" data-from="${from}" data-v="${k}">This is it</button><a class="link-btn" href="${esc(p.url)}" target="_blank" rel="noopener">See it ${ICON.ext}</a></span></div></li>`;
+  const pics = Array.from({length:it.photos || 0}, (_, n) => cImg(it, n)).filter(Boolean);
+  return `<div class="scrim" data-act="scrim"><section class="sheet tryon" role="dialog" aria-modal="true" aria-labelledby="ci-t">
+    <span class="grab" aria-hidden="true"></span>
+    ${pics.length ? `<div class="ci-pics">${pics.map((u) => `<img src="${esc(u)}" alt="">`).join("")}</div>` : ""}
+    <h2 id="ci-t" style="margin:0;font-size:22px">${esc(it.name || it.kind || it.type)}</h2>
+    ${it.match ? `<p class="insight-line" style="margin:0">${ICON.check}<span>Linked: <a href="${esc(it.match.url)}" target="_blank" rel="noopener">${esc(it.match.title)} · ${esc(it.match.store)}</a> · <button type="button" class="link-btn" data-act="closet-unlink">unlink</button></span></p>` : ""}
+    ${S.cbusy ? `<p class="insight-line" style="margin:0">${ICON.sliders}<span>${esc(S.cbusy)}</span></p>` : ""}
+    ${pieceFields(it, "item")}
+    <label class="cf wide"><span>Notes</span><textarea data-cf="notes" data-k="item" rows="2" placeholder="Where you bought it, how it fits…">${esc(it.notes || "")}</textarea></label>
+    ${(it.details || []).length ? `<p class="small-note" style="text-align:left;margin:0">${esc(it.details.join(" · "))}</p>` : ""}
+    <div class="row2"><button type="button" class="outline-btn" data-act="closet-label">${ICON.camera}Photo of its label</button><button type="button" class="outline-btn" data-act="closet-find">${f && f.state === "busy" ? "Looking…" : "Find it online"}</button></div>
+    ${f ? `<div class="st-sec"><span class="mono-label">${f.state === "busy" && !f.cat.length ? "Looking in the catalog and the stores…" : "Is it one of these?"}</span>
+      ${f.cat.length || f.web.length ? `<ul class="cm-list">${f.cat.map((p, k) => prod(p, k, "cat")).join("")}${f.web.map((p, k) => prod(p, k, "web")).join("")}</ul>` : f.state === "done" ? `<p class="small-note" style="text-align:left;margin:0">Nothing close${f.searched ? " in the catalog or at " + esc(f.searched.join(", ")) : " in the catalog"}. Add the brand (or a photo of the label) and look again.</p>` : ""}
+      ${f.err ? `<p class="small-note" style="text-align:left;margin:0">The stores' search didn't answer: ${esc(f.err)}</p>` : ""}</div>` : ""}
+    <div class="bottom"><button type="button" class="cta" data-act="closet-close">Done ${ICON.arrow}</button><button type="button" class="link-btn danger" data-act="closet-remove">Remove from my closet</button></div>
+  </section></div>`;
+}
+
 /* ---------------- people on this phone ---------------- */
 // Switching reloads the app as that person (everything per person is read fresh at start-up).
 function switchPerson(id, then){
@@ -2569,6 +2880,7 @@ function removePerson(id){
   if (!x || PEOPLE.list.length < 2) return;
   S.modal = {title:"Remove " + x.name + "?", body:"This deletes " + x.name + "'s About you, votes, saved and liked pieces on this phone. Everyone else stays as they are.", ok:"Remove", run(){
     const looks = loadOf(id, "looks", []) || [];
+    IDB.keys().then((ks) => Promise.all(ks.filter((k) => String(k).startsWith(id + "|")).map((k) => IDB.del(k)))).catch(() => {});
     caches.open(LOOK_CACHE).then((c) => Promise.all(looks.map((x) => c.delete(lookKey(x, id))))).catch(() => {});
     for (const k of PER_PERSON) try{ localStorage.removeItem(LS + keyOf(k, id)); }catch(e){}
     PEOPLE.list = PEOPLE.list.filter((y) => y.id !== id);
@@ -2607,15 +2919,17 @@ function render(){
   const app = document.getElementById("app");
   // Re-drawing keeps the details view where you had scrolled it.
   const dt = document.getElementById("detail"), keepTop = dt && S.detail && dt.dataset.id === S.detail.item.id ? dt.scrollTop : 0;
-  let html = S.screen === "explore" ? renderExplore() : S.screen === "shop" ? renderShop() : S.screen === "profile" ? renderProfile() : S.screen === "saved" ? renderSaved() : renderStart();
+  let html = S.screen === "explore" ? renderExplore() : S.screen === "shop" ? renderShop() : S.screen === "profile" ? renderProfile() : S.screen === "saved" ? renderSaved() : S.screen === "closet" ? renderCloset() : renderStart();
   if (S.sheet && S.current) html += renderSheet();
   if (S.people) html += renderPeopleSheet();
   if (S.tryon) html += renderTryon();
+  if (S.cadd) html += renderClosetAdd();
+  else if (S.citem) html += renderClosetItem();
   if (S.detail) html += renderDetail();
   if (S.modal) html += renderModal();
   if (S.toast && !S.toast.undo) html += renderToast();
   app.innerHTML = html;
-  document.body.classList.toggle("lock", !!(S.sheet || S.people || S.tryon || S.modal || S.detail || Z.open));
+  document.body.classList.toggle("lock", !!(S.sheet || S.people || S.tryon || S.cadd || S.citem || S.modal || S.detail || Z.open));
   if (S.detail){ const d2 = document.getElementById("detail"); if (d2) d2.scrollTop = keepTop; bindDetail(); }
   if (S.screen === "explore"){ tryAhead(); bindSwipe(); if (S.current){ preloadUrl(photoAt(S.current, curPh() + 1, 900)); loadCardMore(S.current); } }
   const f = S.focus && document.querySelector(S.focus);
@@ -2852,8 +3166,24 @@ const ACTIONS = {
     if (S.sheet) setTimeout(() => { S.sheet = false; render(); }, 300);
   },
   broaden(){ Q.type = "Surprise me"; save("query", Q); S.current = nextIdea(); render(); },
-  scrim(el, e){ if (e.target !== el) return; if (S.modal){ S.modal = null; } else if (S.tryon){ if (S.tryon.state !== "busy") S.tryon = null; } else if (S.people){ S.people = false; } else S.sheet = false; render(); },
+  scrim(el, e){ if (e.target !== el) return; if (S.modal){ S.modal = null; } else if (S.cadd){ if (S.cadd.state !== "reading") S.cadd = null; } else if (S.citem){ S.citem = null; S.cfound = null; } else if (S.tryon){ if (S.tryon.state !== "busy") S.tryon = null; } else if (S.people){ S.people = false; } else S.sheet = false; render(); },
   "photo-add"(){ FILE_IN.click(); },
+  closet(){ openScreen("closet"); },
+  "closet-back"(){ backScreen(); },
+  "closet-group"(el){ S.cgroup = el.dataset.v; render(); },
+  "closet-add"(el){ const m = el.dataset.v; if (m === "manual"){ S.cadd = {mode:"manual", state:"review", items:[blankPiece()]}; render(); } else closetPick(m); },
+  "closet-manual-photo"(){ CLOSET_IN.dataset.mode = "manual-photo"; CLOSET_IN.multiple = false; CLOSET_IN.click(); },
+  "closet-cancel"(){ S.cadd = null; render(); },
+  "closet-save"(){ closetSave(); },
+  "closet-open"(el){ S.citem = el.dataset.v; S.cfound = null; render(); const it = CLOSET.find((x) => x.id === S.citem); if (it) closetImgs([it]); },
+  "closet-close"(){ S.citem = null; S.cfound = null; render(); },
+  "closet-remove"(){ closetRemove(S.citem); },
+  "closet-find"(){ const it = CLOSET.find((x) => x.id === S.citem); if (it) closetFind(it); },
+  "closet-link"(el){ const it = CLOSET.find((x) => x.id === S.citem), f = S.cfound; if (it && f){ const p = (el.dataset.from === "cat" ? f.cat : f.web)[+el.dataset.v]; if (p) closetLink(it, p); } },
+  "closet-unlink"(){ closetUpdate(S.citem, {match:null}); render(); },
+  "closet-label"(){ CLOSET_IN.dataset.mode = "label"; CLOSET_IN.multiple = false; CLOSET_IN.click(); },
+  "closet-export"(){ closetExport(); },
+  "closet-import"(){ BACKUP_IN.click(); },
   "photo-remove"(el){ storePhotos(PHOTOS.filter((x) => x.id !== el.dataset.v)); maybeStylist(); render(); },
   "photo-main"(el){ const x = PHOTOS.find((y) => y.id === el.dataset.v); if (x && PHOTOS[0] !== x){ storePhotos([x].concat(PHOTOS.filter((y) => y !== x))); toast("Pieces will be drawn on this photo"); } render(); },
   onme(el){ const on = el.dataset.v === "1"; if (on && !PHOTOS.length) FILE_IN.click(); Q.onMe = on; save("query", Q); render(); },
@@ -2905,6 +3235,13 @@ document.addEventListener("input", (e) => {
 });
 document.addEventListener("change", (e) => {
   if (e.target.classList && e.target.classList.contains("person-name")){ renamePerson(e.target.dataset.id, e.target.value); return; }
+  if (e.target.dataset && e.target.dataset.cf){
+    const k = e.target.dataset.k, name = e.target.dataset.cf, v = e.target.type === "checkbox" ? e.target.checked : e.target.value.trim();
+    // Only a tick box redraws: redrawing on a text field would take the focus away from the next one you tapped.
+    if (k === "item"){ closetUpdate(S.citem, {[name]:v}); if (name === "brand" || name === "type" || name === "kind") S.cfound = null; }
+    else if (S.cadd && S.cadd.items[+k]){ S.cadd.items[+k][name] = v; if (name === "on") render(); }
+    return;
+  }
   if (e.target.id === "cat"){ Q.type = e.target.value; save("query", Q); return; }
   if (e.target.id === "shipIL"){ PREFS.shipIL = e.target.checked; save("prefs", PREFS); }
 });
@@ -2989,7 +3326,8 @@ function savedBtn(){
 function hbtns(withProfile){
   const saved = S.screen === "explore" || S.screen === "start";
   const prof = withProfile && S.screen !== "explore";
-  return `<span class="hbtns">${askBtn()}${saved ? savedBtn() : ""}${prof ? `<button type="button" class="icon-btn" data-act="profile" aria-label="Your taste profile">${ICON.person}</button>` : ""}</span>`;
+  const closet = S.screen === "start" || S.screen === "saved" || S.screen === "profile";
+  return `<span class="hbtns">${askBtn()}${saved ? savedBtn() : ""}${closet ? `<button type="button" class="icon-btn" data-act="closet" aria-label="Your closet${CLOSET.length ? " (" + CLOSET.length + ")" : ""}">${ICON.hanger}</button>` : ""}${prof ? `<button type="button" class="icon-btn" data-act="profile" aria-label="Your taste profile">${ICON.person}</button>` : ""}</span>`;
 }
 function askSetState(st){
   askState = st;
@@ -3062,6 +3400,8 @@ function askSnapshot(){
   L.push(`LIKED: ${likedList().slice(0, 8).map((x) => x.title).join("; ") || "-"}`);
   L.push(`PREFS: ${JSON.stringify(PREFS)}`);
   { const tr = [...TRY.values()], ok = tr.filter((r) => r.state === "ok"); L.push(`ON ME: ${Q.onMe ? (onMe() ? "on" : "chosen, but " + (!PHOTOS.length ? "no photo" : "AI off")) : "off"}   drawn ${ok.length}, drawing ${tr.filter((r) => r.state === "busy").length}, failed ${tr.filter((r) => r.state === "err").length}${ok.length ? ", median " + ok.map((r) => r.ms).sort((a, b) => a - b)[Math.floor(ok.length / 2)] + "ms" : ""}${tr.some((r) => r.err) ? "   last error: " + tr.filter((r) => r.err).pop().err : ""}${S.tryOff ? "   stopped: " + S.tryOff : ""}   stylist: ${S.stylistBusy ? "reading" : S.stylistErr ? "failed: " + S.stylistErr : STYLIST ? "read " + new Date(STYLIST.at).toISOString() : "-"}`); }
+  L.push(`CLOSET: ${CLOSET.length} pieces ${JSON.stringify(closetSummary())}, linked ${CLOSET.filter((x) => x.match).length}${S.cadd ? "   ADDING: " + S.cadd.mode + " " + S.cadd.state + " " + (S.cadd.items || []).length + " found" + (S.cadd.err ? " — " + S.cadd.err : "") + (S.cadd.ms ? " in " + S.cadd.ms + "ms" : "") : ""}${S.cfound ? "   FIND: " + S.cfound.state + " catalog " + S.cfound.cat.length + ", stores " + S.cfound.web.length + (S.cfound.err ? " — " + S.cfound.err : "") : ""}`);
+  if (CLOSET.length) L.push(`  ${CLOSET.slice(0, 12).map((x) => [x.name, x.type, x.colour, x.brand].filter(Boolean).join(" / ")).join("; ")}`);
   L.push(`PHOTOS: ${PHOTOS.length ? PHOTOS.map((x) => x.w + "x" + x.h + " " + Math.round(x.url.length * 0.75 / 1024) + "KB").join(", ") : "none"}   LOOKS saved: ${LOOKS.length}${S.tryon ? "   TRY-ON: " + (S.tryon.need ? "needs a photo" : S.tryon.state + (S.tryon.ms ? " " + S.tryon.ms + "ms" : "") + (S.tryon.err ? " " + S.tryon.err : "")) + " — " + S.tryon.item.title : ""}`);
   if (STYLIST) L.push(`STYLIST (${STYLIST.model || "-"}, ${STYLIST.ms || "-"}ms): ${STYLIST.summary} | best ${(STYLIST.best_colours || []).join(", ")} | less ${(STYLIST.avoid_colours || []).join(", ")} | look for ${(STYLIST.look_for || []).join(", ")} | avoid ${(STYLIST.avoid || []).join(", ")}`);
   if (S.current && isProduct(S.current)){ const f = fitForMe(S.current); L.push(`FOR YOU: ${f.s ? (f.s > 0 ? "+" : "") + f.s + " " + (f.good || f.bad) : "neutral"}   cut: ${S.current.ct || "-"}${S.current.is ? "   inseam " + S.current.is + '"' : ""}`); }

@@ -35,6 +35,8 @@ Everything you do is saved on the phone (`localStorage`, keys prefixed `clothes:
 | `GET /image` | Draws a product photo for one idea (the garment alone on an invisible mannequin, no person) | First five cards of a search: FLUX.1 schnell (1–2s, about 150 neurons). The rest: FLUX.2 klein 4B at 512×768 (9–14s, about 50 neurons), drawn ahead while you look at the current card. Each is the other's backup. |
 | `POST /tryon` | You wearing a piece: your photo and the store's photo of it (fitted inside 500×500 by Shopify's image server) go in as reference images 0 and 1 | FLUX.2 klein 4B (about 10–30 s) |
 | `POST /stylist` | Reads up to 3 photos of you the way a stylist does (undertone, contrast, proportions) and answers in JSON: best colours, colours to avoid, cuts, words to look for and avoid, patterns, tips | Gemma 4 26B with vision; Gemma 3 12B as backup |
+| `POST /closet` | Your own clothes from a photo: one piece, an outfit you're wearing (each piece, with where it is), or a label (brand, size, composition, care), as JSON fields | Gemma 4 26B with vision; Gemma 3 12B as backup |
+| `POST /find` | One of your pieces in up to 6 stores' own search (the stores the app names), sold-out pieces too | — (the stores' public search) |
 | `GET /portrait` | A made-up man's full-length photo, only for the live test of `/tryon` and `/stylist` (so the test never uses a real person's photo) | FLUX.1 schnell |
 | `GET /health` | Checks the access code | — |
 
@@ -61,6 +63,14 @@ On the phone, tap the version badge next to the logo (or **Update app** in the t
 ## Real products (since 1.0)
 
 AI-drawn photos on the free plan were too generic and too slow, so Drape shows real products: real photos, prices and links.
+
+### Your closet (since 1.12)
+
+- **The closet** (the hanger at the top of the start screen): the clothes you own, per person. Add them three ways: **A piece** (a photo of it, flat, on a hanger or worn, label showing or not), **What I'm wearing** (a photo of you; every piece in it is found and cut out of the photo), or **Type it in** (with a photo if you like).
+- **The AI reads each photo** (`/closet`, Gemma 4 with vision) into the fields: name, type (the app's 16), kind, colour, pattern, fabric, brand (only when a label or logo is readable), fit, details, formality (1–5), seasons, and where in the photo each piece is. Nothing is added before you see it: a review sheet shows every piece found, with its fields to fix and a tick to leave one out.
+- **Each piece** opens to its photos and fields (edit any, add notes). **Photo of its label** reads brand, size, composition, where it was made and care, and fills them in. **Find it online** looks for it in the catalog (brand, kind, colour, fabric and the name's words, across about 60,000 pieces) and in the stores' own search (`/find`: the brand's store if it's one we know, else stores of its kind; sold-out pieces too, since yours may be gone). **This is it** links the piece to that store page; the closet shows it "Linked".
+- **Where it's kept**: the list in localStorage (`clothes:closet`, per person), the photos in IndexedDB (`drape` → `img`, much more room than localStorage). **Make a backup** writes the whole closet with its photos to one file (save it to Files or iCloud); **Bring one back** reads it in (pieces already there are skipped). A phone can clear a web app's storage, so a backup now and then is worth it.
+- **Next, on top of it**: what's missing from the closet, and outfits from what you have.
 
 ### On me (since 1.11)
 

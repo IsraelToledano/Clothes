@@ -10,6 +10,9 @@
 //   GET  /image   → an AI product photo for one idea (FLUX.1 schnell, FLUX.2 klein 4B as backup)
 //   POST /tryon   → you wearing a piece: your photo and the store's photo of it, drawn by FLUX.2 klein 4B
 //   POST /stylist → what suits you, read from your photos by Gemma 4 (vision) the way a stylist would
+//   POST /closet  → your own clothes, from a photo (one piece, an outfit you're wearing, or a label), read by
+//                   Gemma 4 (vision) into the fields of your closet: name, type, colour, fabric, brand...
+//   POST /find    → a piece of yours in stores' own search (the stores the app names), sold-out pieces too
 //   GET  /portrait → a made-up man's full-length photo, only for the repo's live test of /tryon and /stylist
 //                    (so the test never needs a real person's photo)
 // Photos sent to /tryon and /stylist are used for that one answer and never stored.
@@ -21,7 +24,7 @@
 // On the free plan Cloudflare blocks requests past that instead of charging.
 
 // Bump with the app version so a report shows whether the server was redeployed.
-const SERVER_VERSION = "1.3.1";
+const SERVER_VERSION = "1.4.0";
 const APP_ORIGIN = "https://israeltoledano.github.io";
 // Gemma 4 26B (4B active) is fast and costs about a sixth of Llama 3.3 70B per idea in the free allowance.
 const TEXT_MODEL = "@cf/google/gemma-4-26b-a4b-it";
@@ -112,6 +115,13 @@ async function handle(req, env) {
         try { body = JSON.parse(await req.text()); } catch (e) { throw new HttpError(400, "Request isn't valid JSON"); }
         await checkCode(env, body && body.code);
         return json(url.pathname === "/products" ? await products(env, body) : await more(env, body), 200, origin);
+      }
+
+      if (req.method === "POST" && (url.pathname === "/closet" || url.pathname === "/find")) {
+        let body;
+        try { body = JSON.parse(await req.text()); } catch (e) { throw new HttpError(400, "Request isn't valid JSON"); }
+        await checkCode(env, body && body.code);
+        return json(url.pathname === "/closet" ? await closetRead(env, body) : await findPiece(body), 200, origin);
       }
 
       if (req.method === "POST" && (url.pathname === "/tryon" || url.pathname === "/stylist")) {
@@ -583,8 +593,8 @@ function imgSized(u, w) {
 }
 
 // One store's answer to one search, normalized. Cached at Cloudflare's edge for 6 hours.
-async function storeSearch(store, q, limit) {
-  const u = `https://${store.d}/search/suggest.json?q=${encodeURIComponent(q)}&resources[type]=product&resources[limit]=${limit || 10}&resources[options][unavailable_products]=hide`;
+async function storeSearch(store, q, limit, all) {
+  const u = `https://${store.d}/search/suggest.json?q=${encodeURIComponent(q)}&resources[type]=product&resources[limit]=${limit || 10}&resources[options][unavailable_products]=${all ? "last" : "hide"}`;
   const res = await fetch(u, { headers: { Accept: "application/json", "User-Agent": "Mozilla/5.0 (compatible; Drape/1.0; personal shopping app)" }, cf: { cacheTtl: 21600, cacheEverything: true } });
   if (!res.ok) throw new Error(store.d + " " + res.status);
   const j = await res.json();
@@ -600,7 +610,7 @@ async function storeSearch(store, q, limit) {
       available: p.available !== false, rank: ix,
       fabric: cap(findWord(FABRICS, t)), colour: cap(findWord(COLOURS, t)),
     };
-  }).filter((p) => p.image && p.available && !NOT_HIS.test(p.title + " " + p.type + " " + p.tags.join(" ")) && !NOT_CLOTHES.test(p.title + " " + p.type));
+  }).filter((p) => p.image && (all || p.available) && !NOT_HIS.test(p.title + " " + p.type + " " + p.tags.join(" ")) && !NOT_CLOTHES.test(p.title + " " + p.type));
 }
 
 // Search several stores for one query; return a varied pick (best of each store first).
@@ -925,6 +935,72 @@ async function stylist(env, b) {
     look_for: words(out.look_for, 8), avoid: words(out.avoid, 6), patterns: clip(out.patterns, 220), tips: (Array.isArray(out.tips) ? out.tips : []).map((x) => clip(x, 160)).filter(Boolean).slice(0, 4),
     model: used.split("/").pop(), ms: Date.now() - t0,
   };
+}
+
+/* ---------------- /closet and /find: your own clothes ---------------- */
+const CLOSET_TYPES = ["Shirts", "T-shirts", "Polos", "Knitwear", "Sweatshirts", "Overshirts", "Jackets", "Coats", "Blazers", "Suits", "Trousers", "Jeans", "Shorts", "Swimwear", "Shoes", "Accessories"];
+const CLOSET_SYSTEM = `You catalogue a man's own clothes from his photo, for his wardrobe app. Describe only what you can see; never guess a brand you can't read.
+The photo is one of:
+- "piece": one piece of clothing (laid flat, on a hanger, folded, or worn), maybe with its label showing. Describe that one piece.
+- "worn": him wearing an outfit. List every piece of clothing and accessory you can see (each layer, trousers, shoes, belt, watch, hat, bag...), one entry each.
+- "label": a label (brand, size, composition, care). Read it.
+Each piece: {"name": "how a store would name it, e.g. 'Navy wool flannel double-breasted blazer'",
+ "type": one of ${JSON.stringify(CLOSET_TYPES)},
+ "kind": "e.g. oxford shirt, chinos, penny loafers, belt, watch",
+ "colour": "main colour, one or two words", "colours": ["up to 3"],
+ "pattern": "solid|stripe|check|herringbone|houndstooth|print|texture|other",
+ "fabric": "your best reading, e.g. cotton oxford, wool flannel, linen, denim, suede",
+ "brand": "only if a logo or label is readable, else ''",
+ "fit": "slim|regular|relaxed|oversized or ''",
+ "details": ["up to 6 short details: collar, lapels, buttons, pockets, cuffs, rise, sole..."],
+ "formality": 1 to 5 (1 beach or gym, 3 smart casual, 5 black tie),
+ "seasons": ["spring", "summer", "autumn", "winter" that it suits],
+ "box": [left, top, right, bottom] as fractions 0-1 of the photo, where the piece is}
+Answer JSON only: {"items": [...]} for "piece" and "worn"; {"label": {"brand": "", "size": "", "fabric": "composition as written", "made_in": "", "care": ""}} for "label".`;
+async function closetRead(env, b) {
+  const photo = photoUrl(b.photo, "The photo");
+  const mode = ["piece", "worn", "label"].includes(b.mode) ? b.mode : "piece";
+  const hint = clip(b.hint, 200);
+  const messages = [{ role: "system", content: CLOSET_SYSTEM }, { role: "user", content: [{ type: "text", text: `Mode: ${mode}.${hint ? " He says: " + hint + "." : ""} JSON only.` }, { type: "image_url", image_url: { url: photo } }] }];
+  const tries = [
+    [TEXT_MODEL, { messages, max_completion_tokens: 1600, temperature: 0.2, response_format: { type: "json_object" }, chat_template_kwargs: { enable_thinking: false } }],
+    [TEXT_MODEL, { messages, max_completion_tokens: 1600, temperature: 0.2 }],
+    [VISION_BACKUP, { messages, max_tokens: 1600, temperature: 0.2 }],
+  ];
+  let out = null, used = "", last = null;
+  const t0 = Date.now();
+  for (const [model, input] of tries) {
+    const left = 50000 - (Date.now() - t0);
+    if (left < 8000) break;
+    try { out = parseJSON(textOf(await timeLimit(runAI(env, model, input), Math.min(left, 35000), model.split("/").pop()))); if (out && (Array.isArray(out.items) || out.label)) { used = model; break; } }
+    catch (e) { if (e instanceof HttpError && e.status === 429) throw e; last = e; }
+  }
+  if (!used) throw last || new HttpError(502, "The model couldn't read the photo");
+  const str = (x, n) => clip(typeof x === "string" ? x : "", n || 60);
+  const list = (a, n, len) => (Array.isArray(a) ? a : []).map((x) => str(x, len || 40).toLowerCase()).filter(Boolean).slice(0, n);
+  const res = { model: used.split("/").pop(), ms: Date.now() - t0, mode };
+  if (mode === "label") { const l = out.label || {}; res.label = { brand: str(l.brand), size: str(l.size, 20), fabric: str(l.fabric, 120), made_in: str(l.made_in, 40), care: str(l.care, 160) }; return res; }
+  res.items = (out.items || []).filter((x) => x && typeof x === "object").slice(0, 12).map((x) => {
+    const box = Array.isArray(x.box) && x.box.length === 4 && x.box.every((v) => typeof v === "number" && v >= 0 && v <= 1.001) && x.box[2] > x.box[0] && x.box[3] > x.box[1] ? x.box.map((v) => Math.round(v * 1000) / 1000) : null;
+    return { name: str(x.name, 90), type: CLOSET_TYPES.includes(x.type) ? x.type : "", kind: str(x.kind, 40).toLowerCase(), colour: str(x.colour, 30).toLowerCase(), colours: list(x.colours, 3, 20),
+      pattern: str(x.pattern, 20).toLowerCase(), fabric: str(x.fabric, 60).toLowerCase(), brand: str(x.brand, 40), fit: str(x.fit, 12).toLowerCase(), details: list(x.details, 6, 50),
+      formality: Math.max(1, Math.min(5, Math.round(+x.formality || 3))), seasons: list(x.seasons, 4, 10).filter((v) => ["spring", "summer", "autumn", "winter"].includes(v)), box };
+  }).filter((x) => x.name || x.kind);
+  return res;
+}
+// Search the stores the app names (their public search), sold-out pieces too: a piece you own may be gone.
+async function findPiece(b) {
+  const q = clip(b.q, 80);
+  if (q.length < 3) throw new HttpError(400, "Say what to look for");
+  const stores = (Array.isArray(b.stores) ? b.stores : []).slice(0, 6)
+    .filter((x) => x && /^[a-z0-9-]+(\.[a-z0-9-]+)+$/i.test(String(x.d || "")))
+    .map((x) => ({ d: String(x.d).toLowerCase(), name: clip(x.name, 40) || String(x.d), cur: /^[A-Z]{3}$/.test(x.cur) ? x.cur : "USD" }));
+  if (!stores.length) throw new HttpError(400, "No stores to search");
+  const t0 = Date.now(), timing = {};
+  const lists = await Promise.all(stores.map((s) => timeLimit(storeSearch(s, q, 8, true), 7000, s.d).then((r) => { timing[s.d] = Date.now() - t0; return r; }).catch((e) => { timing[s.d] = "failed: " + String(e.message || e).slice(0, 60); return []; })));
+  const out = [];
+  for (let k = 0; k < 8; k++) for (const l of lists) if (l[k] && out.length < 24) out.push(l[k]);
+  return { products: out, timing };
 }
 
 async function diag(env) {
