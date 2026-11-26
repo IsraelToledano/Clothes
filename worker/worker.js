@@ -24,7 +24,7 @@
 // On the free plan Cloudflare blocks requests past that instead of charging.
 
 // Bump with the app version so a report shows whether the server was redeployed.
-const SERVER_VERSION = "1.4.0";
+const SERVER_VERSION = "1.4.1";
 const APP_ORIGIN = "https://israeltoledano.github.io";
 // Gemma 4 26B (4B active) is fast and costs about a sixth of Llama 3.3 70B per idea in the free allowance.
 const TEXT_MODEL = "@cf/google/gemma-4-26b-a4b-it";
@@ -961,7 +961,7 @@ async function closetRead(env, b) {
   const photo = photoUrl(b.photo, "The photo");
   const mode = ["piece", "worn", "label"].includes(b.mode) ? b.mode : "piece";
   const hint = clip(b.hint, 200);
-  const messages = [{ role: "system", content: CLOSET_SYSTEM }, { role: "user", content: [{ type: "text", text: `Mode: ${mode}.${hint ? " He says: " + hint + "." : ""} JSON only.` }, { type: "image_url", image_url: { url: photo } }] }];
+  const messages = [{ role: "system", content: CLOSET_SYSTEM }, { role: "user", content: [{ type: "text", text: `Mode: ${mode}.${hint ? " He says: " + hint + "." : ""}${mode === "worn" ? " Give every piece its box, so it can be cut out of the photo." : ""} JSON only.` }, { type: "image_url", image_url: { url: photo } }] }];
   const tries = [
     [TEXT_MODEL, { messages, max_completion_tokens: 1600, temperature: 0.2, response_format: { type: "json_object" }, chat_template_kwargs: { enable_thinking: false } }],
     [TEXT_MODEL, { messages, max_completion_tokens: 1600, temperature: 0.2 }],

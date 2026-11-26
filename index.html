@@ -2691,7 +2691,8 @@ async function closetLabel(it, file){
   S.cbusy = ""; render();
 }
 // The same piece (or the closest) in the catalog: brand, kind, colour, fabric and the name's words.
-const CSTOP = new Set("the and with for men mens man's his a an in of on to by from new classic".split(" "));
+// Words that don't tell one piece from another of its type (the type already narrows the catalog).
+const CSTOP = new Set("the and with for men mens man's his a an in of on to by from new classic long short sleeve sleeves shirt shirts tee top trouser trousers pant pants jacket jackets coat shoe shoes piece".split(" "));
 function closetWords(it){ return uniq((it.name + " " + it.kind + " " + it.colour + " " + it.fabric + " " + it.pattern).toLowerCase().split(/[^a-z]+/).filter((w) => w.length > 2 && !CSTOP.has(w))); }
 async function closetCatalogMatch(it){
   const types = it.type ? [it.type] : [];
@@ -2706,6 +2707,8 @@ async function closetCatalogMatch(it){
     for (const w of words) if (wordIn(hay, w)) sc += 1;
     if (col && wordIn(hay, col.split(" ").pop())) sc += 1.5;
     if (it.kind && wordIn(hay, it.kind.split(" ").pop())) sc += 1;
+    // the kind and the details as phrases ("button-down", "camp collar", "double-breasted") say the most
+    for (const ph of [it.kind].concat(it.details || [])) { const w = String(ph || "").toLowerCase().replace(/\b(collar|shirt|pocket|pockets|sleeves?)\b/g, "").trim(); if (w.length > 3 && hay.replace(/-/g, " ").includes(w.replace(/-/g, " "))) sc += 2; }
     if (sc >= 3) out.push([p, sc]);
   }
   return out.sort((a, b) => b[1] - a[1]).slice(0, 6).map((x) => x[0]);
