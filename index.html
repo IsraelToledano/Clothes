@@ -279,6 +279,17 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
 .cm-act svg{width:13px;height:13px}
 .row2{display:flex;gap:8px}.row2 > *{flex:1}
 .bad-text{color:#a12a2a}
+.about-it{display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-radius:14px;background:var(--card);border:1px solid var(--line)}
+.about-it p{margin:0;font-size:14.5px;line-height:1.45;color:var(--ink)}
+.about-links{display:flex;flex-wrap:wrap;gap:6px 14px}
+.about-links a{display:inline-flex;align-items:center;gap:4px;font-size:13.5px}.about-links svg{width:12px;height:12px}
+.web-ph{padding:0;border:0;background:none;flex:none;scroll-snap-align:start}
+.ci-pics .web-ph img{height:240px;border-radius:12px;object-fit:cover;background:#fff;display:block}
+.ci-pics.web .web-ph img{height:150px}
+.lightbox{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;padding:16px}
+.lightbox img{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;background:#fff}
+.lb-x{position:absolute;top:calc(14px + env(safe-area-inset-top));right:14px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;display:flex;align-items:center;justify-content:center}
+.lb-x svg{width:18px;height:18px}
 .cl-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
 .cl-list li{display:flex;gap:10px;align-items:baseline}.cl-list small{color:var(--muted);font-size:12px}
 .cu-diff{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;font-size:13.5px}
@@ -467,7 +478,7 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "1.13.3";
+const APP_VERSION = "1.13.4";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
 const SERVER_EXPECTED = "1.5.0"; // the worker/worker.js version this app was built with
 
@@ -2926,15 +2937,20 @@ async function claudeApply(){
     if (Array.isArray(set.details) && set.details.length) it.details = set.details.map(String).slice(0, 8);
     if (x.info) it.info = String(x.info).slice(0, 800);
     if (Array.isArray(x.links)) it.links = x.links.filter((l) => l && /^https:\/\//.test(l.url)).slice(0, 4).map((l) => ({title:String(l.title || l.url).slice(0, 80), url:l.url}));
-    for (const url of (Array.isArray(x.photos) ? x.photos : []).filter((v) => /^https:\/\//.test(v)).slice(0, 4)){
-      try{ await addWebPhoto(it, url); ph++; }catch(e){ bad++; }
+    const urls = (Array.isArray(x.photos) ? x.photos : []).filter((v) => /^https:\/\//.test(v)).slice(0, 8);
+    it.webPhotos = uniq((it.webPhotos || []).concat(urls)).slice(-12);
+    it.webSrc = it.webSrc || []; it.webErr = "";
+    for (const url of urls.filter((v) => !it.webSrc.includes(v))){
+      if ((it.web || []).length >= 4) break;
+      try{ await addWebPhoto(it, url); it.webSrc.push(url); ph++; }catch(e){ bad++; it.webErr = e.message; }
     }
     it.claude = "done"; it.improvedAt = Date.now(); n++;
   }
   save("closet", CLOSET); cloudDirty(); S.cupd = null; claudeTask().then((t) => { S.claudeTask = t; });
   for (const it of CLOSET) for (let k = 0; k < (it.photos || 0); k++) delete S.cimg[cKey(it, k)];
   closetImgs(CLOSET);
-  toast(n + " piece" + (n === 1 ? "" : "s") + " improved" + (ph ? ", " + ph + " photo" + (ph === 1 ? "" : "s") + " added" : "") + (bad ? " (" + bad + " photo" + (bad === 1 ? "" : "s") + " didn't load)" : ""));
+  S.lastUpdate = {at:Date.now(), pieces:n, kept:ph, failed:bad, err:(CLOSET.find((y) => y.webErr) || {}).webErr || ""};
+  toast(n + " piece" + (n === 1 ? "" : "s") + " improved" + (ph ? ", " + ph + " photo" + (ph === 1 ? "" : "s") + " kept" : "") + (bad ? " (" + bad + " shown from the web only)" : "") + ": open it to see");
   render();
 }
 function renderClaudeUpdate(){
@@ -2948,7 +2964,7 @@ function renderClaudeUpdate(){
       return `<li class="cadd${x.on ? "" : " off"}"><div class="cadd-top">${cImg(it) ? `<img src="${esc(cImg(it))}" alt="" class="cadd-img">` : `<span class="cadd-img c-ph">${ICON.hanger}</span>`}
         <div class="cadd-head"><b>${esc(it.name || "")}</b><label class="cadd-on"><input type="checkbox" data-cu="${k}"${x.on ? " checked" : ""}> Use this</label></div></div>
         ${diff ? `<ul class="cu-diff">${diff}</ul>` : ""}${x.info ? `<p class="small-note" style="text-align:left;margin:0">${esc(x.info)}</p>` : ""}
-        ${(x.photos || []).length ? `<div class="ci-pics small">${x.photos.slice(0, 4).map((p) => `<img src="${esc(p)}" alt="" referrerpolicy="no-referrer" loading="lazy">`).join("")}</div>` : ""}</li>`; }).join("")}</ul>
+        ${(x.photos || []).length ? `<div class="ci-pics small">${x.photos.slice(0, 8).map((p) => `<img src="${esc(p)}" alt="" referrerpolicy="no-referrer" loading="lazy">`).join("")}</div>` : ""}</li>`; }).join("")}</ul>
     <div class="bottom">
       <button type="button" class="cta" data-act="claude-apply"${u.state === "applying" ? " disabled" : ""}>${u.state === "applying" ? "Adding the photos…" : "Use it " + ICON.arrow}</button>
       <button type="button" class="link-btn" data-act="claude-cancel">Cancel</button>
@@ -2981,7 +2997,7 @@ function renderCloset(){
       <button type="button" class="add-btn" data-act="closet-add" data-v="manual">${ICON.pen}<b>Type it in</b><small>name, type, colour…</small></button>
     </div>
     ${CLOSET.length ? `<div class="chips small" role="group" aria-label="Show">${chip("All", CLOSET.length)}${CLOSET_GROUPS.filter(([g]) => by[g]).map(([g]) => chip(g, by[g])).join("")}${by.Other ? chip("Other", by.Other) : ""}</div>
-    <ul class="sv-grid">${list.map((it) => `<li><button type="button" class="sv-card" data-act="closet-open" data-v="${esc(it.id)}"><span class="sv-ph" style="background:var(--soft)">${cImg(it) ? `<img src="${esc(cImg(it))}" alt="" loading="lazy">` : `<span class="c-ph">${ICON.hanger}</span>`}${it.match ? `<span class="on-you">Linked</span>` : ""}</span><span class="sv-t">${esc(it.name || it.kind || it.type)}</span><span class="sv-s">${swatch(String(it.colour || "").split(" ").pop())}${esc([it.colour, it.brand || it.type].filter(Boolean).join(" · "))}</span></button></li>`).join("")}</ul>` : ""}
+    <ul class="sv-grid">${list.map((it) => `<li><button type="button" class="sv-card" data-act="closet-open" data-v="${esc(it.id)}"><span class="sv-ph" style="background:var(--soft)">${cImg(it) ? `<img src="${esc(cImg(it))}" alt="" loading="lazy">` : `<span class="c-ph">${ICON.hanger}</span>`}${it.claude === "done" ? `<span class="on-you">Claude ✓</span>` : it.match ? `<span class="on-you">Linked</span>` : ""}</span><span class="sv-t">${esc(it.name || it.kind || it.type)}</span><span class="sv-s">${swatch(String(it.colour || "").split(/[ ,]/)[0])}${esc(it.model ? it.model : [it.colour, it.brand || it.type].filter(Boolean).join(" · "))}</span></button></li>`).join("")}</ul>` : ""}
     ${claudePending().length ? `<section class="card" aria-label="Claude"><h2>For Claude to improve</h2><p>${claudePending().length} piece${claudePending().length === 1 ? "" : "s"} Claude hasn't done yet (the exact model, more about it, photos of it). Send the report to Claude and ask it to improve your closet pieces, then paste its answer here.${claudePending().length > CLAUDE_BATCH ? " " + CLAUDE_BATCH + " go in each report." : ""}</p>
       <div class="row2"><button type="button" class="outline-btn filled" data-act="ask-report">Send to Claude</button><button type="button" class="outline-btn" data-act="claude-paste">Paste Claude's update</button></div></section>` : ""}
     <section class="card" aria-label="Backup"><h2>Backup</h2><p class="${CLOUD.err ? "bad-text" : ""}">${esc(cloudLine())}</p>
@@ -3027,16 +3043,17 @@ function renderClosetItem(){
   const pics = Array.from({length:it.photos || 0}, (_, n) => cImg(it, n)).filter(Boolean);
   return `<div class="scrim" data-act="scrim"><section class="sheet tryon" role="dialog" aria-modal="true" aria-labelledby="ci-t">
     <span class="grab" aria-hidden="true"></span>
-    ${pics.length ? `<div class="ci-pics">${pics.map((u) => `<img src="${esc(u)}" alt="">`).join("")}</div>` : ""}
+    ${pics.length ? `<div class="ci-pics">${pics.map((u) => `<button type="button" class="web-ph" data-act="lightbox" data-v="${esc(u)}"><img src="${esc(u)}" alt=""></button>`).join("")}</div>` : ""}
     <h2 id="ci-t" style="margin:0;font-size:22px">${esc(it.name || it.kind || it.type)}</h2>
+    ${it.model || it.info || (it.links || []).length ? `<div class="about-it"><span class="mono-label">About it${it.claude === "done" ? " · from Claude" : ""}</span>
+      ${it.model ? `<p><b>${esc(it.model)}</b></p>` : ""}${it.info ? `<p>${esc(it.info)}</p>` : ""}
+      ${(it.links || []).length ? `<p class="about-links">${it.links.map((l) => `<a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.title)} ${ICON.ext}</a>`).join("")}</p>` : ""}</div>` : ""}
+    ${(it.webPhotos || []).length ? `<div class="st-sec"><span class="mono-label">Photos from the web · ${it.webPhotos.length}</span><div class="ci-pics web">${it.webPhotos.map((u) => `<button type="button" class="web-ph" data-act="lightbox" data-v="${esc(u)}"><img src="${esc(u)}" alt="" referrerpolicy="no-referrer" loading="lazy"></button>`).join("")}</div>${it.webErr ? `<p class="small-note" style="text-align:left;margin:0">Some couldn't be kept on the phone: ${esc(it.webErr)}. They still show here.</p>` : ""}</div>` : ""}
     ${it.match ? `<p class="insight-line" style="margin:0">${ICON.check}<span>Linked: <a href="${esc(it.match.url)}" target="_blank" rel="noopener">${esc(it.match.title)} · ${esc(it.match.store)}</a> · <button type="button" class="link-btn" data-act="closet-unlink">unlink</button></span></p>` : ""}
     ${S.cbusy ? `<p class="insight-line" style="margin:0">${ICON.sliders}<span>${esc(S.cbusy)}</span></p>` : ""}
     ${pieceFields(it, "item")}
     <label class="cf wide"><span>Notes</span><textarea data-cf="notes" data-k="item" rows="2" placeholder="Where you bought it, how it fits…">${esc(it.notes || "")}</textarea></label>
     ${(it.details || []).length ? `<p class="small-note" style="text-align:left;margin:0">${esc(it.details.join(" · "))}</p>` : ""}
-    ${it.model ? `<p style="margin:0"><b>Model:</b> ${esc(it.model)}</p>` : ""}
-    ${it.info ? `<p class="small-note" style="text-align:left;margin:0">${esc(it.info)}</p>` : ""}
-    ${(it.links || []).length ? `<p class="small-note" style="text-align:left;margin:0">${it.links.map((l) => `<a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.title)}</a>`).join(" · ")}</p>` : ""}
     <div class="row2"><button type="button" class="outline-btn" data-act="closet-label">${ICON.camera}Photo of its label</button><button type="button" class="outline-btn" data-act="closet-find">${f && f.state === "busy" ? "Looking…" : "Find it online"}</button></div>
     <div class="row2">${it.claude === "done" ? `<button type="button" class="outline-btn" data-act="closet-claude">Improve again with Claude</button>` : `<button type="button" class="outline-btn filled" data-act="closet-claude" disabled>${it.claude === "asked" ? "Claude does it again next" : "Claude improves it next"}</button>`}${PHOTOS.length && aiOn() && (it.photos || 0) ? `<button type="button" class="outline-btn" data-act="closet-tryon">${ICON.person}See it on ${youName() === "you" ? "you" : esc(youName())}</button>` : ""}</div>
     ${f ? `<div class="st-sec"><span class="mono-label">${f.state === "busy" && !f.cat.length ? "Looking in the catalog and the stores…" : "Is it one of these?"}</span>
@@ -3120,6 +3137,7 @@ function render(){
   if (S.sheet && S.current) html += renderSheet();
   if (S.people) html += renderPeopleSheet();
   if (S.tryon) html += renderTryon();
+  if (S.lightbox) html += `<div class="lightbox" data-act="lightbox-close" role="dialog" aria-label="Photo"><img src="${esc(S.lightbox)}" alt="" referrerpolicy="no-referrer"><span class="lb-x">${ICON.close}</span></div>`;
   if (S.cupd) html += renderClaudeUpdate();
   else if (S.cpaste) html += renderPasteSheet();
   else if (S.cadd) html += renderClosetAdd();
@@ -3382,6 +3400,8 @@ const ACTIONS = {
   "closet-unlink"(){ closetUpdate(S.citem, {match:null}); render(); },
   "closet-label"(){ CLOSET_IN.dataset.mode = "label"; CLOSET_IN.multiple = false; CLOSET_IN.click(); },
   "closet-export"(){ closetExport(); },
+  lightbox(el){ S.lightbox = el.dataset.v; render(); },
+  "lightbox-close"(){ S.lightbox = null; render(); },
   "cloud-now"(){ cloudBackup(true); },
   "cloud-list"(){ if (S.cloudList) { S.cloudList = null; render(); } else cloudList(); },
   "cloud-restore"(el){ cloudRestore(el.dataset.v); },
@@ -3611,7 +3631,8 @@ function askSnapshot(){
   L.push(`PREFS: ${JSON.stringify(PREFS)}`);
   { const tr = [...TRY.values()], ok = tr.filter((r) => r.state === "ok"); L.push(`ON ME: ${Q.onMe ? (onMe() ? "on" : "chosen, but " + (!PHOTOS.length ? "no photo" : "AI off")) : "off"}   drawn ${ok.length}, drawing ${tr.filter((r) => r.state === "busy").length}, failed ${tr.filter((r) => r.state === "err").length}${ok.length ? ", median " + ok.map((r) => r.ms).sort((a, b) => a - b)[Math.floor(ok.length / 2)] + "ms" : ""}${tr.some((r) => r.err) ? "   last error: " + tr.filter((r) => r.err).pop().err : ""}${S.tryOff ? "   stopped: " + S.tryOff : ""}   stylist: ${S.stylistBusy ? "reading" : S.stylistErr ? "failed: " + S.stylistErr : STYLIST ? "read " + new Date(STYLIST.at).toISOString() : "-"}`); }
   L.push(`CLOSET: ${CLOSET.length} pieces ${JSON.stringify(closetSummary())}, linked ${CLOSET.filter((x) => x.match).length}${S.cadd ? "   ADDING: " + S.cadd.mode + " " + S.cadd.state + " " + (S.cadd.items || []).length + " found" + (S.cadd.err ? " — " + S.cadd.err : "") + (S.cadd.ms ? " in " + S.cadd.ms + "ms" : "") : ""}${S.cfound ? "   FIND: " + S.cfound.state + " catalog " + S.cfound.cat.length + ", stores " + S.cfound.web.length + (S.cfound.err ? " — " + S.cfound.err : "") : ""}`);
-  if (CLOSET.length) L.push(`  ${CLOSET.slice(0, 12).map((x) => [x.name, x.type, x.colour, x.brand].filter(Boolean).join(" / ")).join("; ")}`);
+  for (const x of CLOSET.slice(0, 20)) L.push(`  ${[x.name, x.type, x.colour, x.brand, x.size && "size " + x.size].filter(Boolean).join(" / ")} | claude ${x.claude || "-"}${x.model ? " | model " + x.model : ""}${x.info ? " | info yes" : ""} | photos ${x.photos || 0} (web kept ${(x.web || []).length}, web shown ${(x.webPhotos || []).length})${x.webErr ? " | photo error: " + x.webErr : ""}`);
+  if (S.lastUpdate) L.push(`  LAST UPDATE: ${JSON.stringify(S.lastUpdate)}`);
   L.push(`CLOUD: ${cloudLine()}`);
   if (S.claudeTask) L.push(S.claudeTask);
   L.push(`PHOTOS: ${PHOTOS.length ? PHOTOS.map((x) => x.w + "x" + x.h + " " + Math.round(x.url.length * 0.75 / 1024) + "KB").join(", ") : "none"}   LOOKS saved: ${LOOKS.length}${S.tryon ? "   TRY-ON: " + (S.tryon.need ? "needs a photo" : S.tryon.state + (S.tryon.ms ? " " + S.tryon.ms + "ms" : "") + (S.tryon.err ? " " + S.tryon.err : "")) + " — " + S.tryon.item.title : ""}`);
