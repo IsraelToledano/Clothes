@@ -403,6 +403,16 @@ try {
       // photos as Claude finds them on the web: a sneaker retailer's image server (as in the first real update) and a store's
       const urls = ["https://images.laced.com/products/11c39876-db31-4d2e-92b1-b26381496225.jpg?fm=jpg&fit=max&w=1200&q=80", "https://images.laced.com/products/f0ce63e8-54f2-4cdf-a67f-4e8bd3b6427b.jpg?fm=jpg&fit=max&w=1200&q=80", "https://images.laced.com/products/8a48b31c-5b68-4eaf-a36a-9784c3085500.jpg?width=1200"].concat(await page.evaluate(() => CAT.lists.Shirts.filter((p) => p.images && p.images.length > 1).slice(3, 4).flatMap((p) => p.images.slice(0, 1))));
       w.update = await page.evaluate(async ([id, photos]) => { await claudePaste(JSON.stringify({ kind: "drape-closet-update", person: person().name, items: [{ id, set: { model: "Test model 1", brand: "Test brand" }, info: "From the live test.", photos }] })); const before = CLOSET.find((x) => x.id === id).photos; await claudeApply(); const it = CLOSET.find((x) => x.id === id); return { before, after: it.photos, web: it.web, webShown: (it.webPhotos || []).length, webErr: it.webErr || "", model: it.model, last: S.lastUpdate }; }, [sid, urls]);
+      // Claude's update through the inbox (the live test's own inbox): put by GitHub's sign-in, picked up and applied by the app
+      const pname = await page.evaluate(() => person().name);
+      const put = await fetch(WORKER + "/inbox?person=" + encodeURIComponent(pname), { method: "PUT", headers: { "X-Drape-Code": tok, "Content-Type": "application/json" }, body: JSON.stringify({ kind: "drape-closet-update", person: pname, items: [{ id: sid, set: { model: "Inbox model 2" }, info: "Came in through the inbox." }] }) });
+      w.inbox = { put: put.status + " " + (await put.text()).slice(0, 80) };
+      await page.evaluate(() => checkInbox(true));
+      await page.waitForFunction((id) => (CLOSET.find((x) => x.id === id) || {}).model === "Inbox model 2", sid, { timeout: 20000 }).catch(() => {});
+      w.inbox.applied = await page.evaluate((id) => (CLOSET.find((x) => x.id === id) || {}).model, sid);
+      w.inbox.err = await page.evaluate(() => S.inboxErr || "");
+      const left = await fetch(WORKER + "/inbox?person=" + encodeURIComponent(pname), { headers: { "X-Drape-Code": tok } });
+      w.inbox.leftAfter = (await left.json()).updates.length;
       await page.click(`[data-act="closet-open"][data-v="${sid}"]`); await page.waitForSelector("#ci-t"); await page.waitForTimeout(3000);
       w.sheetPhotos = await page.locator(".ci-pics:not(.web) img").count();
       w.webShownLoaded = await page.evaluate(() => [...document.querySelectorAll(".ci-pics.web img")].map((i) => i.naturalWidth));
@@ -494,6 +504,7 @@ const md = [
   `1.12 closet: ${JSON.stringify(a.v112 && { closet: a.v112.closet, idbPhotos: a.v112.idbPhotos, sheetPhotos: a.v112.sheetPhotos, linked: a.v112.linked, error: a.v112.error })}`,
   `1.12 find it online: ${JSON.stringify(a.v112 && a.v112.find)}`,
   `1.13 Claude's task (by itself): ${JSON.stringify(a.v113 && a.v113.task)}   update: ${JSON.stringify(a.v113 && a.v113.update)}   sheet photos ${a.v113 && a.v113.sheetPhotos}   web photos shown (width each): ${JSON.stringify(a.v113 && a.v113.webShownLoaded)}   About it above the fields: ${a.v113 && a.v113.aboutAboveFields}`,
+  `1.14 Claude's inbox: ${JSON.stringify(a.v113 && a.v113.inbox)}`,
   `1.13 try on a closet piece: ${JSON.stringify(a.v113 && a.v113.tryon)}`,
   `1.13 cloud backup: ${JSON.stringify(a.v113 && a.v113.backup)}   list: ${JSON.stringify(a.v113 && a.v113.list)}   restored: ${JSON.stringify(a.v113 && a.v113.restored)}`,
   `Deployed app: ${JSON.stringify(a.deployed || null)}`,

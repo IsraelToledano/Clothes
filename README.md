@@ -38,6 +38,7 @@ Everything you do is saved on the phone (`localStorage`, keys prefixed `clothes:
 | `POST /closet` | Your own clothes from a photo: one piece, an outfit you're wearing (each piece, with where it is), or a label (brand, size, composition, care), as JSON fields | Gemma 4 26B with vision; Gemma 3 12B as backup |
 | `POST /find` | One of your pieces in up to 6 stores' own search (the stores the app names), sold-out pieces too | — (the stores' public search) |
 | `PUT /backup`, `GET /backup`, `GET /backups` | Your backup in Workers KV (binding `DRAPE`, created on deploy), per person, under a hash of the access code: put as it came, no parsing | — |
+| `PUT/GET/DELETE /inbox` | Claude's closet updates for the app, per person: put by the `claude-inbox` workflow, picked up and removed by the app | — |
 | `GET /img` | A photo from any https address passed through (for photos Claude found), so the phone can make it smaller and keep it | — |
 | `GET /portrait` | A made-up man's full-length photo, only for the live test of `/tryon` and `/stylist` (so the test never uses a real person's photo) | FLUX.1 schnell |
 | `GET /health` | Checks the access code | — |
@@ -65,6 +66,11 @@ On the phone, tap the version badge next to the logo (or **Update app** in the t
 ## Real products (since 1.0)
 
 AI-drawn photos on the free plan were too generic and too slow, so Drape shows real products: real photos, prices and links.
+
+### Claude's updates come in by themselves (since 1.14)
+
+- **No copying**: Claude sends its update straight to your AI server's inbox by running the repo's `claude-inbox` workflow (inputs `person` and `update`, the JSON gzipped then base64; it's read from the event file and never printed). The workflow signs in with GitHub's short-lived token for that workflow on main (audience `drape-claude-inbox`), which only people who can write to the repo can run; the worker puts it in that owner's inbox in KV (`PUT /inbox`, kept 30 days).
+- **The app** looks in the inbox (`GET /inbox`) when it opens, when it comes back to the front and when the closet opens; it applies each update (what you typed, like the size, stays), takes it out (`DELETE /inbox`), and says which pieces changed. *Paste it* is still there for a block.
 
 ### Claude improves a piece; the closet in the cloud (since 1.13)
 

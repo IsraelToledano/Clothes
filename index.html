@@ -478,9 +478,9 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "1.13.4";
+const APP_VERSION = "1.14.0";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
-const SERVER_EXPECTED = "1.5.0"; // the worker/worker.js version this app was built with
+const SERVER_EXPECTED = "1.6.0"; // the worker/worker.js version this app was built with
 
 /* ---------------- storage (on this phone only) ---------------- */
 const LS = "clothes:";
@@ -2905,7 +2905,7 @@ async function claudeTask(){
   if (!want.length) return "";
   const list = [];
   for (const it of want) list.push({id:it.id, name:it.name, type:it.type, kind:it.kind, colour:it.colour, pattern:it.pattern, fabric:it.fabric, brand:it.brand, size:it.size, fit:it.fit, details:it.details, notes:it.notes, linked:it.match ? it.match.url : "", photo:await thumbOf(it)});
-  return "\nCLAUDE TASK (improve these " + want.length + " closet pieces" + (all.length > want.length ? "; " + (all.length - want.length) + " more come in the next report" : "") + "): find each one's exact model online (brand, model name, colourway), what it's made of and other facts, and 2-4 product photo addresses (https, the photo files themselves). A piece you can't identify: include it with \"tried\":true and what you could tell, so it isn't sent again. Answer with one JSON block for the app's \"Paste Claude's update\":\n" +
+  return "\nCLAUDE TASK (improve these " + want.length + " closet pieces" + (all.length > want.length ? "; " + (all.length - want.length) + " more come in the next report" : "") + "): find each one's exact model online (brand, model name, colourway), what it's made of and other facts, and 2-4 product photo addresses (https, the photo files themselves). A piece you can't identify: include it with \"tried\":true and what you could tell, so it isn't sent again. Send the update straight into the app: run the repo's claude-inbox workflow (inputs person, and update = the JSON gzipped then base64); the app applies it when it opens. The update:\n" +
     '{"kind":"drape-closet-update","person":"' + person().name + '","items":[{"id":"…","set":{"name":"…","brand":"…","model":"…","colour":"…","fabric":"…","details":["…"]},"info":"2-3 sentences","links":[{"title":"…","url":"…"}],"photos":["https://…"]}]}\n' +
     "PIECES: " + JSON.stringify(list) + "\n";
 }
@@ -2926,9 +2926,33 @@ async function addWebPhoto(it, url){
   await IDB.put(cKey(it, it.photos || 0), await dataBlob(ph.url));
   it.photos = (it.photos || 0) + 1; it.web = (it.web || []).concat([it.photos - 1]);
 }
+// Claude's updates come in by themselves: Claude sends them to your AI server's inbox (the repo's claude-inbox
+// workflow); the app looks when it opens, when it comes back to the front and when the closet opens, applies
+// each one (what you typed, like the size, stays) and takes it out of the inbox.
+async function checkInbox(force){
+  if (!cloudOn() || S.inboxBusy) return;
+  if (!force && Date.now() - (S.inboxAt || 0) < 30000) return;
+  S.inboxBusy = true; S.inboxAt = Date.now();
+  try{
+    const base = workerBase() + "/inbox?person=" + encodeURIComponent(person().name);
+    const r = await fetch(base, {headers:{"X-Drape-Code":AI.code}, cache:"no-store"});
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || "AI server error " + r.status);
+    const names = [];
+    for (const u of j.updates || []){
+      const d = u.body || {};
+      const rows = (Array.isArray(d.items) ? d.items : []).filter((x) => x && CLOSET.some((it) => it.id === x.id)).map((x) => Object.assign({on:true}, x));
+      if (rows.length){ S.cupd = {rows, state:"review", auto:true}; await claudeApply(); names.push(...rows.map((x) => (CLOSET.find((it) => it.id === x.id) || {}).name).filter(Boolean)); }
+      await fetch(base + "&key=" + encodeURIComponent(u.key), {method:"DELETE", headers:{"X-Drape-Code":AI.code}}).catch(() => {});
+    }
+    if (names.length){ S.inboxNote = {at:Date.now(), names}; toast("Claude improved " + (names.length === 1 ? names[0] : names.length + " pieces") + ": open " + (names.length === 1 ? "it" : "them") + " to see"); if (S.screen === "closet" || S.screen === "start") render(); }
+    S.inboxErr = "";
+  }catch(e){ S.inboxErr = e instanceof TypeError ? "No connection to the AI server" : e.message; }
+  S.inboxBusy = false;
+}
 async function claudeApply(){
   const u = S.cupd; if (!u) return;
-  u.state = "applying"; render();
+  u.state = "applying"; if (!u.auto) render();
   let n = 0, ph = 0, bad = 0;
   for (const x of u.rows.filter((r) => r.on)){
     const it = CLOSET.find((y) => y.id === x.id); if (!it) continue;
@@ -2998,8 +3022,10 @@ function renderCloset(){
     </div>
     ${CLOSET.length ? `<div class="chips small" role="group" aria-label="Show">${chip("All", CLOSET.length)}${CLOSET_GROUPS.filter(([g]) => by[g]).map(([g]) => chip(g, by[g])).join("")}${by.Other ? chip("Other", by.Other) : ""}</div>
     <ul class="sv-grid">${list.map((it) => `<li><button type="button" class="sv-card" data-act="closet-open" data-v="${esc(it.id)}"><span class="sv-ph" style="background:var(--soft)">${cImg(it) ? `<img src="${esc(cImg(it))}" alt="" loading="lazy">` : `<span class="c-ph">${ICON.hanger}</span>`}${it.claude === "done" ? `<span class="on-you">Claude ✓</span>` : it.match ? `<span class="on-you">Linked</span>` : ""}</span><span class="sv-t">${esc(it.name || it.kind || it.type)}</span><span class="sv-s">${swatch(String(it.colour || "").split(/[ ,]/)[0])}${esc(it.model ? it.model : [it.colour, it.brand || it.type].filter(Boolean).join(" · "))}</span></button></li>`).join("")}</ul>` : ""}
-    ${claudePending().length ? `<section class="card" aria-label="Claude"><h2>For Claude to improve</h2><p>${claudePending().length} piece${claudePending().length === 1 ? "" : "s"} Claude hasn't done yet (the exact model, more about it, photos of it). Send the report to Claude and ask it to improve your closet pieces, then paste its answer here.${claudePending().length > CLAUDE_BATCH ? " " + CLAUDE_BATCH + " go in each report." : ""}</p>
-      <div class="row2"><button type="button" class="outline-btn filled" data-act="ask-report">Send to Claude</button><button type="button" class="outline-btn" data-act="claude-paste">Paste Claude's update</button></div></section>` : ""}
+    ${S.inboxNote && Date.now() - S.inboxNote.at < 30 * 60000 ? `<p class="insight-line" style="margin:0 16px">${ICON.check}<span>Claude's update came in: ${esc(S.inboxNote.names.join(", "))}. Open ${S.inboxNote.names.length === 1 ? "it" : "them"} to see.</span></p>` : ""}
+    ${claudePending().length ? `<section class="card" aria-label="Claude"><h2>For Claude to improve</h2><p>${claudePending().length} piece${claudePending().length === 1 ? "" : "s"} Claude hasn't done yet (the exact model, more about it, photos of it). Send the report to Claude and ask it to improve your closet pieces: its answer comes into the app by itself.${claudePending().length > CLAUDE_BATCH ? " " + CLAUDE_BATCH + " go in each report." : ""}</p>
+      <div class="row2"><button type="button" class="outline-btn filled" data-act="ask-report">Send to Claude</button></div>
+      <p class="small-note" style="text-align:left;margin:6px 0 0">Got a block to paste instead? <button type="button" class="link-btn" data-act="claude-paste">Paste it</button></p></section>` : ""}
     <section class="card" aria-label="Backup"><h2>Backup</h2><p class="${CLOUD.err ? "bad-text" : ""}">${esc(cloudLine())}</p>
       <div class="row2"><button type="button" class="outline-btn" data-act="cloud-now"${cloudOn() && !S.cloudBusy ? "" : " disabled"}>Back up now</button><button type="button" class="outline-btn" data-act="cloud-list"${cloudOn() ? "" : " disabled"}>Bring one back</button></div>
       ${S.cloudList ? `<div class="st-sec">${S.cloudList.state === "busy" ? `<p class="small-note" style="text-align:left;margin:0">Looking…</p>` : S.cloudList.err ? `<p class="fit-note bad" style="margin:0">${esc(S.cloudList.err)}</p>` : S.cloudList.list.length ? `<ul class="cl-list">${S.cloudList.list.map((b) => `<li><button type="button" class="link-btn" data-act="cloud-restore" data-v="${esc(b.key)}">${b.key === "latest" ? "The latest" : esc(b.key)}</button><small>${b.items || 0} pieces · ${b.bytes > 1e6 ? (b.bytes / 1e6).toFixed(1) + " MB" : Math.round((b.bytes || 0) / 1024) + " KB"}${b.at ? " · " + esc(new Date(b.at).toLocaleString()) : ""}</small></li>`).join("")}</ul>` : `<p class="small-note" style="text-align:left;margin:0">No backup in the cloud yet.</p>`}</div>` : ""}
@@ -3385,7 +3411,7 @@ const ACTIONS = {
   broaden(){ Q.type = "Surprise me"; save("query", Q); S.current = nextIdea(); render(); },
   scrim(el, e){ if (e.target !== el) return; if (S.modal){ S.modal = null; } else if (S.cupd){ if (S.cupd.state !== "applying") S.cupd = null; } else if (S.cpaste){ S.cpaste = false; } else if (S.cadd){ if (S.cadd.state !== "reading") S.cadd = null; } else if (S.citem){ S.citem = null; S.cfound = null; } else if (S.tryon){ if (S.tryon.state !== "busy") S.tryon = null; } else if (S.people){ S.people = false; } else S.sheet = false; render(); },
   "photo-add"(){ FILE_IN.click(); },
-  closet(){ openScreen("closet"); },
+  closet(){ openScreen("closet"); checkInbox(); },
   "closet-back"(){ backScreen(); },
   "closet-group"(el){ S.cgroup = el.dataset.v; render(); },
   "closet-add"(el){ const m = el.dataset.v; if (m === "manual"){ S.cadd = {mode:"manual", state:"review", items:[blankPiece()]}; render(); } else closetPick(m); },
@@ -3633,7 +3659,7 @@ function askSnapshot(){
   L.push(`CLOSET: ${CLOSET.length} pieces ${JSON.stringify(closetSummary())}, linked ${CLOSET.filter((x) => x.match).length}${S.cadd ? "   ADDING: " + S.cadd.mode + " " + S.cadd.state + " " + (S.cadd.items || []).length + " found" + (S.cadd.err ? " — " + S.cadd.err : "") + (S.cadd.ms ? " in " + S.cadd.ms + "ms" : "") : ""}${S.cfound ? "   FIND: " + S.cfound.state + " catalog " + S.cfound.cat.length + ", stores " + S.cfound.web.length + (S.cfound.err ? " — " + S.cfound.err : "") : ""}`);
   for (const x of CLOSET.slice(0, 20)) L.push(`  ${[x.name, x.type, x.colour, x.brand, x.size && "size " + x.size].filter(Boolean).join(" / ")} | claude ${x.claude || "-"}${x.model ? " | model " + x.model : ""}${x.info ? " | info yes" : ""} | photos ${x.photos || 0} (web kept ${(x.web || []).length}, web shown ${(x.webPhotos || []).length})${x.webErr ? " | photo error: " + x.webErr : ""}`);
   if (S.lastUpdate) L.push(`  LAST UPDATE: ${JSON.stringify(S.lastUpdate)}`);
-  L.push(`CLOUD: ${cloudLine()}`);
+  L.push(`CLOUD: ${cloudLine()}   INBOX: ${S.inboxAt ? "looked " + ago(S.inboxAt) + (S.inboxErr ? ", error: " + S.inboxErr : ", ok") : "not yet"}${S.inboxNote ? ", last came in: " + S.inboxNote.names.join(", ") : ""}`);
   if (S.claudeTask) L.push(S.claudeTask);
   L.push(`PHOTOS: ${PHOTOS.length ? PHOTOS.map((x) => x.w + "x" + x.h + " " + Math.round(x.url.length * 0.75 / 1024) + "KB").join(", ") : "none"}   LOOKS saved: ${LOOKS.length}${S.tryon ? "   TRY-ON: " + (S.tryon.need ? "needs a photo" : S.tryon.state + (S.tryon.ms ? " " + S.tryon.ms + "ms" : "") + (S.tryon.err ? " " + S.tryon.err : "")) + " — " + S.tryon.item.title : ""}`);
   if (STYLIST) L.push(`STYLIST (${STYLIST.model || "-"}, ${STYLIST.ms || "-"}ms): ${STYLIST.summary} | best ${(STYLIST.best_colours || []).join(", ")} | less ${(STYLIST.avoid_colours || []).join(", ")} | look for ${(STYLIST.look_for || []).join(", ")} | avoid ${(STYLIST.avoid || []).join(", ")}`);
@@ -3765,7 +3791,8 @@ if (!LIKED){
   save("liked", LIKED);
 }
 restoreSession();
-document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden" && CLOUD.dirty) cloudBackup(true); });
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden" && CLOUD.dirty) cloudBackup(true); if (document.visibilityState === "visible") checkInbox(); });
+setTimeout(() => checkInbox(true), 2500);
 // A closet made before the cloud backup existed (1.12) never changed since, so it was never marked to go up.
 if (CLOSET.length && !CLOUD.at && !CLOUD.dirty){ CLOUD.dirty = true; save("cloud", CLOUD); }
 setTimeout(() => cloudBackup(), 8000);

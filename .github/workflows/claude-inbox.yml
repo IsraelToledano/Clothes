@@ -1,0 +1,39 @@
+# Claude's update for the closet, straight into the app: Claude (in a chat) runs this with the update, and it goes
+# to the AI server's inbox, signed in with GitHub's short-lived token for this workflow (only people who can
+# write to the repo can run it). The app picks it up the next time it opens and applies it.
+# The update is read from the event file, never printed or put in an environment variable (those show in logs).
+name: Claude inbox
+
+on:
+  workflow_dispatch:
+    inputs:
+      person:
+        description: "Who it's for, as the app names them (Me, Nadav...)"
+        required: true
+        default: "Me"
+      update:
+        description: "The update: gzip, then base64 (not shown anywhere)"
+        required: true
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Into the AI server's inbox
+        run: |
+          set -eu
+          jq -r '.inputs.update' "$GITHUB_EVENT_PATH" | base64 -d | gunzip > /tmp/update.json
+          jq -e '.kind == "drape-closet-update" and (.items | length > 0)' /tmp/update.json > /dev/null || { echo "Not a closet update"; exit 1; }
+          echo "Pieces: $(jq '.items | length' /tmp/update.json)"
+          PERSON=$(jq -r '.inputs.person | @uri' "$GITHUB_EVENT_PATH")
+          TOKEN=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=drape-claude-inbox" | jq -r .value)
+          echo "::add-mask::$TOKEN"
+          code=$(curl -sS -o /tmp/out.json -w "%{http_code}" -X PUT "https://clothes.srul7022.workers.dev/inbox?person=$PERSON" \
+            -H "X-Drape-Code: $TOKEN" -H "Content-Type: application/json" --data-binary @/tmp/update.json)
+          echo "AI server: $code $(jq -c '{ok, key, error}' /tmp/out.json 2>/dev/null || true)"
+          [ "$code" = "200" ]

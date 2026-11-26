@@ -15,6 +15,8 @@
 //   POST /find    → a piece of yours in stores' own search (the stores the app names), sold-out pieces too
 //   PUT  /backup  → your backup (closet with photos, taste, saved...) kept in Cloudflare KV, per person;
 //   GET  /backup  → it back (?at=latest or a day); GET /backups → which ones there are
+//   PUT  /inbox   → Claude's update for your closet, sent by the repo's claude-inbox workflow (GitHub's sign-in for
+//                   that workflow only); GET /inbox → the app picks it up and applies it; DELETE /inbox → done
 //   GET  /img     → a photo from a store's site, passed through (so the phone can make it smaller and keep it)
 //   GET  /portrait → a made-up man's full-length photo, only for the repo's live test of /tryon and /stylist
 //                    (so the test never needs a real person's photo)
@@ -27,7 +29,7 @@
 // On the free plan Cloudflare blocks requests past that instead of charging.
 
 // Bump with the app version so a report shows whether the server was redeployed.
-const SERVER_VERSION = "1.5.0";
+const SERVER_VERSION = "1.6.0";
 const APP_ORIGIN = "https://israeltoledano.github.io";
 // Gemma 4 26B (4B active) is fast and costs about a sixth of Llama 3.3 70B per idea in the free allowance.
 const TEXT_MODEL = "@cf/google/gemma-4-26b-a4b-it";
@@ -49,7 +51,7 @@ const STYLES = ["Relaxed", "Minimal", "Smart-casual", "Streetwear", "Vintage", "
 
 const cors = (origin) => ({
   "Access-Control-Allow-Origin": origin === APP_ORIGIN || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin || "") ? origin : APP_ORIGIN,
-  "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, X-Drape-Code",
   "Access-Control-Max-Age": "86400",
   "Vary": "Origin",
@@ -172,6 +174,35 @@ async function handle(req, env) {
         throw new HttpError(405, "Use PUT or GET");
       }
 
+      if (url.pathname === "/inbox") {
+        if (!env.DRAPE) throw new HttpError(503, "The inbox needs the worker's KV storage (DRAPE)");
+        const who = await owner(env, url.searchParams.get("code") || req.headers.get("X-Drape-Code"));
+        const base = "i:" + who + ":" + personKey(url.searchParams.get("person")) + ":";
+        if (req.method === "PUT") {
+          const text = await req.text();
+          if (text.length < 20 || text.length > 256 * 1024) throw new HttpError(400, "An update is 20 bytes to 256 KB");
+          if (!text.includes('"drape-closet-update"')) throw new HttpError(400, "Not a closet update");
+          const key = base + Date.now();
+          await env.DRAPE.put(key, text, { expirationTtl: 30 * 86400, metadata: { at: new Date().toISOString(), bytes: text.length } });
+          return json({ ok: true, key: key.slice(base.length) }, 200, origin);
+        }
+        if (req.method === "GET") {
+          // the updates as they were put (no parsing here), oldest first
+          const l = await env.DRAPE.list({ prefix: base });
+          const keys = l.keys.map((k) => k.name).sort().slice(0, 10);
+          const parts = [];
+          for (const k of keys) { const v = await env.DRAPE.get(k); if (v) parts.push('{"key":' + JSON.stringify(k.slice(base.length)) + ',"body":' + v + "}"); }
+          return new Response('{"updates":[' + parts.join(",") + "]}", { headers: { "Content-Type": "application/json", "Cache-Control": "no-store", ...cors(origin) } });
+        }
+        if (req.method === "DELETE") {
+          const k = String(url.searchParams.get("key") || "");
+          if (!/^\d{10,16}$/.test(k)) throw new HttpError(400, "Which update?");
+          await env.DRAPE.delete(base + k);
+          return json({ ok: true }, 200, origin);
+        }
+        throw new HttpError(405, "Use PUT, GET or DELETE");
+      }
+
       if (req.method === "GET" && url.pathname === "/img") {
         await checkCode(env, url.searchParams.get("code"));
         let u;
@@ -210,7 +241,13 @@ async function handle(req, env) {
 // Whose backups: a hash of the access code (the code itself is never stored); the live test gets its own.
 async function owner(env, code) {
   await checkCode(env, code);
-  if (String(code).trim() !== String(env.ACCESS_CODE).trim()) return "test";
+  if (String(code).trim() !== String(env.ACCESS_CODE).trim()) {
+    // Claude's updates come through the repo's claude-inbox workflow on main (only people who can write to the
+    // repo can run it): they go to the owner's inbox. Any other GitHub sign-in (the live test) has its own.
+    const c = await githubTestToken(code);
+    if (!(c && c.aud === "drape-claude-inbox" && String(c.workflow_ref || "").toLowerCase() === GH_REPO + "/.github/workflows/claude-inbox.yml@refs/heads/main")) return "test";
+    code = env.ACCESS_CODE;
+  }
   const d = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode("drape:" + String(code).trim())));
   return Array.from(d.slice(0, 8), (b) => b.toString(16).padStart(2, "0")).join("");
 }
@@ -233,7 +270,7 @@ async function githubTestToken(tok) {
     const [h, p, sig] = String(tok).split(".");
     const head = JSON.parse(new TextDecoder().decode(b64url(h)));
     const claims = JSON.parse(new TextDecoder().decode(b64url(p)));
-    if (claims.iss !== GH_ISSUER || claims.aud !== "drape-live-test" || String(claims.repository || "").toLowerCase() !== GH_REPO) return false;
+    if (claims.iss !== GH_ISSUER || !["drape-live-test", "drape-claude-inbox"].includes(claims.aud) || String(claims.repository || "").toLowerCase() !== GH_REPO) return false;
     if (!(claims.exp * 1000 > Date.now()) || head.alg !== "RS256") return false;
     if (!jwks || Date.now() - jwks.at > 3600 * 1000 || !jwks.keys.some((k) => k.kid === head.kid)) {
       const r = await fetch(GH_ISSUER + "/.well-known/jwks");
@@ -242,7 +279,7 @@ async function githubTestToken(tok) {
     const k = jwks.keys.find((x) => x.kid === head.kid);
     if (!k) return false;
     const key = await crypto.subtle.importKey("jwk", { kty: k.kty, n: k.n, e: k.e, alg: "RS256", ext: true }, { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["verify"]);
-    return await crypto.subtle.verify("RSASSA-PKCS1-v1_5", key, b64url(sig), new TextEncoder().encode(h + "." + p));
+    return (await crypto.subtle.verify("RSASSA-PKCS1-v1_5", key, b64url(sig), new TextEncoder().encode(h + "." + p))) ? claims : false;
   } catch (e) { return false; }
 }
 
