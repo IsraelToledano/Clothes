@@ -67,6 +67,16 @@ On the phone, tap the version badge next to the logo (or **Update app** in the t
 
 AI-drawn photos on the free plan were too generic and too slow, so Drape shows real products: real photos, prices and links.
 
+### Home: three ways in (since 1.15)
+
+The app opens on Home and asks one thing: what would you like to do?
+
+- **My closet** — see your clothes and add more (count, groups and a few of your photos on the tile).
+- **Find something new** — the search: Find a style or Shop, On me or On their own, then the cards. If a search is under way the tile says "Carry on" and goes straight back to the cards.
+- **Saved & liked** — the pieces you kept.
+
+Each one has its own screen and its back arrow returns to Home. The person (and Add a person) and the About you line sit on Home; the header keeps only Claude ✦ and About you (and Saved while swiping).
+
 ### Claude's updates come in by themselves (since 1.14)
 
 - **No copying**: Claude sends its update straight to your AI server's inbox by running the repo's `claude-inbox` workflow (inputs `person` and `update`, the JSON gzipped then base64; it's read from the event file and never printed). The workflow signs in with GitHub's short-lived token for that workflow on main (audience `drape-claude-inbox`), which only people who can write to the repo can run; the worker puts it in that owner's inbox in KV (`PUT /inbox`, kept 30 days).

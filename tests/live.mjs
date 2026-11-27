@@ -107,6 +107,8 @@ try {
   }, [WORKER, (tok = await token()), expected, BRIEF]);
   await page.reload();
   await page.waitForTimeout(800);
+  R.app.home = await page.evaluate(() => ({ screen: S.screen, tiles: [...document.querySelectorAll(".hub-tile b")].map((b) => b.innerText) }));
+  await page.click('.hub-tile[data-act="discover"]'); await page.waitForTimeout(300);
   await page.click('[data-act="go"]');
   const t0 = Date.now();
   let tokAt = Date.now();
@@ -281,17 +283,18 @@ try {
   if (first) {
     try {
       const before = await page.evaluate(() => ({ votes: TASTE.votes.length, saved: SAVED.length }));
-      await page.evaluate(() => { S.screen = "start"; render(); });
-      await page.click('[data-act="people"]'); await page.fill("#pp-name", "Dan");
+      await page.evaluate(() => { S.screen = "hub"; S.stack = []; render(); });
+      await page.click('.who [data-act="people"]'); await page.fill("#pp-name", "Dan");
       await Promise.all([page.waitForNavigation(), page.click('[data-act="person-add"]')]); await page.waitForTimeout(600);
       const dan = await page.evaluate(() => ({ name: person().name, screen: S.screen, votes: TASTE.votes.length, saved: SAVED.length, about: document.getElementById("about-h").innerText }));
       await page.click('[data-act="me"][data-k="height"][data-v="tall"]'); await page.click('[data-act="me"][data-k="build"][data-v="broad"]');
       await page.click('[data-act="profile-back"]'); await page.waitForTimeout(300);
+      await page.click('.hub-tile[data-act="discover"]'); await page.waitForTimeout(300);
       await page.selectOption("#cat", "Suits"); await page.click('[data-act="go"]'); await page.waitForSelector("#card img.prod.ok", { timeout: 20000 }); await page.waitForTimeout(500);
       dan.header = await page.innerText("header .meta"); dan.first = await page.evaluate(() => S.current.store + " | " + S.current.title + " | " + S.current.why);
       await page.keyboard.press("ArrowLeft"); await page.waitForTimeout(300);
       await page.screenshot({ path: path.join(OUT, "v19-dan.png") });
-      await page.click('[data-act="home"]'); await page.waitForTimeout(300); await page.click('.who [data-act="people"]');
+      await page.click('[data-act="home"]'); await page.waitForTimeout(300); await page.click('[data-act="hub"]'); await page.waitForTimeout(300); await page.click('.who [data-act="people"]');
       await Promise.all([page.waitForNavigation(), page.click('.person[data-v="me"]')]); await page.waitForTimeout(600);
       const back = await page.evaluate(() => ({ name: person().name, votes: TASTE.votes.length, saved: SAVED.length, people: PEOPLE.list.map((x) => x.name) }));
       R.app.people = { before, dan, back, same: back.votes === before.votes && back.saved === before.saved };
@@ -365,8 +368,8 @@ try {
       const r = await fetch(shirt.src + (shirt.src.includes("?") ? "&" : "?") + "width=900");
       fs.writeFileSync(path.join(OUT, "closet-piece.jpg"), Buffer.from(await r.arrayBuffer()));
       if (!fs.existsSync(path.join(OUT, "portrait.jpg"))) { const q = await fetch(WORKER + "/portrait?code=" + encodeURIComponent(tok)); if (q.ok) fs.writeFileSync(path.join(OUT, "portrait.jpg"), Buffer.from(await q.arrayBuffer())); }
-      await page.evaluate(() => { S.screen = "start"; S.tryon = null; S.sheet = false; render(); });
-      await page.click('header [data-act="closet"]'); await page.waitForTimeout(400);
+      await page.evaluate(() => { S.screen = "hub"; S.stack = []; S.tryon = null; S.sheet = false; render(); });
+      await page.click('.hub-tile[data-act="closet"]'); await page.waitForTimeout(400);
       const add = async (mode, file) => {
         const t = Date.now();
         await page.evaluate((m) => { CLOSET_IN.dataset.mode = m; }, mode);
@@ -451,9 +454,10 @@ try {
       await pg.evaluate(() => { localStorage.clear(); localStorage.setItem("clothes:query", JSON.stringify({ type: "Suits", styles: ["Tailored"], text: "", mode: "style" })); });
       await pg.reload(); await pg.waitForTimeout(800);
       const ver = await pg.evaluate(() => APP_VERSION);
+      const home = await pg.evaluate(() => S.screen); await pg.click('.hub-tile[data-act="discover"]'); await pg.waitForTimeout(300);
       await pg.click('[data-act="go"]'); const t1 = Date.now();
       const ok = await pg.waitForSelector("#card img.prod.ok", { timeout: 30000 }).then(() => true).catch(() => false);
-      R.app.deployed = { version: ver, firstCardMs: ok ? Date.now() - t1 : null, base: await pg.evaluate(() => CAT_BASE), pool: await pg.evaluate(() => (S.pool || []).length), catalogFiles: cat, first: ok ? await pg.evaluate(() => S.current.store + " | " + S.current.title) : "" };
+      R.app.deployed = { version: ver, home, firstCardMs: ok ? Date.now() - t1 : null, base: await pg.evaluate(() => CAT_BASE), pool: await pg.evaluate(() => (S.pool || []).length), catalogFiles: cat, first: ok ? await pg.evaluate(() => S.current.store + " | " + S.current.title) : "" };
       await pg.screenshot({ path: path.join(OUT, "deployed.png") });
       log("deployed", R.app.deployed);
     } catch (e) { R.app.deployed = { error: String((e && e.message) || e) }; }
@@ -478,6 +482,7 @@ const md = [
   `Catalog: ${JSON.stringify(R.catalog)}`,
   `Catalog photos: ${(R.photosApi || []).map((i) => i.store + " w" + i.width + " " + i.status + " " + i.ms + "ms " + i.bytes + "B").join(" | ")}`,
   `API keywords: ${JSON.stringify(R.keywordsApi)}`,
+  `Home: ${JSON.stringify(a.home)}`,
   `App first card: ${a.firstCardMs == null ? "NOT SHOWN" : a.firstCardMs + "ms"}`,
   `App searches: ${ideas.map((r) => r.kind + " " + (r.status || "fail") + " " + r.ms + "ms " + (r.count != null ? r.count + " items " : "") + (r.model || r.failed || r.error || "")).join(" | ")}`,
   `App photos: ${imgs.length} requests; ${imgs.filter((r) => r.status === 200).length} ok; models ${[...new Set(imgs.map((r) => r.model))].join(",")}; median card photo wait ${photoMs.length ? photoMs.sort((x, y) => x - y)[Math.floor(photoMs.length / 2)] + "ms" : "-"}`,

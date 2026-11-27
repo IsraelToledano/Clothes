@@ -329,6 +329,20 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
 .to-wait svg{width:16px;height:16px;flex:none}
 .to-empty{display:flex;flex-direction:column;gap:12px}
 .on-you{position:absolute;left:8px;bottom:8px;padding:2px 8px;border-radius:10px;background:rgba(0,0,0,.65);color:#fff;font-size:11px;font-family:var(--mono);letter-spacing:.04em;text-transform:uppercase}
+.hub-tiles{display:flex;flex-direction:column;gap:12px}
+.hub-tile{display:flex;align-items:center;gap:14px;min-height:112px;padding:16px;border:1px solid var(--line);border-radius:20px;background:var(--card);color:var(--ink);text-align:left;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.hub-tile:active{transform:scale(.99)}
+.ht-ico{width:48px;height:48px;border-radius:14px;background:var(--soft);display:flex;align-items:center;justify-content:center;flex:none}
+.ht-ico svg{width:24px;height:24px}
+.ht-txt{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.ht-txt b{font-size:19px;letter-spacing:-.01em}
+.ht-txt small{font-size:13.5px;color:var(--muted);line-height:1.35}
+.ht-txt em{font-style:normal;font-size:12px;font-family:var(--mono);letter-spacing:.03em;color:var(--accent);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ht-pics{display:flex;flex:none}
+.ht-pics img{width:40px;height:52px;object-fit:cover;border-radius:8px;border:2px solid var(--card);background:var(--soft);margin-left:-14px}
+.ht-pics img:first-child{margin-left:0}
+.ht-pics.light img{background:#fff}
+.hub-about{margin:4px 2px 0}
 .who{margin:0 0 -6px;font-size:14px;color:var(--muted);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .who .link-btn{display:inline-flex;align-items:center;gap:4px;min-height:36px;padding:0}
 .who-btn{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 10px 0 4px;border:1px solid var(--line);border-radius:18px;background:var(--card);color:var(--ink);font-weight:600;font-size:14px}
@@ -478,7 +492,7 @@ details summary{cursor:pointer;font-size:14px;color:var(--muted);min-height:32px
    ideas, FLUX draws the photos, Google Shopping finds real products). It turns
    on once the access code is entered in the taste profile. Without it, ideas
    come from the SAMPLE_IDEAS list below and still adapt to your votes. */
-const APP_VERSION = "1.14.1";
+const APP_VERSION = "1.15.0";
 const DEFAULT_WORKER = "https://clothes.srul7022.workers.dev";
 const SERVER_EXPECTED = "1.6.0"; // 1.6.1: the inbox in one value per person // the worker/worker.js version this app was built with
 
@@ -649,6 +663,7 @@ const ICON = {
   sliders: sv('<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>'),
   image: sv('<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/>', {w:1.6}),
   later: sv('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
+  spark: sv('<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15z"/>'),
   mark: sv('<path d="M6 3h12v18l-6-4-6 4V3z"/>'),
   hanger: sv('<path d="M12 7.5a2 2 0 1 0-2-2"/><path d="M12 7.5v1.2L3.6 15a1.4 1.4 0 0 0 .8 2.5h15.2a1.4 1.4 0 0 0 .8-2.5L12 8.7"/>'),
   camera: sv('<path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/>'),
@@ -688,7 +703,7 @@ let PHOTOS = load("photos", []); // photos of this person (made smaller than 512
 let STYLIST = load("stylist", null); // the stylist's reading of those photos
 let CLOSET = load("closet", []); // your own clothes (their photos are in IndexedDB "drape", store "img")
 let LOOKS = load("looks", []); // pieces saved with a try-on picture (the pictures are in the "drape-looks" cache)
-const S = {screen:"start", prev:"start", round:{votes:[]}, current:null, picked:null, sheet:false, modal:null, toast:null, busy:false,
+const S = {screen:"hub", prev:"hub", round:{votes:[]}, current:null, picked:null, sheet:false, modal:null, toast:null, busy:false,
   // AI: ideas waiting to be shown, the request in flight, what the AI has learned this round
   queue:[], fetching:null, gen:0, aiErr:null, aiInsight:"", anchor:null, sampleRound:false, checking:false,
   detail:null, more:{}, ph:0, phFor:null, stack:[]};
@@ -1620,10 +1635,34 @@ function restoreSession(){
 }
 
 /* ---------------- screens ---------------- */
+// Home: who it's for, then three ways in: the closet (your clothes), finding something new (the swipe search),
+// and what you saved and liked.
+function renderHub(){
+  closetImgs(CLOSET.slice(0, 3));
+  const kept = SAVED.concat((LIKED || []).filter((x) => !SAVED.some((y) => y.id === x.id)));
+  const by = closetSummary(), groups = CLOSET_GROUPS.filter(([g]) => by[g]).map(([g]) => by[g] + " " + g.toLowerCase()).join(" · ");
+  const cpics = CLOSET.slice(0, 3).map((it) => cImg(it)).filter(Boolean);
+  const spics = kept.slice(0, 3).map((p) => photosOf(p)[0]).filter(Boolean);
+  const pics = (l, cls) => l.length ? `<span class="ht-pics${cls || ""}" aria-hidden="true">${l.map((u) => `<img src="${esc(u.startsWith("blob:") ? u : sized(u, 200))}" alt="" loading="lazy">`).join("")}</span>` : "";
+  const last = Q.type ? catLabel(Q.type) + ((Q.styles || []).length ? " · " + Q.styles.length + " look" + (Q.styles.length === 1 ? "" : "s") : "") : "";
+  const going = S.current && S.round.votes.length;
+  const me = [meLabel("height"), meLabel("build"), PREFS.sizeSet ? "size " + PREFS.size : "", PREFS.me.skin ? meLabel("skin").toLowerCase() + " skin" : ""].filter(Boolean).join(" · ");
+  const who = youName() === "you" ? "you" : esc(youName());
+  return `<main class="screen roomy hub" aria-labelledby="hub-h">
+    <header class="top"><span class="brand"><span class="wordmark">drape</span><button type="button" class="ver" data-act="refresh" aria-label="Update the app (version ${APP_VERSION})">v${APP_VERSION} ${ICON.refresh}</button></span>${hbtns(true)}</header>
+    <div class="who">${PEOPLE.list.length > 1 ? `<button type="button" class="who-btn" data-act="people"><span class="av" aria-hidden="true">${esc((person().name || "?")[0].toUpperCase())}</span>${esc(person().name)} ${ICON.fwd}</button>` : `<button type="button" class="link-btn" data-act="people">+ Someone else? Add a person</button>`}</div>
+    <h1 id="hub-h" class="h1">${youName() === "you" ? "What would you like to do?" : "What would " + esc(youName()) + " like to do?"}</h1>
+    <nav class="hub-tiles" aria-label="Ways in">
+      <button type="button" class="hub-tile" data-act="closet"><span class="ht-ico">${ICON.hanger}</span><span class="ht-txt"><b>${youName() === "you" ? "My closet" : who + "'s closet"}</b><small>See ${youName() === "you" ? "your" : "their"} clothes, add more</small><em>${CLOSET.length ? CLOSET.length + " piece" + (CLOSET.length === 1 ? "" : "s") + (groups ? " · " + esc(groups) : "") : "Empty: start with a photo"}</em></span>${pics(cpics)}</button>
+      <button type="button" class="hub-tile" data-act="discover"><span class="ht-ico">${ICON.spark}</span><span class="ht-txt"><b>Find something new</b><small>Swipe through looks until one is right</small><em>${going ? "Carry on: " + esc(catLabel(Q.type)) : last ? "Last time: " + esc(last) : "From 100+ stores"}</em></span></button>
+      <button type="button" class="hub-tile" data-act="saved"><span class="ht-ico">${ICON.mark}</span><span class="ht-txt"><b>Saved & liked</b><small>The pieces ${youName() === "you" ? "you" : "they"} kept</small><em>${kept.length ? kept.length + " piece" + (kept.length === 1 ? "" : "s") : "Nothing yet"}</em></span>${pics(spics, " light")}</button>
+    </nav>
+    <p class="about-line hub-about">${me ? `For ${who}: ${esc(me)} · ` : ""}<button type="button" class="link-btn" data-act="about">${me ? "Change" : "Add " + (youName() === "you" ? "your" : esc(youName()) + "'s") + " height and build"}</button></p>
+  </main>`;
+}
 function renderStart(){
   return `<main class="screen roomy" aria-labelledby="start-h">
-    <header class="top"><span class="brand"><span class="wordmark">drape</span><button type="button" class="ver" data-act="refresh" aria-label="Update the app (version ${APP_VERSION})">v${APP_VERSION} ${ICON.refresh}</button></span>${hbtns(true)}</header>
-    <p class="who">${PEOPLE.list.length > 1 ? `Looking for <button type="button" class="who-btn" data-act="people"><span class="av" aria-hidden="true">${esc((person().name || "?")[0].toUpperCase())}</span>${esc(person().name)} ${ICON.fwd}</button>` : `<button type="button" class="link-btn" data-act="people">+ Someone else? Add a person</button>`}</p>
+    <header class="top"><button type="button" class="icon-btn" data-act="hub" aria-label="Home">${ICON.back}</button><span class="meta">Find something new</span>${hbtns(true)}</header>
     <h1 id="start-h" class="h1">${PEOPLE.list.length > 1 && youName() !== "you" ? "What is " + esc(youName()) + " looking for today?" : "What are you looking for today?"}</h1>
     <div><div class="modes" role="group" aria-label="What for">
         <button type="button" data-act="mode" data-v="style" aria-pressed="${styleMode()}">Find a style<small>ideas for your tailor</small></button>
@@ -1646,7 +1685,6 @@ function renderStart(){
     ${STYLE_GROUPS.map(([g, list], k) => `<fieldset><legend class="label">${esc(g)} <span class="hint">· pick any${k ? "" : (Q.styles.length ? " · " + Q.styles.length + " picked" : "")}</span></legend><div class="chips small">${list.map((s) => { const on = Q.styles.includes(s); return `<button type="button" class="chip" data-act="style" data-v="${esc(s)}" aria-pressed="${on}">${on ? ICON.check : ""}${esc(s)}</button>`; }).join("")}</div></fieldset>`).join("")}
     <div><label class="label" for="txt">In your own words <span class="hint">· optional</span></label><textarea id="txt" rows="3" placeholder="e.g. something light to throw over a tee on summer evenings, nothing too sporty">${esc(Q.text)}</textarea></div>
     <div class="bottom sticky"><button type="button" class="cta" data-act="go">Show me ideas ${ICON.arrow}</button>
-      ${SAVED.length ? `<button type="button" class="link-btn" data-act="saved">Saved pieces · ${SAVED.length}</button>` : ""}
       ${aiOn() ? "" : `<p class="small-note" style="margin-top:6px">Sample ideas for now · <button type="button" class="link-btn" data-act="profile">turn on AI</button></p>`}</div>
   </main>`;
 }
@@ -2427,7 +2465,7 @@ async function askStylist(){
     if (who === PEOPLE.active){ STYLIST = Object.assign(j, {at:Date.now(), photos:PHOTOS.length, ids}); save("stylist", STYLIST); S.brief = null; if (S.pool) refill(); }
   }catch(e){ S.stylistErr = e.message; S.stylistFailed = ids; }
   S.stylistBusy = false;
-  if (S.screen === "profile" || S.screen === "start") render();
+  if (S.screen === "profile" || S.screen === "start" || S.screen === "hub") render();
 }
 // Read the photos once whenever they change (not again after a failure until you ask).
 function maybeStylist(){
@@ -2950,7 +2988,7 @@ async function inboxOnce(){
       if (rows.length){ S.cupd = {rows, state:"review", auto:true}; await claudeApply(); names.push(...rows.map((x) => (CLOSET.find((it) => it.id === x.id) || {}).name).filter(Boolean)); }
       await fetch(base + "&key=" + encodeURIComponent(u.key), {method:"DELETE", headers:{"X-Drape-Code":AI.code}}).catch(() => {});
     }
-    if (names.length){ S.inboxNote = {at:Date.now(), names}; toast("Claude improved " + (names.length === 1 ? names[0] : names.length + " pieces") + ": open " + (names.length === 1 ? "it" : "them") + " to see"); if (S.screen === "closet" || S.screen === "start") render(); }
+    if (names.length){ S.inboxNote = {at:Date.now(), names}; toast("Claude improved " + (names.length === 1 ? names[0] : names.length + " pieces") + ": open " + (names.length === 1 ? "it" : "them") + " to see"); if (S.screen === "closet" || S.screen === "start" || S.screen === "hub") render(); }
     S.inboxErr = "";
   }catch(e){ S.inboxErr = e instanceof TypeError ? "No connection to the AI server" : e.message; }
   S.inboxBusy = false;
@@ -3164,7 +3202,7 @@ function render(){
   const app = document.getElementById("app");
   // Re-drawing keeps the details view where you had scrolled it.
   const dt = document.getElementById("detail"), keepTop = dt && S.detail && dt.dataset.id === S.detail.item.id ? dt.scrollTop : 0;
-  let html = S.screen === "explore" ? renderExplore() : S.screen === "shop" ? renderShop() : S.screen === "profile" ? renderProfile() : S.screen === "saved" ? renderSaved() : S.screen === "closet" ? renderCloset() : renderStart();
+  let html = S.screen === "explore" ? renderExplore() : S.screen === "shop" ? renderShop() : S.screen === "profile" ? renderProfile() : S.screen === "saved" ? renderSaved() : S.screen === "closet" ? renderCloset() : S.screen === "start" ? renderStart() : renderHub();
   if (S.sheet && S.current) html += renderSheet();
   if (S.people) html += renderPeopleSheet();
   if (S.tryon) html += renderTryon();
@@ -3195,7 +3233,7 @@ function openScreen(name){
 }
 function backScreen(){
   const prev = S.stack.pop();
-  go(prev && prev !== S.screen ? prev : "start");
+  go(prev && prev !== S.screen ? prev : "hub");
 }
 function go(screen){
   if (screen !== S.screen){
@@ -3417,6 +3455,8 @@ const ACTIONS = {
   scrim(el, e){ if (e.target !== el) return; if (S.modal){ S.modal = null; } else if (S.cupd){ if (S.cupd.state !== "applying") S.cupd = null; } else if (S.cpaste){ S.cpaste = false; } else if (S.cadd){ if (S.cadd.state !== "reading") S.cadd = null; } else if (S.citem){ S.citem = null; S.cfound = null; } else if (S.tryon){ if (S.tryon.state !== "busy") S.tryon = null; } else if (S.people){ S.people = false; } else S.sheet = false; render(); },
   "photo-add"(){ FILE_IN.click(); },
   closet(){ openScreen("closet"); checkInbox(); },
+  hub(){ S.sheet = false; S.stack = []; go("hub"); },
+  discover(){ if (S.current && S.round.votes.length){ S.stack = ["hub", "start"]; go("explore"); } else openScreen("start"); },
   "closet-back"(){ backScreen(); },
   "closet-group"(el){ S.cgroup = el.dataset.v; render(); },
   "closet-add"(el){ const m = el.dataset.v; if (m === "manual"){ S.cadd = {mode:"manual", state:"review", items:[blankPiece()]}; render(); } else closetPick(m); },
@@ -3585,9 +3625,9 @@ function savedBtn(){
 }
 // Explore: report + saved. Start: all three. Saved: report + taste. Taste: report.
 function hbtns(withProfile){
-  const saved = S.screen === "explore" || S.screen === "start";
+  const saved = S.screen === "explore";
   const prof = withProfile && S.screen !== "explore";
-  const closet = S.screen === "start" || S.screen === "saved" || S.screen === "profile";
+  const closet = false; // the closet is on Home
   return `<span class="hbtns">${askBtn()}${saved ? savedBtn() : ""}${closet ? `<button type="button" class="icon-btn" data-act="closet" aria-label="Your closet${CLOSET.length ? " (" + CLOSET.length + ")" : ""}">${ICON.hanger}</button>` : ""}${prof ? `<button type="button" class="icon-btn" data-act="profile" aria-label="Your taste profile">${ICON.person}</button>` : ""}</span>`;
 }
 function askSetState(st){
@@ -3804,7 +3844,7 @@ setTimeout(() => cloudBackup(), 8000);
 if (claudePending().length) setTimeout(() => claudeTask().then((t) => { S.claudeTask = t; }), 1500);
 slimPhotos().then(() => setTimeout(maybeStylist, 1500));
 (() => { let then = ""; try{ then = sessionStorage.getItem("drape:then") || ""; sessionStorage.removeItem("drape:then"); }catch(e){}
-  if (then === "about" || then === "profile"){ S.screen = "profile"; S.prev = "start"; S.stack = ["start"]; setTimeout(() => { const a = document.getElementById(then === "about" ? "about" : "people"); if (a) a.scrollIntoView({block:"start"}); }, 60); }
+  if (then === "about" || then === "profile"){ S.screen = "profile"; S.prev = "hub"; S.stack = ["hub"]; setTimeout(() => { const a = document.getElementById(then === "about" ? "about" : "people"); if (a) a.scrollIntoView({block:"start"}); }, 60); }
   if (then === "about") setTimeout(() => toast("Now " + person().name + ": add their height, build and size"), 80);
   else if (then) setTimeout(() => toast("Now looking for " + person().name), 80); })();
 render();
