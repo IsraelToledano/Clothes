@@ -1,0 +1,1238 @@
+{
+  "started": "2026-11-27T17:06:06.015Z",
+  "worker": "https://clothes.srul7022.workers.dev",
+  "log": [
+    "server version 1.6.1 (as expected)",
+    "health {\"ok\":true,\"ms\":390,\"status\":200,\"body\":{\"ok\":true,\"ideas\":true,\"images\":true,\"version\":\"1.6.1\",\"textModel\":\"gemma-4-26b-a4b-it\",\"imageModel\":\"schnell for the first cards, klein after\"}}",
+    "keywords (API) {\"ok\":true,\"ms\":1969,\"status\":200,\"body\":{\"keywords\":[\"oxford\",\"button down\",\"madras\",\"gingham\",\"chambray\",\"rugby\",\"stripe\",\"poplin\",\"linen\",\"navy\"],\"avoid\":[\"streetwear\",\"oversized\",\"technical\",\"minimalist\"],\"stores\":[\"Todd Snyder\",\"Rowing Blazers\",\"Drake's\",\"Alex Mill\",\"Percival\"],\"why\":\"classic preppy american heritage\",\"model\":\"gemma\"}}",
+    "first card 528ms",
+    "card 1 Carlo Bassetti Italian Linen Stripe Shirt | photo 192ms | swipe later",
+    "card 2 Graduate Oxford Shirt | photo 223ms | swipe like",
+    "card 3 Made-in-USA Burgundy Stripe Button Down Shirt | photo 6ms | swipe later",
+    "card 4 Hamilton + Todd Snyder Cotton Oxford Spread Collar Dress Shirt | photo 6ms | swipe later",
+    "card 5 Made-in-USA White Oxford Club Collar Dress Shirt - Classic Fit | photo 6ms | swipe later",
+    "card 6 Easy Cut Oxford Shirt | photo 9ms | swipe like",
+    "card 7 Tonal Plaid Lightweight Flannel Shirt | photo 8ms | swipe later",
+    "card 8 Oakleigh Classic Oxford - White | photo 7ms | swipe later",
+    "gallery & details {\"card\":{\"title\":\"The White Brenton Royal Oxford Custom Shirt\",\"store\":\"Ledbury\",\"photos\":4,\"onPhoto\":0,\"layout\":{\"photoBottom\":718,\"titleBottom\":808,\"screen\":844}},\"flipMs\":43,\"tapVoted\":false,\"cardZoom\":{\"opened\":true,\"photo\":2,\"opensAt\":{\"scale\":2,\"fill\":2,\"shown\":\"1\"},\"sharpMs\":846,\"closed\":true},\"zoomScale\":2.2,\"moreMs\":2,\"details\":{\"thumbs\":4,\"desc\":\"A wardrobe staple with a refined edge. The midweight royal oxford is exceptionally soft with a slight sheen and just the right amount of structure that is never sheer, always polished. It’s a crisp, elevated option that works just as well with a suit as it does under a sweater or sport coat.\\nFabric:\",\"sizes\":[],\"specs\":[\"COLOUR: White\",\"FABRIC: Oxford\"]},\"back\":{\"was\":\"The White Brenton Royal Oxford Custom Shirt\",\"nowShowing\":\"Oakleigh Classic Oxford - White\",\"expected\":\"Oakleigh Classic Oxford - White\",\"ok\":true,\"thenNext\":\"The White Brenton Royal Oxford Custom Shirt\"},\"saved\":{\"screen\":\"saved\",\"cards\":1,\"photos\":1},\"liked\":{\"cards\":[\"Easy Cut Oxford Shirt\",\"Graduate Oxford Shirt\"],\"hearted\":[\"Graduate Oxford Shirt\",\"Easy Cut Oxford Shirt\"]}}",
+    "shoes {\"cards\":[\"Drake's | Running sneakers | New Balance ‘Luxury Leather’ Chocolate Plum and Caramel Made in UK 991v1 Trainers\",\"Anglo-Italian | Chukkas & desert boots | Desert Boot Crepe Sole Black Suede\",\"New & Lingwood | Loafers | Espresso Calf Suede Butterfly Loafers\",\"Todd Snyder | Sneakers | Porto Low Profile Sneaker\",\"Drake's | Running sneakers | New Balance 'Vintage Sports' Kombu Green and Sea Spray Made in UK 1500v1 Trainers\",\"Anglo-Italian | Oxfords | Crockett & Jones Hurlingham Oxford Dark Brown Suede City Sole\",\"New & Lingwood | Mules & clogs | Chestnut Suede All Day Slipper\",\"Todd Snyder | Sneakers | Veja V-10 CWL Sneaker\",\"Drake's | Chukkas & desert boots | Crosby Moc-Toe Chukka Boot Sand Suede\",\"Turnbull & Asser | Derbies | Blue Weekend Fit Cotton-Cashmere Finch Shirt With Derby Collar And Chest Pocket\",\"Velasca | Boat shoes | Gondolèe\",\"Todd Snyder | Chelsea boots | Nomad Chelsea Boot\",\"Drake's | Loafers | Brown Suede Charles Mk II Goodyear Welted Penny Loafer\",\"Beckett Simonon | Sneakers | Graham Trainers - Men's\",\"Huntsman | Mules & clogs | Blue Devon Four Point Star Cashmere Slippers\",\"Todd Snyder | Boat shoes | Lug Sole Boat Shoe\",\"Velasca | Boots | Alpée\",\"Beckett Simonon | Sneakers | Fletcher Sneaker - Textile and Suede - Men's\",\"Paul Evans | Loafers | The Louis Penny Loafer - Martora Suede\",\"Turnbull & Asser | Derbies | Blue Multi Chambray Stripe Weekend Fit Shirt with Derby Collar and 1 Button Cuffs\"],\"sameModel\":[],\"kinds\":10,\"topMaker\":[\"new balance\",2]}",
+    "categories {\"Suits\":{\"pool\":551,\"first\":[\"Todd Snyder | Italian Wool-Silk Donegal Wythe Suit | Charcoal suits fair skin\",\"Cordings | Grey 10oz Three Button Chalk Stripe Suit | Preppy: stripe\",\"New & Lingwood | Navy Chalk Stripe Flannel Double Breasted Suit Jacket | Preppy: stripe\",\"Drake's | Black Barathea Wool Dinner Jacket | Tuxedo & dinner\",\"Todd Snyder | Italian Flannel Sutton Suit | Navy suits fair skin\"]},\"Swimwear\":{\"pool\":1369,\"first\":[\"Todd Snyder | 5\\\" Seersucker Montauk Swim Trunk | Preppy: seersucker\",\"Orlebar Brown | Bulldog | Preppy: seersucker, stripe\",\"Southern Tide | Colorblock Seersucker Stripe Maritime Swim Trunk | Preppy: seersucker, stripe\",\"Haspel | Sherwood Lt. Blue Seersucker Stretch Swimsuit | Preppy: seersucker\",\"Fair Harbor | SMU Bayberry Trunk | Light Blue Seersucker | Preppy: seersucker\"]},\"Coats\":{\"pool\":915,\"first\":[\"Cordings | Navy Rugby Reefer Coat | Preppy: rugby\",\"Todd Snyder | Italian Herringbone Balmacaan | Charcoal suits fair skin\",\"Kith | Stone Island Dense Oxford Nylon TC Fishtail Parka - Lead Grey | Preppy: oxford\",\"Billy Reid | Boiled Wool Bond Peacoat | Charcoal suits fair skin\",\"Oliver Brown | Field Coat - Navy Loden | Navy suits fair skin\"]},\"Sneakers\":{\"pool\":1022,\"first\":[\"Kith | Nike Air Bakin High SP - Varsity Royal / Black / Metallic Silver / White | Preppy: varsity\",\"Todd Snyder | Veja V-10 CWL Sneaker | Sneakers\",\"Rancourt & Co. | Court Classic 2.0 Low - Red Orion Fleshout | Court & canvas sneakers\",\"Drake's | New Balance 'Elevated Essentials' Rose Taupe Made in UK 991v2 Trainers | Running sneakers\",\"Kith | VANS Premium Old Skool 36 - Pearlized Marshmallow White | Court & canvas sneakers\"]},\"Hats\":{\"pool\":2764,\"first\":[\"Drake's | Green and Blue Stripe Geelongora Ribbed Knit Cap | Preppy: stripe\",\"Todd Snyder | Selvedge Chino Dad Cap | Preppy: chino\",\"Aimé Leon Dore | Washed Chino Hat | Preppy: chino\",\"Kith | Kith & '47 for the New York Yankees Wool Hunter Franchise LS Cap - Oxford | Preppy: oxford\",\"Drake's | Chamula for Drake's Brown Rombos Stripe Merino Knit Cap | Preppy: stripe\"]}}",
+    "about you {\"notSet\":{\"long\":0,\"suitYou\":0,\"first\":[\"Todd Snyder | Barbour Waterproof Ursula Jacket | Cotton\",\"Kith | Engineered Garments Newspaper Print Canvas Type 5 Jean Jacket - White | Canvas\",\"Iron Heart | 13oz Oxford Cloth Riders Jacket - Indigo | Oxford\",\"Battenwear | Beach Breaker - Blue Madras | Madras\",\"Todd Snyder | Barbour Wax Transport Jacket | Cotton\",\"Johnnie-O | Chicago White Sox Crosswind Quilted Performance Vest - Cooperstown Logo | Vest\"]},\"shortSlim\":{\"long\":0,\"suitYou\":20,\"first\":[\"Rogue Territory | Supply Jacket // Rinsed Tan Denim | Cropped, good for your height\",\"Todd Snyder | Italian Suede Dylan Jacket | Cropped, good for your height\",\"Stoffa | Flight Jacket (Mid-Grey Cotton Canvas) | Cropped, good for your height\",\"Rowing Blazers | Bella Tailored Stretch Button Jacket Brown | Cropped, good for your height\",\"Kith | Junya Watanabe MAN Blouson - Indigo | Cropped, good for your height\",\"Todd Snyder | Nylon Harrington Jacket | Cropped, good for your height\"]}}",
+    "1.8 {\"again\":{\"answered\":8,\"waiting\":36,\"shownAgain\":[]},\"words\":{\"read\":\"184 cm (over 182) · 95 kg (broad build) · fair skin · for a wedding\",\"styles\":[\"Tailored\",\"Wedding\"],\"first\":[\"Huntsman | Ecru Barathea Shawl Lapel Dinner Jacket | Wedding: tuxedo, dinner | \",\"Todd Snyder | Italian Wool-Silk Donegal Wythe Suit | Tailored: wool, suit | Charcoal suits fair skin\",\"Richard James | Chapman Jacket – Cobalt Blue Sharkskin | Tailored: tailored, suit | Cobalt suits fair skin\",\"Anglo-Italian | Suit Double Breasted Navy Wool Cavalry Twill | Tailored: wool, suit | Navy suits fair skin\",\"Oliver Brown | Carlyle Dinner Jacket - White | Tailored: wool, tuxedo | \",\"Todd Snyder | Portuguese Flannel Pinstripe Wythe Suit | Tailored: wool, flannel | Grey suits fair skin\"]},\"style\":{\"pool\":551,\"soldInPool\":18,\"cards\":36,\"soldOut\":0,\"notShipping\":8},\"shop\":{\"pool\":551,\"soldInPool\":18,\"cards\":36,\"soldOut\":0,\"notShipping\":0},\"brief\":{\"saved\":true,\"text\":\"Like this: Italian Houndstooth Sport Coat (Todd Snyder)\\nPhotos: https://toddsnyder.com/products/tweed-houndstooth-sport-coatmulti\\n\\nPiece: Wool · Blazers\\nCloth: Multi · wool, houndstooth, linen\\nDetails: side vents, a soft natural shoulder\\nCut for me: jacket length just covering the seat, a slightly higher button stance and moderate lapels, so the line stays long; close through the chest and waist without pulling; a little structure in the shoulder\\n\\nFrom the store: The perfect sport coat to see you through the season. This is our laidback but luxurious take on a classic blazer: no stuffy padding, no hot lining, only relaxed, rakish charm. It’s made from Italian linen blend, and features detail\"}}",
+    "people {\"before\":{\"votes\":9,\"saved\":2},\"dan\":{\"name\":\"Dan\",\"screen\":\"profile\",\"votes\":0,\"saved\":0,\"about\":\"About Dan\",\"header\":\"Dan · Suits · 0 votes\",\"first\":\"Todd Snyder | Italian Cashmere Wythe Suit | A relaxed cut for your build\"},\"back\":{\"name\":\"Me\",\"votes\":9,\"saved\":2,\"people\":[\"Me\",\"Dan\"]},\"same\":true}",
+    "1.11 {\"portrait\":{\"ok\":true,\"ms\":1971,\"status\":200,\"bytes\":325350,\"error\":\"\"},\"kb\":{\"1.10\":[29,29,29],\"1.11\":[17,17,17],\"heavy\":[81,81,81]},\"stylist 1.10\":{\"status\":200,\"ms\":9111,\"model\":\"gemma-4-26b-a4b-it\",\"summary\":\"Build a wardrobe around medium-contrast neutrals and deep tones to complement your natural coloring. Focus on slim, structured silhouettes that define your frame without being overly tight.\"},\"stylist 1.11\":{\"status\":200,\"ms\":7525,\"model\":\"gemma-4-26b-a4b-it\",\"summary\":\"Build a wardrobe around medium-contrast neutrals and rich, saturated tones to complement your features. Focus on structured silhouettes that define your frame without being overly tight.\"},\"stylist heavy\":{\"status\":200,\"ms\":6892,\"model\":\"gemma-4-26b-a4b-it\",\"summary\":\"Build a wardrobe around high-contrast neutrals and earthy tones to complement your natural coloring. Focus on structured silhouettes that define your frame without being overly restrictive.\"},\"photos\":[\"336x448 34KB\",\"336x448 34KB\",\"336x448 34KB\"],\"stylist\":{\"model\":\"gemma-4-26b-a4b-it\",\"ms\":8916,\"summary\":\"Build a wardrobe around smart-casual textures and streamlined silhouettes to enhance your vertical line. Focus on well-fitted, classic pieces that avoid overwhelming your slim frame.\",\"best\":[\"navy\",\"charcoal\",\"forest green\",\"burgundy\",\"cream\",\"sky blue\",\"olive\",\"camel\"],\"less\":[\"neon\",\"bright yellow\",\"stark white\",\"lavender\",\"bright orange\"],\"lookFor\":[\"slim fit\",\"tapered leg\",\"mid rise\",\"button-down collar\",\"structured shoulder\",\"monochromatic outfits\"],\"avoid\":[\"oversized\",\"low rise\",\"longline tees\",\"wide leg\",\"heavy layering\"],\"wallMs\":7489},\"cards\":[{\"piece\":\"Todd Snyder | Italian Donegal Herringbone Sutton Jacket\",\"state\":\"ok\",\"ms\":7761,\"err\":\"\",\"waitedMs\":7729},{\"piece\":\"Billy Reid | Hopsack Silk Wool Archie Jacket\",\"state\":\"ok\",\"ms\":6505,\"err\":\"\",\"waitedMs\":5,\"looks\":1},{\"piece\":\"Orlebar Brown | Garret\",\"state\":\"ok\",\"ms\":4676,\"err\":\"\",\"waitedMs\":4},{\"piece\":\"Peregrine | Belmont Capsule Blazer\",\"state\":\"ok\",\"ms\":4122,\"err\":\"\",\"waitedMs\":3},{\"piece\":\"Drake's | Navy Pinstripe Wool-Cotton Double-Breasted Tailored Jacket\",\"state\":\"ok\",\"ms\":6239,\"err\":\"\",\"waitedMs\":2123},{\"piece\":\"Percival | Tailored Blazer | Birdseye Wool | Grey\",\"state\":\"ok\",\"ms\":5882,\"err\":\"\",\"waitedMs\":4}],\"onMe\":\"ON ME: on   drawn 6, drawing 2, failed 0, median 6239ms   stylist: read 2026-11-27T17:07:42.305Z\"}",
+    "1.12 {\"pieceSource\":\"Kamakura Shirts | TOKYO SLIM FIT- Italian Spread Pinpoint Oxford J-TECH EASY CARE\",\"piece\":{\"model\":\"gemma-4-26b-a4b-it\",\"ms\":3646,\"err\":\"\",\"items\":[\"Light blue micro-check dress shirt | Shirts | dress shirt | light blue | cotton | Känkers Shirts | 4 | -\"],\"wallMs\":3725},\"worn\":{\"model\":\"gemma-4-26b-a4b-it\",\"ms\":8916,\"err\":\"\",\"items\":[\"White crew neck t-shirt | T-shirts | t-shirt | white | cotton |  | 1 | -\",\"Blue slim fit jeans | Jeans | jeans | blue | denim |  | 2 | -\",\"White leather sneakers | Shoes | sneakers | white | leather |  | 1 | -\",\"Black watch | Accessories | watch | black |  |  | 2 | -\"],\"wallMs\":8978},\"closet\":{\"n\":5,\"groups\":{\"Tops\":2,\"Bottoms\":1,\"Shoes\":1,\"Accessories\":1},\"photos\":5},\"idbPhotos\":5,\"sheetPhotos\":1,\"find\":{\"catalog\":[\"Todd Snyder | Armando Cabral Long Sleeve Camp Collar Dress Shirt\",\"Todd Snyder | Cotton Spread Collar Dress Shirt\",\"J.Press | Made-in-USA Thomas Mason Light Blue Large Tattersall Spread Collar Dress Shirt - Classic Fit\",\"J.Press | Made-in-USA Thomas Mason Blue Plaid Spread Collar Dress Shirt - Classic Fit\"],\"stores\":[\"Ash & Erie | Blue Dress Shirt\",\"Drake's | Light Blue Cotton Chambray Button-Down Shirt\",\"Grayers | Nantucket Yarn Dyed Linen Shirt - Light Blue\",\"Ash & Erie | Blue Tattersall Dress Shirt\"],\"searched\":[\"Ash & Erie\",\"Drake's\",\"Quoddy\",\"Grayers\",\"Paul Evans\"],\"err\":\"\",\"wallMs\":495},\"linked\":\"Armando Cabral Long Sleeve Camp Collar Dress Shirt\",\"report\":\"CLOSET: 5 pieces {\\\"Tops\\\":2,\\\"Bottoms\\\":1,\\\"Shoes\\\":1,\\\"Accessories\\\":1}, linked 1\"}",
+    "1.13 {\"task\":{\"pending\":5,\"inReport\":5,\"withPhoto\":5},\"update\":{\"before\":1,\"after\":5,\"web\":[1,2,3,4],\"webShown\":4,\"webErr\":\"\",\"model\":\"Test model 1\",\"last\":{\"at\":1795799304532,\"pieces\":1,\"kept\":4,\"failed\":0,\"err\":\"\"}},\"inbox\":{\"put\":\"200 {\\\"ok\\\":true,\\\"key\\\":\\\"1795799304646\\\",\\\"waiting\\\":1}\",\"applied\":\"Inbox model 2\",\"err\":\"\",\"leftAfter\":0},\"sheetPhotos\":5,\"webShownLoaded\":[4000,3000,1200,1048],\"aboutAboveFields\":true,\"tryon\":{\"state\":\"ok\",\"ms\":3911,\"err\":\"\",\"wallMs\":3954},\"backup\":{\"line\":\"In the cloud: backed up just now (5 pieces, 325 KB)\",\"bytes\":332562,\"err\":\"\",\"ms\":891},\"list\":{\"state\":\"done\",\"list\":[{\"at\":\"2026-11-27T17:08:32.997Z\",\"bytes\":332562,\"items\":5,\"app\":\"1.15.0\",\"key\":\"latest\"},{\"at\":\"2026-11-27T17:08:32.997Z\",\"bytes\":332562,\"items\":5,\"app\":\"1.15.0\",\"key\":\"2026-11-27\"},{\"at\":\"2026-11-26T20:05:43.975Z\",\"bytes\":318546,\"items\":3,\"app\":\"1.14.1\",\"key\":\"2026-11-26\"}]},\"restored\":{\"before\":[5,9],\"after\":[5,9],\"idb\":9}}",
+    "deployed {\"version\":\"1.15.0\",\"home\":\"hub\",\"firstCardMs\":789,\"base\":\"https://raw.githubusercontent.com/IsraelToledano/Clothes/catalog-data/catalog/\",\"pool\":551,\"catalogFiles\":[{\"file\":\"stores.json\",\"status\":200,\"bytes\":94920},{\"file\":\"suits.json\",\"status\":200,\"bytes\":295062},{\"file\":\"details/040.json\",\"status\":200,\"bytes\":334607},{\"file\":\"details/016.json\",\"status\":200,\"bytes\":329200}],\"first\":\"Todd Snyder | Italian Flannel Sutton Suit\"}"
+  ],
+  "expectedServer": "1.6.1",
+  "deployed": "1.6.1",
+  "health": {
+    "ok": true,
+    "ms": 390,
+    "status": 200,
+    "body": {
+      "ok": true,
+      "ideas": true,
+      "images": true,
+      "version": "1.6.1",
+      "textModel": "gemma-4-26b-a4b-it",
+      "imageModel": "schnell for the first cards, klein after"
+    }
+  },
+  "catalog": {
+    "updated": "2026-11-27T10:53:15.775Z",
+    "counts": {
+      "Knitwear": 5764,
+      "Trousers": 5565,
+      "Overshirts": 1222,
+      "Jackets": 5076,
+      "T-shirts": 5801,
+      "Polos": 4400,
+      "Accessories": 12122,
+      "Shirts": 10309,
+      "Blazers": 1018,
+      "Sweatshirts": 2999,
+      "Coats": 915,
+      "Shorts": 2023,
+      "Shoes": 4091,
+      "Swimwear": 1369,
+      "Jeans": 1534,
+      "Suits": 551
+    },
+    "failedStores": [
+      "bonobos.com: gave up after retries"
+    ],
+    "format": 2,
+    "photosPerShirt": {
+      "median": 3,
+      "min": 1,
+      "max": 3,
+      "oneOnly": 553,
+      "of": 10309
+    },
+    "details": {
+      "files": 128,
+      "pieces": 64759,
+      "withDescription": 61758,
+      "withSoldOutSizes": 36660,
+      "onSale": "3736 shirts"
+    }
+  },
+  "photosApi": [
+    {
+      "title": "【BF Sale】TOKYO SLIM FIT - Button Down Broadcloth",
+      "store": "Kamakura Shirts",
+      "width": 900,
+      "ok": true,
+      "ms": 323,
+      "status": 200,
+      "bytes": 94278
+    },
+    {
+      "title": "【BF Sale】TOKYO SLIM FIT - Button Down Broadcloth",
+      "store": "Kamakura Shirts",
+      "width": 2000,
+      "ok": true,
+      "ms": 336,
+      "status": 200,
+      "bytes": 167903
+    },
+    {
+      "title": "Atlantic Madras Shirt - Outerworn",
+      "store": "Outerknown",
+      "width": 900,
+      "ok": true,
+      "ms": 318,
+      "status": 200,
+      "bytes": 198527
+    },
+    {
+      "title": "Atlantic Madras Shirt - Outerworn",
+      "store": "Outerknown",
+      "width": 2000,
+      "ok": true,
+      "ms": 215,
+      "status": 200,
+      "bytes": 258802
+    },
+    {
+      "title": "REAL SALT LAKE - Coaches Players Shirt - Lion - Black",
+      "store": "Criquet",
+      "width": 900,
+      "ok": true,
+      "ms": 292,
+      "status": 200,
+      "bytes": 568696
+    },
+    {
+      "title": "REAL SALT LAKE - Coaches Players Shirt - Lion - Black",
+      "store": "Criquet",
+      "width": 2000,
+      "ok": true,
+      "ms": 198,
+      "status": 200,
+      "bytes": 175
+    },
+    {
+      "title": "Sea Soft Linen Shirt",
+      "store": "Todd Snyder",
+      "width": 900,
+      "ok": true,
+      "ms": 313,
+      "status": 200,
+      "bytes": 231444
+    },
+    {
+      "title": "Sea Soft Linen Shirt",
+      "store": "Todd Snyder",
+      "width": 2000,
+      "ok": true,
+      "ms": 216,
+      "status": 200,
+      "bytes": 368457
+    },
+    {
+      "title": "Bespoke Fabric 1335 34",
+      "store": "Turnbull & Asser",
+      "width": 900,
+      "ok": true,
+      "ms": 246,
+      "status": 200,
+      "bytes": 129217
+    },
+    {
+      "title": "Bespoke Fabric 1335 34",
+      "store": "Turnbull & Asser",
+      "width": 2000,
+      "ok": true,
+      "ms": 160,
+      "status": 200,
+      "bytes": 161546
+    },
+    {
+      "title": "Multicoloured Check Mayfair Shirt",
+      "store": "Turnbull & Asser",
+      "width": 900,
+      "ok": true,
+      "ms": 242,
+      "status": 200,
+      "bytes": 161847
+    },
+    {
+      "title": "Multicoloured Check Mayfair Shirt",
+      "store": "Turnbull & Asser",
+      "width": 2000,
+      "ok": true,
+      "ms": 564,
+      "status": 200,
+      "bytes": 693602
+    }
+  ],
+  "keywordsApi": {
+    "ok": true,
+    "ms": 1969,
+    "status": 200,
+    "body": {
+      "keywords": [
+        "oxford",
+        "button down",
+        "madras",
+        "gingham",
+        "chambray",
+        "rugby",
+        "stripe",
+        "poplin",
+        "linen",
+        "navy"
+      ],
+      "avoid": [
+        "streetwear",
+        "oversized",
+        "technical",
+        "minimalist"
+      ],
+      "stores": [
+        "Todd Snyder",
+        "Rowing Blazers",
+        "Drake's",
+        "Alex Mill",
+        "Percival"
+      ],
+      "why": "classic preppy american heritage",
+      "model": "gemma"
+    }
+  },
+  "app": {
+    "requests": [
+      {
+        "kind": "/health",
+        "status": 200,
+        "ms": 146,
+        "at": 1795799173876
+      },
+      {
+        "kind": "/inbox",
+        "status": 200,
+        "ms": 136,
+        "at": 1795799176361
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 2384,
+        "at": 1795799177850
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 2077,
+        "at": 1795799182059
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 2211,
+        "at": 1795799190963
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 1152,
+        "at": 1795799208379
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 1157,
+        "at": 1795799210961
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 2814,
+        "at": 1795799211689
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 1810,
+        "at": 1795799212473
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 7190,
+        "at": 1795799212659
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 2331,
+        "at": 1795799214293
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 2293,
+        "at": 1795799216020
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 1611,
+        "at": 1795799216289
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 2258,
+        "at": 1795799218270
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 1671,
+        "at": 1795799218541
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 1334,
+        "at": 1795799219226
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 1732,
+        "at": 1795799220266
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 1172,
+        "at": 1795799220388
+      },
+      {
+        "kind": "/health",
+        "status": 200,
+        "ms": 36,
+        "at": 1795799223449
+      },
+      {
+        "kind": "/inbox",
+        "status": 200,
+        "ms": 211,
+        "at": 1795799226127
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 1627,
+        "at": 1795799226528
+      },
+      {
+        "kind": "/health",
+        "status": 200,
+        "ms": 101,
+        "at": 1795799226950
+      },
+      {
+        "kind": "/inbox",
+        "status": 200,
+        "ms": 55,
+        "at": 1795799229406
+      },
+      {
+        "kind": "/stylist",
+        "status": 200,
+        "ms": 9104,
+        "at": 1795799238798
+      },
+      {
+        "kind": "/stylist",
+        "status": 200,
+        "ms": 7520,
+        "at": 1795799246327
+      },
+      {
+        "kind": "/stylist",
+        "status": 200,
+        "ms": 6877,
+        "at": 1795799253233
+      },
+      {
+        "kind": "/stylist",
+        "status": 200,
+        "ms": 8930,
+        "at": 1795799262305
+      },
+      {
+        "kind": "/keywords",
+        "status": 200,
+        "ms": 1958,
+        "at": 1795799265177
+      },
+      {
+        "kind": "/tryon",
+        "status": 200,
+        "ms": 6449,
+        "at": 1795799269703
+      },
+      {
+        "kind": "/tryon",
+        "status": 200,
+        "ms": 7699,
+        "at": 1795799270952
+      },
+      {
+        "kind": "/tryon",
+        "status": 200,
+        "ms": 4652,
+        "at": 1795799274375
+      },
+      {
+        "kind": "/tryon",
+        "status": 200,
+        "ms": 4084,
+        "at": 1795799275982
+      },
+      {
+        "kind": "/tryon",
+        "status": 200,
+        "ms": 6205,
+        "at": 1795799280618
+      },
+      {
+        "kind": "/tryon",
+        "status": 200,
+        "ms": 5848,
+        "at": 1795799281859
+      },
+      {
+        "kind": "/inbox",
+        "status": 200,
+        "ms": 50,
+        "at": 1795799284078
+      },
+      {
+        "kind": "/tryon",
+        "status": 200,
+        "ms": 4698,
+        "at": 1795799285348
+      },
+      {
+        "kind": "/tryon",
+        "status": 200,
+        "ms": 5019,
+        "at": 1795799286920
+      },
+      {
+        "kind": "/closet",
+        "status": 200,
+        "ms": 3676,
+        "at": 1795799288142
+      },
+      {
+        "kind": "/tryon",
+        "status": 200,
+        "ms": 3827,
+        "at": 1795799289201
+      },
+      {
+        "kind": "/tryon",
+        "status": 200,
+        "ms": 5723,
+        "at": 1795799292666
+      },
+      {
+        "kind": "/closet",
+        "status": 200,
+        "ms": 8937,
+        "at": 1795799298454
+      },
+      {
+        "kind": "/find",
+        "status": 200,
+        "ms": 390,
+        "at": 1795799300451
+      },
+      {
+        "kind": "/img",
+        "status": 200,
+        "ms": 759,
+        "at": 1795799301873
+      },
+      {
+        "kind": "/img",
+        "status": 200,
+        "ms": 634,
+        "at": 1795799303087
+      },
+      {
+        "kind": "/img",
+        "status": 200,
+        "ms": 570,
+        "at": 1795799304139
+      },
+      {
+        "kind": "/img",
+        "status": 200,
+        "ms": 106,
+        "at": 1795799304480
+      },
+      {
+        "kind": "/inbox",
+        "status": 200,
+        "ms": 66,
+        "at": 1795799304907
+      },
+      {
+        "kind": "/inbox",
+        "status": 200,
+        "ms": 486,
+        "at": 1795799305396
+      },
+      {
+        "kind": "/tryon",
+        "status": 200,
+        "ms": 3883,
+        "at": 1795799312584
+      },
+      {
+        "kind": "/backup",
+        "status": 200,
+        "ms": 807,
+        "at": 1795799313745
+      },
+      {
+        "kind": "/backups",
+        "status": 200,
+        "ms": 119,
+        "at": 1795799313911
+      },
+      {
+        "kind": "/backup",
+        "status": 200,
+        "ms": 54,
+        "at": 1795799314012
+      }
+    ],
+    "errors": [],
+    "cards": [
+      {
+        "n": 1,
+        "id": "p-clubmonaco-6935720788040",
+        "title": "Carlo Bassetti Italian Linen Stripe Shirt",
+        "why": "Like Ralph Lauren: stripe, linen",
+        "colour": "",
+        "fabric": "Linen",
+        "store": "Club Monaco",
+        "brand": "Club Monaco",
+        "price": 148,
+        "currency": "USD",
+        "url": "https://clubmonaco.com/products/carlo-bassetti-italian-linen-stripe-shirt-795100364-982",
+        "boost": 0,
+        "waitedMs": 528,
+        "photoMs": 192,
+        "swipe": "later"
+      },
+      {
+        "n": 2,
+        "id": "p-toddsnyder-1494400321",
+        "title": "Graduate Oxford Shirt",
+        "why": "Like Ralph Lauren: oxford, button down",
+        "colour": "White",
+        "fabric": "Oxford",
+        "store": "Todd Snyder",
+        "brand": "Todd Snyder",
+        "price": 228,
+        "currency": "USD",
+        "url": "https://toddsnyder.com/products/white-selvedge-oxford-shirt",
+        "boost": 0,
+        "waitedMs": 491,
+        "photoMs": 223,
+        "swipe": "like"
+      },
+      {
+        "n": 3,
+        "id": "p-jpressonline-8161694613551",
+        "title": "Made-in-USA Burgundy Stripe Button Down Shirt",
+        "why": "Like Ralph Lauren: oxford, button down",
+        "colour": "Burgundy",
+        "fabric": "Oxford",
+        "store": "J.Press",
+        "brand": "J.Press",
+        "price": 157,
+        "currency": "USD",
+        "url": "https://jpressonline.com/products/made-in-usa-burgundy-stripe-button-down-shirt-classic-fit",
+        "boost": 0,
+        "waitedMs": 541,
+        "photoMs": 6,
+        "swipe": "later"
+      },
+      {
+        "n": 4,
+        "id": "p-toddsnyder-6807186571335",
+        "title": "Hamilton + Todd Snyder Cotton Oxford Spread Collar Dress Shirt",
+        "why": "More like: Graduate Oxford Shirt",
+        "colour": "White",
+        "fabric": "Oxford",
+        "store": "Todd Snyder",
+        "brand": "Todd Snyder",
+        "price": 294,
+        "currency": "USD",
+        "url": "https://toddsnyder.com/products/hamilton-todd-snyder-white-herringbone-spread-collar-dress-shirtwhite",
+        "boost": 10,
+        "waitedMs": 700,
+        "photoMs": 6,
+        "swipe": "later"
+      },
+      {
+        "n": 5,
+        "id": "p-jpressonline-8321605238831",
+        "title": "Made-in-USA White Oxford Club Collar Dress Shirt - Classic Fit",
+        "why": "More like: Graduate Oxford Shirt",
+        "colour": "White",
+        "fabric": "Oxford",
+        "store": "J.Press",
+        "brand": "J.Press",
+        "price": 191,
+        "currency": "USD",
+        "url": "https://jpressonline.com/products/white-oxford-club-collar-dress-shirt-classic-fit",
+        "boost": 10,
+        "waitedMs": 506,
+        "photoMs": 6,
+        "swipe": "later"
+      },
+      {
+        "n": 6,
+        "id": "p-toddsnyder-7263296421959",
+        "title": "Easy Cut Oxford Shirt",
+        "why": "More like: Graduate Oxford Shirt",
+        "colour": "White",
+        "fabric": "Oxford",
+        "store": "Todd Snyder",
+        "brand": "Todd Snyder",
+        "price": 84,
+        "currency": "USD",
+        "url": "https://toddsnyder.com/products/oxford-big-shirtwhite",
+        "boost": 10,
+        "waitedMs": 514,
+        "photoMs": 9,
+        "swipe": "like"
+      },
+      {
+        "n": 7,
+        "id": "p-clubmonaco-6935009460296",
+        "title": "Tonal Plaid Lightweight Flannel Shirt",
+        "why": "Like Ralph Lauren: madras, flannel",
+        "colour": "",
+        "fabric": "Flannel",
+        "store": "Club Monaco",
+        "brand": "Club Monaco",
+        "price": 69,
+        "currency": "USD",
+        "url": "https://clubmonaco.com/products/tonal-plaid-lightweight-flannel-shirt-795102306-410",
+        "boost": 0,
+        "waitedMs": 535,
+        "photoMs": 8,
+        "swipe": "later"
+      },
+      {
+        "n": 8,
+        "id": "p-grayers-10707184387",
+        "title": "Oakleigh Classic Oxford - White",
+        "why": "More like: Easy Cut Oxford Shirt",
+        "colour": "White",
+        "fabric": "Oxford",
+        "store": "Grayers",
+        "brand": "Grayers",
+        "price": 98,
+        "currency": "USD",
+        "url": "https://grayers.com/products/oakleigh-classic-oxford-white",
+        "boost": 10,
+        "waitedMs": 705,
+        "photoMs": 7,
+        "swipe": "later"
+      }
+    ],
+    "home": {
+      "screen": "hub",
+      "tiles": [
+        "My closet",
+        "Find something new",
+        "Saved & liked"
+      ]
+    },
+    "firstCardMs": 528,
+    "samePiece": [],
+    "gallery": {
+      "card": {
+        "title": "The White Brenton Royal Oxford Custom Shirt",
+        "store": "Ledbury",
+        "photos": 4,
+        "onPhoto": 0,
+        "layout": {
+          "photoBottom": 718,
+          "titleBottom": 808,
+          "screen": 844
+        }
+      },
+      "flipMs": 43,
+      "tapVoted": false,
+      "cardZoom": {
+        "opened": true,
+        "photo": 2,
+        "opensAt": {
+          "scale": 2,
+          "fill": 2,
+          "shown": "1"
+        },
+        "sharpMs": 846,
+        "closed": true
+      },
+      "zoomScale": 2.2,
+      "moreMs": 2,
+      "details": {
+        "thumbs": 4,
+        "desc": "A wardrobe staple with a refined edge. The midweight royal oxford is exceptionally soft with a slight sheen and just the right amount of structure that is never sheer, always polished. It’s a crisp, elevated option that works just as well with a suit as it does under a sweater or sport coat.\nFabric:",
+        "sizes": [],
+        "specs": [
+          "COLOUR: White",
+          "FABRIC: Oxford"
+        ]
+      },
+      "back": {
+        "was": "The White Brenton Royal Oxford Custom Shirt",
+        "nowShowing": "Oakleigh Classic Oxford - White",
+        "expected": "Oakleigh Classic Oxford - White",
+        "ok": true,
+        "thenNext": "The White Brenton Royal Oxford Custom Shirt"
+      },
+      "saved": {
+        "screen": "saved",
+        "cards": 1,
+        "photos": 1
+      },
+      "liked": {
+        "cards": [
+          "Easy Cut Oxford Shirt",
+          "Graduate Oxford Shirt"
+        ],
+        "hearted": [
+          "Graduate Oxford Shirt",
+          "Easy Cut Oxford Shirt"
+        ]
+      }
+    },
+    "shoes": {
+      "cards": [
+        "Drake's | Running sneakers | New Balance ‘Luxury Leather’ Chocolate Plum and Caramel Made in UK 991v1 Trainers",
+        "Anglo-Italian | Chukkas & desert boots | Desert Boot Crepe Sole Black Suede",
+        "New & Lingwood | Loafers | Espresso Calf Suede Butterfly Loafers",
+        "Todd Snyder | Sneakers | Porto Low Profile Sneaker",
+        "Drake's | Running sneakers | New Balance 'Vintage Sports' Kombu Green and Sea Spray Made in UK 1500v1 Trainers",
+        "Anglo-Italian | Oxfords | Crockett & Jones Hurlingham Oxford Dark Brown Suede City Sole",
+        "New & Lingwood | Mules & clogs | Chestnut Suede All Day Slipper",
+        "Todd Snyder | Sneakers | Veja V-10 CWL Sneaker",
+        "Drake's | Chukkas & desert boots | Crosby Moc-Toe Chukka Boot Sand Suede",
+        "Turnbull & Asser | Derbies | Blue Weekend Fit Cotton-Cashmere Finch Shirt With Derby Collar And Chest Pocket",
+        "Velasca | Boat shoes | Gondolèe",
+        "Todd Snyder | Chelsea boots | Nomad Chelsea Boot",
+        "Drake's | Loafers | Brown Suede Charles Mk II Goodyear Welted Penny Loafer",
+        "Beckett Simonon | Sneakers | Graham Trainers - Men's",
+        "Huntsman | Mules & clogs | Blue Devon Four Point Star Cashmere Slippers",
+        "Todd Snyder | Boat shoes | Lug Sole Boat Shoe",
+        "Velasca | Boots | Alpée",
+        "Beckett Simonon | Sneakers | Fletcher Sneaker - Textile and Suede - Men's",
+        "Paul Evans | Loafers | The Louis Penny Loafer - Martora Suede",
+        "Turnbull & Asser | Derbies | Blue Multi Chambray Stripe Weekend Fit Shirt with Derby Collar and 1 Button Cuffs"
+      ],
+      "sameModel": [],
+      "kinds": 10,
+      "topMaker": [
+        "new balance",
+        2
+      ]
+    },
+    "categories": {
+      "Suits": {
+        "pool": 551,
+        "first": [
+          "Todd Snyder | Italian Wool-Silk Donegal Wythe Suit | Charcoal suits fair skin",
+          "Cordings | Grey 10oz Three Button Chalk Stripe Suit | Preppy: stripe",
+          "New & Lingwood | Navy Chalk Stripe Flannel Double Breasted Suit Jacket | Preppy: stripe",
+          "Drake's | Black Barathea Wool Dinner Jacket | Tuxedo & dinner",
+          "Todd Snyder | Italian Flannel Sutton Suit | Navy suits fair skin"
+        ]
+      },
+      "Swimwear": {
+        "pool": 1369,
+        "first": [
+          "Todd Snyder | 5\" Seersucker Montauk Swim Trunk | Preppy: seersucker",
+          "Orlebar Brown | Bulldog | Preppy: seersucker, stripe",
+          "Southern Tide | Colorblock Seersucker Stripe Maritime Swim Trunk | Preppy: seersucker, stripe",
+          "Haspel | Sherwood Lt. Blue Seersucker Stretch Swimsuit | Preppy: seersucker",
+          "Fair Harbor | SMU Bayberry Trunk | Light Blue Seersucker | Preppy: seersucker"
+        ]
+      },
+      "Coats": {
+        "pool": 915,
+        "first": [
+          "Cordings | Navy Rugby Reefer Coat | Preppy: rugby",
+          "Todd Snyder | Italian Herringbone Balmacaan | Charcoal suits fair skin",
+          "Kith | Stone Island Dense Oxford Nylon TC Fishtail Parka - Lead Grey | Preppy: oxford",
+          "Billy Reid | Boiled Wool Bond Peacoat | Charcoal suits fair skin",
+          "Oliver Brown | Field Coat - Navy Loden | Navy suits fair skin"
+        ]
+      },
+      "Sneakers": {
+        "pool": 1022,
+        "first": [
+          "Kith | Nike Air Bakin High SP - Varsity Royal / Black / Metallic Silver / White | Preppy: varsity",
+          "Todd Snyder | Veja V-10 CWL Sneaker | Sneakers",
+          "Rancourt & Co. | Court Classic 2.0 Low - Red Orion Fleshout | Court & canvas sneakers",
+          "Drake's | New Balance 'Elevated Essentials' Rose Taupe Made in UK 991v2 Trainers | Running sneakers",
+          "Kith | VANS Premium Old Skool 36 - Pearlized Marshmallow White | Court & canvas sneakers"
+        ]
+      },
+      "Hats": {
+        "pool": 2764,
+        "first": [
+          "Drake's | Green and Blue Stripe Geelongora Ribbed Knit Cap | Preppy: stripe",
+          "Todd Snyder | Selvedge Chino Dad Cap | Preppy: chino",
+          "Aimé Leon Dore | Washed Chino Hat | Preppy: chino",
+          "Kith | Kith & '47 for the New York Yankees Wool Hunter Franchise LS Cap - Oxford | Preppy: oxford",
+          "Drake's | Chamula for Drake's Brown Rombos Stripe Merino Knit Cap | Preppy: stripe"
+        ]
+      }
+    },
+    "aboutYou": {
+      "notSet": {
+        "long": 0,
+        "suitYou": 0,
+        "first": [
+          "Todd Snyder | Barbour Waterproof Ursula Jacket | Cotton",
+          "Kith | Engineered Garments Newspaper Print Canvas Type 5 Jean Jacket - White | Canvas",
+          "Iron Heart | 13oz Oxford Cloth Riders Jacket - Indigo | Oxford",
+          "Battenwear | Beach Breaker - Blue Madras | Madras",
+          "Todd Snyder | Barbour Wax Transport Jacket | Cotton",
+          "Johnnie-O | Chicago White Sox Crosswind Quilted Performance Vest - Cooperstown Logo | Vest"
+        ]
+      },
+      "shortSlim": {
+        "long": 0,
+        "suitYou": 20,
+        "first": [
+          "Rogue Territory | Supply Jacket // Rinsed Tan Denim | Cropped, good for your height",
+          "Todd Snyder | Italian Suede Dylan Jacket | Cropped, good for your height",
+          "Stoffa | Flight Jacket (Mid-Grey Cotton Canvas) | Cropped, good for your height",
+          "Rowing Blazers | Bella Tailored Stretch Button Jacket Brown | Cropped, good for your height",
+          "Kith | Junya Watanabe MAN Blouson - Indigo | Cropped, good for your height",
+          "Todd Snyder | Nylon Harrington Jacket | Cropped, good for your height"
+        ]
+      }
+    },
+    "v18": {
+      "again": {
+        "answered": 8,
+        "waiting": 36,
+        "shownAgain": []
+      },
+      "words": {
+        "read": "184 cm (over 182) · 95 kg (broad build) · fair skin · for a wedding",
+        "styles": [
+          "Tailored",
+          "Wedding"
+        ],
+        "first": [
+          "Huntsman | Ecru Barathea Shawl Lapel Dinner Jacket | Wedding: tuxedo, dinner | ",
+          "Todd Snyder | Italian Wool-Silk Donegal Wythe Suit | Tailored: wool, suit | Charcoal suits fair skin",
+          "Richard James | Chapman Jacket – Cobalt Blue Sharkskin | Tailored: tailored, suit | Cobalt suits fair skin",
+          "Anglo-Italian | Suit Double Breasted Navy Wool Cavalry Twill | Tailored: wool, suit | Navy suits fair skin",
+          "Oliver Brown | Carlyle Dinner Jacket - White | Tailored: wool, tuxedo | ",
+          "Todd Snyder | Portuguese Flannel Pinstripe Wythe Suit | Tailored: wool, flannel | Grey suits fair skin"
+        ]
+      },
+      "style": {
+        "pool": 551,
+        "soldInPool": 18,
+        "cards": 36,
+        "soldOut": 0,
+        "notShipping": 8
+      },
+      "shop": {
+        "pool": 551,
+        "soldInPool": 18,
+        "cards": 36,
+        "soldOut": 0,
+        "notShipping": 0
+      },
+      "brief": {
+        "saved": true,
+        "text": "Like this: Italian Houndstooth Sport Coat (Todd Snyder)\nPhotos: https://toddsnyder.com/products/tweed-houndstooth-sport-coatmulti\n\nPiece: Wool · Blazers\nCloth: Multi · wool, houndstooth, linen\nDetails: side vents, a soft natural shoulder\nCut for me: jacket length just covering the seat, a slightly higher button stance and moderate lapels, so the line stays long; close through the chest and waist without pulling; a little structure in the shoulder\n\nFrom the store: The perfect sport coat to see you through the season. This is our laidback but luxurious take on a classic blazer: no stuffy padding, no hot lining, only relaxed, rakish charm. It’s made from Italian linen blend, and features detail"
+      }
+    },
+    "people": {
+      "before": {
+        "votes": 9,
+        "saved": 2
+      },
+      "dan": {
+        "name": "Dan",
+        "screen": "profile",
+        "votes": 0,
+        "saved": 0,
+        "about": "About Dan",
+        "header": "Dan · Suits · 0 votes",
+        "first": "Todd Snyder | Italian Cashmere Wythe Suit | A relaxed cut for your build"
+      },
+      "back": {
+        "name": "Me",
+        "votes": 9,
+        "saved": 2,
+        "people": [
+          "Me",
+          "Dan"
+        ]
+      },
+      "same": true
+    },
+    "v111": {
+      "portrait": {
+        "ok": true,
+        "ms": 1971,
+        "status": 200,
+        "bytes": 325350,
+        "error": ""
+      },
+      "kb": {
+        "1.10": [
+          29,
+          29,
+          29
+        ],
+        "1.11": [
+          17,
+          17,
+          17
+        ],
+        "heavy": [
+          81,
+          81,
+          81
+        ]
+      },
+      "stylist 1.10": {
+        "status": 200,
+        "ms": 9111,
+        "model": "gemma-4-26b-a4b-it",
+        "summary": "Build a wardrobe around medium-contrast neutrals and deep tones to complement your natural coloring. Focus on slim, structured silhouettes that define your frame without being overly tight."
+      },
+      "stylist 1.11": {
+        "status": 200,
+        "ms": 7525,
+        "model": "gemma-4-26b-a4b-it",
+        "summary": "Build a wardrobe around medium-contrast neutrals and rich, saturated tones to complement your features. Focus on structured silhouettes that define your frame without being overly tight."
+      },
+      "stylist heavy": {
+        "status": 200,
+        "ms": 6892,
+        "model": "gemma-4-26b-a4b-it",
+        "summary": "Build a wardrobe around high-contrast neutrals and earthy tones to complement your natural coloring. Focus on structured silhouettes that define your frame without being overly restrictive."
+      },
+      "photos": [
+        "336x448 34KB",
+        "336x448 34KB",
+        "336x448 34KB"
+      ],
+      "stylist": {
+        "model": "gemma-4-26b-a4b-it",
+        "ms": 8916,
+        "summary": "Build a wardrobe around smart-casual textures and streamlined silhouettes to enhance your vertical line. Focus on well-fitted, classic pieces that avoid overwhelming your slim frame.",
+        "best": [
+          "navy",
+          "charcoal",
+          "forest green",
+          "burgundy",
+          "cream",
+          "sky blue",
+          "olive",
+          "camel"
+        ],
+        "less": [
+          "neon",
+          "bright yellow",
+          "stark white",
+          "lavender",
+          "bright orange"
+        ],
+        "lookFor": [
+          "slim fit",
+          "tapered leg",
+          "mid rise",
+          "button-down collar",
+          "structured shoulder",
+          "monochromatic outfits"
+        ],
+        "avoid": [
+          "oversized",
+          "low rise",
+          "longline tees",
+          "wide leg",
+          "heavy layering"
+        ],
+        "wallMs": 7489
+      },
+      "cards": [
+        {
+          "piece": "Todd Snyder | Italian Donegal Herringbone Sutton Jacket",
+          "state": "ok",
+          "ms": 7761,
+          "err": "",
+          "waitedMs": 7729
+        },
+        {
+          "piece": "Billy Reid | Hopsack Silk Wool Archie Jacket",
+          "state": "ok",
+          "ms": 6505,
+          "err": "",
+          "waitedMs": 5,
+          "looks": 1
+        },
+        {
+          "piece": "Orlebar Brown | Garret",
+          "state": "ok",
+          "ms": 4676,
+          "err": "",
+          "waitedMs": 4
+        },
+        {
+          "piece": "Peregrine | Belmont Capsule Blazer",
+          "state": "ok",
+          "ms": 4122,
+          "err": "",
+          "waitedMs": 3
+        },
+        {
+          "piece": "Drake's | Navy Pinstripe Wool-Cotton Double-Breasted Tailored Jacket",
+          "state": "ok",
+          "ms": 6239,
+          "err": "",
+          "waitedMs": 2123
+        },
+        {
+          "piece": "Percival | Tailored Blazer | Birdseye Wool | Grey",
+          "state": "ok",
+          "ms": 5882,
+          "err": "",
+          "waitedMs": 4
+        }
+      ],
+      "onMe": "ON ME: on   drawn 6, drawing 2, failed 0, median 6239ms   stylist: read 2026-11-27T17:07:42.305Z"
+    },
+    "v112": {
+      "pieceSource": "Kamakura Shirts | TOKYO SLIM FIT- Italian Spread Pinpoint Oxford J-TECH EASY CARE",
+      "piece": {
+        "model": "gemma-4-26b-a4b-it",
+        "ms": 3646,
+        "err": "",
+        "items": [
+          "Light blue micro-check dress shirt | Shirts | dress shirt | light blue | cotton | Känkers Shirts | 4 | -"
+        ],
+        "wallMs": 3725
+      },
+      "worn": {
+        "model": "gemma-4-26b-a4b-it",
+        "ms": 8916,
+        "err": "",
+        "items": [
+          "White crew neck t-shirt | T-shirts | t-shirt | white | cotton |  | 1 | -",
+          "Blue slim fit jeans | Jeans | jeans | blue | denim |  | 2 | -",
+          "White leather sneakers | Shoes | sneakers | white | leather |  | 1 | -",
+          "Black watch | Accessories | watch | black |  |  | 2 | -"
+        ],
+        "wallMs": 8978
+      },
+      "closet": {
+        "n": 5,
+        "groups": {
+          "Tops": 2,
+          "Bottoms": 1,
+          "Shoes": 1,
+          "Accessories": 1
+        },
+        "photos": 5
+      },
+      "idbPhotos": 5,
+      "sheetPhotos": 1,
+      "find": {
+        "catalog": [
+          "Todd Snyder | Armando Cabral Long Sleeve Camp Collar Dress Shirt",
+          "Todd Snyder | Cotton Spread Collar Dress Shirt",
+          "J.Press | Made-in-USA Thomas Mason Light Blue Large Tattersall Spread Collar Dress Shirt - Classic Fit",
+          "J.Press | Made-in-USA Thomas Mason Blue Plaid Spread Collar Dress Shirt - Classic Fit"
+        ],
+        "stores": [
+          "Ash & Erie | Blue Dress Shirt",
+          "Drake's | Light Blue Cotton Chambray Button-Down Shirt",
+          "Grayers | Nantucket Yarn Dyed Linen Shirt - Light Blue",
+          "Ash & Erie | Blue Tattersall Dress Shirt"
+        ],
+        "searched": [
+          "Ash & Erie",
+          "Drake's",
+          "Quoddy",
+          "Grayers",
+          "Paul Evans"
+        ],
+        "err": "",
+        "wallMs": 495
+      },
+      "linked": "Armando Cabral Long Sleeve Camp Collar Dress Shirt",
+      "report": "CLOSET: 5 pieces {\"Tops\":2,\"Bottoms\":1,\"Shoes\":1,\"Accessories\":1}, linked 1"
+    },
+    "v113": {
+      "task": {
+        "pending": 5,
+        "inReport": 5,
+        "withPhoto": 5
+      },
+      "update": {
+        "before": 1,
+        "after": 5,
+        "web": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "webShown": 4,
+        "webErr": "",
+        "model": "Test model 1",
+        "last": {
+          "at": 1795799304532,
+          "pieces": 1,
+          "kept": 4,
+          "failed": 0,
+          "err": ""
+        }
+      },
+      "inbox": {
+        "put": "200 {\"ok\":true,\"key\":\"1795799304646\",\"waiting\":1}",
+        "applied": "Inbox model 2",
+        "err": "",
+        "leftAfter": 0
+      },
+      "sheetPhotos": 5,
+      "webShownLoaded": [
+        4000,
+        3000,
+        1200,
+        1048
+      ],
+      "aboutAboveFields": true,
+      "tryon": {
+        "state": "ok",
+        "ms": 3911,
+        "err": "",
+        "wallMs": 3954
+      },
+      "backup": {
+        "line": "In the cloud: backed up just now (5 pieces, 325 KB)",
+        "bytes": 332562,
+        "err": "",
+        "ms": 891
+      },
+      "list": {
+        "state": "done",
+        "list": [
+          {
+            "at": "2026-11-27T17:08:32.997Z",
+            "bytes": 332562,
+            "items": 5,
+            "app": "1.15.0",
+            "key": "latest"
+          },
+          {
+            "at": "2026-11-27T17:08:32.997Z",
+            "bytes": 332562,
+            "items": 5,
+            "app": "1.15.0",
+            "key": "2026-11-27"
+          },
+          {
+            "at": "2026-11-26T20:05:43.975Z",
+            "bytes": 318546,
+            "items": 3,
+            "app": "1.14.1",
+            "key": "2026-11-26"
+          }
+        ]
+      },
+      "restored": {
+        "before": [
+          5,
+          9
+        ],
+        "after": [
+          5,
+          9
+        ],
+        "idb": 9
+      }
+    },
+    "deployed": {
+      "version": "1.15.0",
+      "home": "hub",
+      "firstCardMs": 789,
+      "base": "https://raw.githubusercontent.com/IsraelToledano/Clothes/catalog-data/catalog/",
+      "pool": 551,
+      "catalogFiles": [
+        {
+          "file": "stores.json",
+          "status": 200,
+          "bytes": 94920
+        },
+        {
+          "file": "suits.json",
+          "status": 200,
+          "bytes": 295062
+        },
+        {
+          "file": "details/040.json",
+          "status": 200,
+          "bytes": 334607
+        },
+        {
+          "file": "details/016.json",
+          "status": 200,
+          "bytes": 329200
+        }
+      ],
+      "first": "Todd Snyder | Italian Flannel Sutton Suit"
+    },
+    "report": "app: 1.15.0   when: 2026-11-27T17:08:37.600Z   person: Me (2 on this phone: Me, Dan)\nscreen: closet\nua: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/130.0.6723.31 Safari/537.36\nai: on   server: https://clothes.srul7022.workers.dev   health: {\"ideas\":true,\"images\":true,\"version\":\"1.6.1\",\"textModel\":\"gemma-4-26b-a4b-it\",\"imageModel\":\"schnell for the first cards, klein after\"}\nai request: idle   last error: none   waiting ideas: 36\nserver version: 1.6.1   (app expects 1.6.0 or newer)\nidea model: gemma (last reply)   server says: gemma-4-26b-a4b-it\ncatalog: 104 stores, updated 2026-11-27T10:53:15.775Z, {\"Knitwear\":5764,\"Trousers\":5565,\"Overshirts\":1222,\"Jackets\":5076,\"T-shirts\":5801,\"Polos\":4400,\"Accessories\":12122,\"Shirts\":10309,\"Blazers\":1018,\"Sweatshirts\":2999,\"Coats\":915,\"Shorts\":2023,\"Shoes\":4091,\"Swimwear\":1369,\"Jeans\":1534,\"Suits\":551}   pool for this search: 1018   AI words: slim fit, cropped, tailored, structured, short jacket   avoid: oversized, longline, boxy, wide, relaxed\nlast photo error: none\n\nSEARCH: mode=find a style  type=Blazers (Blazers & sport coats)  styles=-  text=\"\"\nANSWERED BEFORE: 15 answers; 7 of this search's pieces not shown again\nYOUR WORDS READ AS: brands -; styles -; look for -; avoid -; store styles +- --; stores -\nLIKED: Italian Houndstooth Sport Coat; Easy Cut Oxford Shirt; Graduate Oxford Shirt\nPREFS: {\"budget\":\"any\",\"size\":\"M\",\"shoe\":\"43\",\"shipIL\":true,\"me\":{\"height\":\"short\",\"build\":\"slim\",\"fit\":\"\",\"skin\":\"fair\"}}\nON ME: on   drawn 10, drawing 0, failed 0, median 5745ms   stylist: read 2026-11-27T17:07:42.305Z\nCLOSET: 5 pieces {\"Tops\":2,\"Bottoms\":1,\"Shoes\":1,\"Accessories\":1}, linked 1\n  White crew neck t-shirt / T-shirts / white | claude - | photos 1 (web kept 0, web shown 0)\n  Blue slim fit jeans / Jeans / blue | claude - | photos 1 (web kept 0, web shown 0)\n  White leather sneakers / Shoes / white | claude - | photos 1 (web kept 0, web shown 0)\n  Black watch / Accessories / black | claude - | photos 1 (web kept 0, web shown 0)\n  Light blue micro-check dress shirt / Shirts / light blue / Test brand | claude done | model Inbox model 2 | info yes | photos 5 (web kept 4, web shown 4)\n  LAST UPDATE: {\"at\":1795799304908,\"pieces\":1,\"kept\":0,\"failed\":0,\"err\":\"\"}\nCLOUD: In the cloud: backed up just now (5 pieces, 325 KB)   INBOX: looked now, ok, last came in: Light blue micro-check dress shirt\n\nCLAUDE TASK (improve these 4 closet pieces): find each one's exact model online (brand, model name, colourway), what it's made of and other facts, and 2-4 product photo addresses (https, the photo files themselves). A piece you can't identify: include it with \"tried\":true and what you could tell, so it isn't sent again. Send the update straight into the app: run the repo's claude-inbox workflow (inputs person, and update = the JSON gzipped then base64); the app applies it when it opens. The update:\n{\"kind\":\"drape-closet-update\",\"person\":\"Me\",\"items\":[{\"id\":\"…\",\"set\":{\"name\":\"…\",\"brand\":\"…\",\"model\":\"…\",\"colour\":\"…\",\"fabric\":\"…\",\"details\":[\"…\"]},\"info\":\"2-3 sentences\",\"links\":[{\"title\":\"…\",\"url\":\"…\"}],\"photos\":[\"https://…\"]}]}\nPIECES: [{\"id\":\"cmwz8jay70\",\"name\":\"White crew neck t-shirt\",\"type\":\"T-shirts\",\"kind\":\"t-shirt\",\"colour\":\"white\",\"pattern\":\"solid\",\"fabric\":\"cotton\",\"brand\":\"\",\"size\":\"\",\"fit\":\"regular\",\"details\":[\"crew neck\",\"short sleeves\"],\"notes\":\"\",\"linked\":\"\",\"photo\":\"data:image/jpeg;base64,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\"},{\"id\":\"cmwz8jaya1\",\"name\":\"Blue slim fit jeans\",\"type\":\"Jeans\",\"kind\":\"jeans\",\"colour\":\"blue\",\"pattern\":\"solid\",\"fabric\":\"denim\",\"brand\":\"\",\"size\":\"\",\"fit\":\"slim\",\"details\":[\"five pockets\",\"waistband\"],\"notes\":\"\",\"linked\":\"\",\"photo\":\"data:image/jpeg;base64,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\"},{\"id\":\"cmwz8jayd2\",\"name\":\"White leather sneakers\",\"type\":\"Shoes\",\"kind\":\"sneakers\",\"colour\":\"white\",\"pattern\":\"solid\",\"fabric\":\"leather\",\"brand\":\"\",\"size\":\"\",\"fit\":\"\",\"details\":[\"lace up\",\"flat sole\"],\"notes\":\"\",\"linked\":\"\",\"photo\":\"data:image/jpeg;base64,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\"},{\"id\":\"cmwz8jayg3\",\"name\":\"Black watch\",\"type\":\"Accessories\",\"kind\":\"watch\",\"colour\":\"black\",\"pattern\":\"solid\",\"fabric\":\"\",\"brand\":\"\",\"size\":\"\",\"fit\":\"\",\"details\":[\"round face\",\"strap\"],\"notes\":\"\",\"linked\":\"\",\"photo\":\"data:image/jpeg;base64,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\"}]\n\nPHOTOS: 336x448 34KB, 336x448 34KB, 336x448 34KB   LOOKS saved: 1\nSTYLIST (gemma-4-26b-a4b-it, 8916ms): Build a wardrobe around smart-casual textures and streamlined silhouettes to enhance your vertical line. Focus on well-fitted, classic pieces that avoid overwhelming your slim frame. | best navy, charcoal, forest green, burgundy, cream, sky blue, olive, camel | less neon, bright yellow, stark white, lavender, bright orange | look for slim fit, tapered leg, mid rise, button-down collar, structured shoulder, monochromatic outfits | avoid oversized, low rise, longline tees, wide leg, heavy layering\nFOR YOU: +1.5 a slimmer cut for your build   cut: T\n\nON SCREEN: Garret Pique — Orlebar Brown at Orlebar Brown, £695 [NIGHT IRIS, Pique, Knit & unstructured] https://orlebarbrown.com/products/garret-pique-dark-blue-jackets-280265\n  why: \"A slimmer cut for your build\"   search: \"Garret Pique\"   photo 1 of 6\nNEXT UP: Chapman Blazer – Navy Wool Hopsack; Corduroy Stretch Slim Fit Blazer - India Ink; Mouline Wool Tailored Jacket; Mathis; Traveler Navy Knit Blazer - Tailored Fit\n\nTHIS ROUND (6 votes, oldest first):\n  LATER Italian Donegal Herringbone Sutton Jacket\n  LATER Hopsack Silk Wool Archie Jacket\n  LATER Garret\n  LATER Belmont Capsule Blazer\n  LATER Navy Pinstripe Wool-Cotton Double-Breasted Tailored Jacket\n  LATER Tailored Blazer | Birdseye Wool | Grey\nAI insight: focusing on slim, proportional cuts\n\nTASTE: more of: Todd Snyder, Wool, White, Oxford   less of: -\nPICKS: Italian Houndstooth Sport Coat\nSAVED: The White Brenton Royal Oxford Custom Shirt; Italian Houndstooth Sport Coat; Hopsack Silk Wool Archie Jacket"
+  }
+}
